@@ -27,7 +27,8 @@ class ManageShareFolderBottomSheetMenuItem @Inject constructor(
         isConnected: Boolean,
         nodeSourceType: NodeSourceType,
     ) = node.isTakenDown.not()
-            && accessPermission == AccessPermission.OWNER
+            // Backups are user-owned but reported as READ by the SDK; allow this owner action for them.
+            && (accessPermission == AccessPermission.OWNER || isInBackups)
             && isNodeInRubbish.not()
             && isOutShareUseCase(node)
             && node.isNotS4Container() && node.isNodeKeyDecrypted

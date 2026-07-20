@@ -206,6 +206,10 @@ class NodeOptionsActionViewModel @AssistedInject constructor(
     // picker only returns the selected emails, so the target handles are retained here.
     private var pendingShareFolderHandles: List<Long> = emptyList()
 
+    // Whether the share awaiting contact selection targets backup (read-only) folders,
+    // snapshotted when the share is triggered so it survives the contact-picker round-trip.
+    private var pendingShareIsFromBackups: Boolean = false
+
     init {
         getRubbishBinNode()
         monitorIsLoggedIn()
@@ -633,6 +637,7 @@ class NodeOptionsActionViewModel @AssistedInject constructor(
             }
 
         val nodeIds = folderNodes.map { it.id.longValue }
+        pendingShareIsFromBackups = hasBackUpNodes
 
         if (hasBackUpNodes) {
             uiState.update { state ->
@@ -698,18 +703,18 @@ class NodeOptionsActionViewModel @AssistedInject constructor(
     fun contactSelectedForShareFolder(contactsData: List<String>) {
         contactSelectedForShareFolder(contactsData, pendingShareFolderHandles)
         pendingShareFolderHandles = emptyList()
+        pendingShareIsFromBackups = false
     }
 
     /**
      * Contact selected for folder share
      */
     fun contactSelectedForShareFolder(contactsData: List<String>, nodeHandle: List<Long>) {
+        // No target handles (e.g. the picker result fires again after the handles were already used,
+        // or the handles were lost when the app was killed): nothing to share.
+        if (nodeHandle.isEmpty()) return
+        val isFromBackups = pendingShareIsFromBackups
         viewModelScope.launch {
-            val isFromBackups = uiState.value.selectedNodes.find {
-                runCatching {
-                    checkBackupNodeTypeUseCase(it) != BackupNodeType.NonBackupNode
-                }.getOrDefault(false)
-            }
             runCatching {
                 nodeHandlesToJsonMapper(nodeHandle)
             }.onSuccess { handles ->
@@ -718,7 +723,7 @@ class NodeOptionsActionViewModel @AssistedInject constructor(
                         contactsData = triggered(
                             Triple(
                                 contactsData,
-                                isFromBackups != null,
+                                isFromBackups,
                                 handles
                             )
                         )

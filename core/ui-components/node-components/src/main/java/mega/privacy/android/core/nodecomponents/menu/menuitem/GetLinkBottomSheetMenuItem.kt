@@ -27,7 +27,8 @@ class GetLinkBottomSheetMenuItem @Inject constructor(
     ) = node.isTakenDown.not()
             && node.exportedData?.publicLink.isNullOrEmpty()
             && isNodeInRubbish.not()
-            && accessPermission == AccessPermission.OWNER
+            // Backups are user-owned but reported as READ by the SDK; allow this owner action for them.
+            && (accessPermission == AccessPermission.OWNER || isInBackups)
             && node.isNotS4Container() && node.isNodeKeyDecrypted
 
     override val groupId: Int

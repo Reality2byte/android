@@ -81,7 +81,6 @@ private fun ShareFolderDialogM3View(
             negativeButtonText = attr.negativeButton?.let { stringResource(id = it) },
             onPositiveButtonClicked = {
                 onConfirm(type.nodes)
-                onDismiss()
             },
             onNegativeButtonClicked = onDismiss,
         )

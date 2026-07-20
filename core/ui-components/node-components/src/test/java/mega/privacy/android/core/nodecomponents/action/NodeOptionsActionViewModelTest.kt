@@ -1063,6 +1063,42 @@ class NodeOptionsActionViewModelTest {
         }
 
     @Test
+    fun `test that contactSelectedForShareFolder marks the share as from backups when the folder is a backup node`() =
+        runTest {
+            val mockFolderNode = mock<TypedFolderNode>().stub {
+                on { id } doReturn NodeId(456L)
+            }
+            whenever(createShareKeyUseCase(mockFolderNode)).thenReturn(Unit)
+            whenever(checkBackupNodeTypeUseCase(mockFolderNode))
+                .thenReturn(BackupNodeType.RootNode)
+            initViewModel()
+
+            viewModel.verifyShareFolderAction(mockFolderNode)
+            viewModel.triggerShareFolderFromDialogResult(listOf(456L))
+            viewModel.contactSelectedForShareFolder(listOf("sample@mega.co.nz"))
+
+            viewModel.uiState.test {
+                val contactsData = awaitItem().contactsData
+                assertThat(contactsData)
+                    .isInstanceOf(StateEventWithContentTriggered::class.java)
+                val content =
+                    (contactsData as StateEventWithContentTriggered<Triple<List<String>, Boolean, String>>).content
+                assertThat(content.second).isTrue()
+            }
+        }
+
+    @Test
+    fun `test that contactSelectedForShareFolder does not trigger contactsData when share handles are empty`() =
+        runTest {
+            initViewModel()
+            viewModel.contactSelectedForShareFolder(listOf("sample@mega.co.nz"), emptyList())
+            viewModel.uiState.test {
+                assertThat(awaitItem().contactsData)
+                    .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+            }
+        }
+
+    @Test
     fun `test that chatRequestMessageMapper is called when chatIds is selected`() =
         runTest {
             initViewModel()

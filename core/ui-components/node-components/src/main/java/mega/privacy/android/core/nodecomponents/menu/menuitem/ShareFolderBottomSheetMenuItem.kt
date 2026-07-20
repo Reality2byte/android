@@ -32,7 +32,8 @@ class ShareFolderBottomSheetMenuItem @Inject constructor(
             && node is TypedFolderNode
             && isNodeInRubbish.not()
             && isOutShareUseCase(node).not()
-            && accessPermission == AccessPermission.OWNER
+            // Backups are user-owned but reported as READ by the SDK; allow sharing them for read-only exposure.
+            && (accessPermission == AccessPermission.OWNER || isInBackups)
             && node.isNotS4Container() && node.isNodeKeyDecrypted
 
     override fun getOnClickFunction(

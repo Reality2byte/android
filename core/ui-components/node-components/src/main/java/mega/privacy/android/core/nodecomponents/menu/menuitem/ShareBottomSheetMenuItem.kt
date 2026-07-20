@@ -41,8 +41,9 @@ class ShareBottomSheetMenuItem @Inject constructor(
         }
 
         // For cloud nodes, require owner permission
+        // Backups are user-owned but reported as READ by the SDK; allow sharing them for read-only exposure.
         return node.isTakenDown.not()
-                && accessPermission == AccessPermission.OWNER
+                && (accessPermission == AccessPermission.OWNER || isInBackups)
                 && isNodeInRubbish.not()
                 && node.isNotS4Container() && node.isNodeKeyDecrypted
     }

@@ -44,7 +44,6 @@ fun EntryProviderScope<NavKey>.shareFolderDialogM3(
                     ShareFolderDialogNavKey.RESULT,
                     ShareFolderDialogResult(nodes)
                 )
-                onDismiss()
             }
         )
     }
