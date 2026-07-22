@@ -72,11 +72,22 @@ fun LegacyActivityScaffold(
     entryContent: EntryProviderScope<NavKey>.(NavigationHandler, TransferHandler) -> Unit,
 ) {
     container {
-        val (backStack, navigationHandler) = rememberLegacyActivityNavigation(
+        val (backStack, baseNavigationHandler) = rememberLegacyActivityNavigation(
             initialKey = initialKey,
             navigationResultManager = navigationResultManager,
             onEmptyBackStack = onEmptyBackStack,
         )
+        val snackbarHostState = remember { SnackbarHostState() }
+        // The host is shared across all destinations, so an unclosed snackbar stays alive and gets
+        // re-rendered when its destination is reopened. Dismiss it on back to prevent that.
+        val navigationHandler = remember(baseNavigationHandler, snackbarHostState) {
+            object : NavigationHandler by baseNavigationHandler {
+                override fun back() {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    baseNavigationHandler.back()
+                }
+            }
+        }
         // Activity-scoped (composed at the scaffold root, outside any NavDisplay entry) so
         // transfer events outlive individual destinations.
         val appTransferViewModel = hiltViewModel<AppTransferViewModel>()
@@ -90,7 +101,6 @@ fun LegacyActivityScaffold(
         }
         val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
         val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
-        val snackbarHostState = remember { SnackbarHostState() }
 
         CompositionLocalProvider(LocalSnackBarHostState provides snackbarHostState) {
             SnackbarLifetimeController()
