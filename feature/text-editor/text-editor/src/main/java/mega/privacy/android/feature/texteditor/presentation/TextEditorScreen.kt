@@ -40,6 +40,7 @@ import mega.android.core.ui.components.dialogs.BasicDialog
 import mega.android.core.ui.components.indicators.InfiniteProgressBarIndicator
 import mega.android.core.ui.components.indicators.LargeInfiniteSpinnerIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +72,7 @@ import de.palm.composestateevents.triggered
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mega.android.core.ui.components.LocalSnackBarHostState
 import mega.android.core.ui.components.MegaScaffold
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.snackbar.MegaSnackbar
@@ -265,7 +267,7 @@ fun TextEditorScreen(
         )
     }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalSnackBarHostState.current ?: remember { SnackbarHostState() }
     val genericErrorMessage = stringResource(sharedR.string.general_request_failed_message)
     val lineTooltipTemplate = stringResource(sharedR.string.text_editor_fast_scroll_line_tooltip)
     EventEffect(
@@ -300,183 +302,185 @@ fun TextEditorScreen(
             && uiState.mode != TextEditorMode.Create
             && uiState.bottomBarActions.isNotEmpty()
             && !uiState.isLoading
-    MegaScaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0.dp),
-        snackbarHost = {
-            MegaSnackbar(
-                snackBarHostState = snackbarHostState,
-                safeAreaPadding = if (showBottomBar) {
-                    PaddingValues(
-                        bottom = SnackbarBottomBarClearance,
-                        start = SnackbarHorizontalPadding,
-                        end = SnackbarHorizontalPadding,
-                    )
-                } else {
-                    null
-                },
-            )
-        },
-        topBar = {
-            CollapsingTopBar(
-                scrollBarState = scrollBarState,
-                mode = uiState.mode,
-                fileName = uiState.fileName,
-                scope = scope,
-                lazyListState = lazyListState,
-                viewModel = viewModel,
-                onBack = onBack,
-                onOpenNodeOptions = onOpenNodeOptions,
-                isMarkdownPreview = showMarkdownPreview,
-            )
-        },
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .navigationBarsPadding()
-                // Match the top bar's horizontal safe area (it uses safeDrawing) so the content and
-                // fast-scroll thumb stay clear of the landscape display cutout instead of running
-                // under it while the toolbar is inset — keeping the back button/title aligned with
-                // the text. Reading the same safeDrawing channel as the toolbar also ensures the
-                // inset recomputes on a portrait→landscape rotation, which displayCutout did not
-                // (AND-23925). navigationBarsPadding above consumes the nav-bar inset first, so this
-                // only adds the cutout portion and never double-pads the side bars.
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                .nestedScroll(scrollBarState.scrollConnection)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    enabled = barsHidden,
-                ) { scrollBarState.revealBar() },
-        ) {
-            when {
-                uiState.isLoading -> {
+    CompositionLocalProvider(LocalSnackBarHostState provides snackbarHostState) {
+        MegaScaffold(
+            modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0.dp),
+            snackbarHost = {
+                MegaSnackbar(
+                    snackBarHostState = snackbarHostState,
+                    safeAreaPadding = if (showBottomBar) {
+                        PaddingValues(
+                            bottom = SnackbarBottomBarClearance,
+                            start = SnackbarHorizontalPadding,
+                            end = SnackbarHorizontalPadding,
+                        )
+                    } else {
+                        null
+                    },
+                )
+            },
+            topBar = {
+                CollapsingTopBar(
+                    scrollBarState = scrollBarState,
+                    mode = uiState.mode,
+                    fileName = uiState.fileName,
+                    scope = scope,
+                    lazyListState = lazyListState,
+                    viewModel = viewModel,
+                    onBack = onBack,
+                    onOpenNodeOptions = onOpenNodeOptions,
+                    isMarkdownPreview = showMarkdownPreview,
+                )
+            },
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .navigationBarsPadding()
+                    // Match the top bar's horizontal safe area (it uses safeDrawing) so the content and
+                    // fast-scroll thumb stay clear of the landscape display cutout instead of running
+                    // under it while the toolbar is inset — keeping the back button/title aligned with
+                    // the text. Reading the same safeDrawing channel as the toolbar also ensures the
+                    // inset recomputes on a portrait→landscape rotation, which displayCutout did not
+                    // (AND-23925). navigationBarsPadding above consumes the nav-bar inset first, so this
+                    // only adds the cutout portion and never double-pads the side bars.
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                    .nestedScroll(scrollBarState.scrollConnection)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = barsHidden,
+                    ) { scrollBarState.revealBar() },
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TextEditorLoadingContent()
+                        }
+                    }
+
+                    uiState.errorEvent == triggered -> {
+                        val message = uiState.errorMessage?.takeIf { it.isNotBlank() }
+                        val errorMessage = when {
+                            uiState.isNoInternetError ->
+                                stringResource(sharedR.string.error_no_internet_message)
+
+                            message != null -> message
+                            else -> stringResource(sharedR.string.general_request_failed_message)
+                        }
+                        TextEditorErrorContent(
+                            message = errorMessage,
+                            onDismiss = {
+                                viewModel.consumeErrorEvent()
+                                onBack()
+                            },
+                        )
+                    }
+
+                    markdownContent != null -> {
+                        MarkdownPreview(
+                            content = markdownContent,
+                            lazyListState = markdownListState,
+                            modifier = Modifier.fillMaxSize(),
+                            restoreLine = uiState.restorePreviewLine,
+                            onRestoreConsumed = viewModel::consumeRestorePreviewLine,
+                            onTopLine = viewModel::updateTopLine,
+                        )
+                    }
+
+                    else -> {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            TextEditorContent(
+                                lazyListState = lazyListState,
+                                chunkCount = chunkCount,
+                                totalLineCount = uiState.totalLineCount,
+                                chunkTextProvider = chunkTextProvider,
+                                chunkStateProvider = chunkStateProvider,
+                                chunkStartLineProvider = chunkStartLineProvider,
+                                onChunkDisposed = onChunkDisposed,
+                                isChunkReadOnly = isChunkReadOnly,
+                                onChunkFocused = onChunkFocused,
+                                showLineNumbers = uiState.showLineNumbers,
+                                readOnly = !isEditable,
+                                requestInitialFocusOnFirstChunk = uiState.mode == TextEditorMode.Create,
+                                restoreScrollIndex = uiState.restoreScrollIndex,
+                                restoreScrollOffset = uiState.restoreScrollOffset,
+                                restoreScrollWithinChunkLine = uiState.restoreScrollWithinChunkLine,
+                                onRestoreScrollConsumed = viewModel::consumeRestoreScrollIndex,
+                                onTopLineChanged = viewModel::updateTopLine,
+                                restoreFocusChunkIndex = uiState.restoreFocusChunkIndex,
+                                onRestoreFocusConsumed = viewModel::consumeRestoreFocusChunkIndex,
+                            )
+                            TextEditorFastScrollbar(
+                                state = lazyListState,
+                                itemCount = chunkCount,
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .fillMaxHeight(),
+                                tooltipText = { chunkIndex, fractionWithinChunk ->
+                                    val startLine = chunkStartLineProvider(chunkIndex).coerceAtLeast(1)
+                                    // First line of the next chunk (or one past the last line) bounds this
+                                    // chunk's line range; interpolating with the in-chunk scroll fraction
+                                    // gives the actual top line even when the whole file is one chunk.
+                                    val nextStartLine = if (chunkIndex + 1 < chunkCount) {
+                                        chunkStartLineProvider(chunkIndex + 1)
+                                    } else {
+                                        uiState.totalLineCount + 1
+                                    }
+                                    val line = (startLine +
+                                        ((nextStartLine - startLine) * fractionWithinChunk).toInt())
+                                        .coerceIn(1, uiState.totalLineCount.coerceAtLeast(1))
+                                    lineTooltipTemplate.format(line)
+                                },
+                            )
+                        }
+                    }
+                }
+                if (uiState.isRestoringContent) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TextEditorLoadingContent()
+                        LargeInfiniteSpinnerIndicator()
                     }
                 }
-
-                uiState.errorEvent == triggered -> {
-                    val message = uiState.errorMessage?.takeIf { it.isNotBlank() }
-                    val errorMessage = when {
-                        uiState.isNoInternetError ->
-                            stringResource(sharedR.string.error_no_internet_message)
-
-                        message != null -> message
-                        else -> stringResource(sharedR.string.general_request_failed_message)
+                LaunchedEffect(showBottomBar) {
+                    if (showBottomBar) {
+                        bottomBarEntranceOffset.snapTo(bottomBarSlideDistancePx)
+                        bottomBarEntranceOffset.animateTo(0f, animationSpec = tween(ENTRANCE_ANIMATION_MS))
+                    } else {
+                        bottomBarEntranceOffset.snapTo(bottomBarSlideDistancePx)
                     }
-                    TextEditorErrorContent(
-                        message = errorMessage,
-                        onDismiss = {
-                            viewModel.consumeErrorEvent()
-                            onBack()
-                        },
-                    )
                 }
-
-                markdownContent != null -> {
-                    MarkdownPreview(
-                        content = markdownContent,
-                        lazyListState = markdownListState,
-                        modifier = Modifier.fillMaxSize(),
-                        restoreLine = uiState.restorePreviewLine,
-                        onRestoreConsumed = viewModel::consumeRestorePreviewLine,
-                        onTopLine = viewModel::updateTopLine,
-                    )
-                }
-
-                else -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        TextEditorContent(
-                            lazyListState = lazyListState,
-                            chunkCount = chunkCount,
-                            totalLineCount = uiState.totalLineCount,
-                            chunkTextProvider = chunkTextProvider,
-                            chunkStateProvider = chunkStateProvider,
-                            chunkStartLineProvider = chunkStartLineProvider,
-                            onChunkDisposed = onChunkDisposed,
-                            isChunkReadOnly = isChunkReadOnly,
-                            onChunkFocused = onChunkFocused,
-                            showLineNumbers = uiState.showLineNumbers,
-                            readOnly = !isEditable,
-                            requestInitialFocusOnFirstChunk = uiState.mode == TextEditorMode.Create,
-                            restoreScrollIndex = uiState.restoreScrollIndex,
-                            restoreScrollOffset = uiState.restoreScrollOffset,
-                            restoreScrollWithinChunkLine = uiState.restoreScrollWithinChunkLine,
-                            onRestoreScrollConsumed = viewModel::consumeRestoreScrollIndex,
-                            onTopLineChanged = viewModel::updateTopLine,
-                            restoreFocusChunkIndex = uiState.restoreFocusChunkIndex,
-                            onRestoreFocusConsumed = viewModel::consumeRestoreFocusChunkIndex,
-                        )
-                        TextEditorFastScrollbar(
-                            state = lazyListState,
-                            itemCount = chunkCount,
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .fillMaxHeight(),
-                            tooltipText = { chunkIndex, fractionWithinChunk ->
-                                val startLine = chunkStartLineProvider(chunkIndex).coerceAtLeast(1)
-                                // First line of the next chunk (or one past the last line) bounds this
-                                // chunk's line range; interpolating with the in-chunk scroll fraction
-                                // gives the actual top line even when the whole file is one chunk.
-                                val nextStartLine = if (chunkIndex + 1 < chunkCount) {
-                                    chunkStartLineProvider(chunkIndex + 1)
-                                } else {
-                                    uiState.totalLineCount + 1
+                if (showBottomBar) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp)
+                            .graphicsLayer {
+                                translationY =
+                                    bottomBarEntranceOffset.value + bottomBarTranslationY
+                            },
+                    ) {
+                        MegaFloatingToolbar(
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            actions = uiState.bottomBarActions,
+                            actionsEnabled = true,
+                            onActionPressed = { action ->
+                                when (action) {
+                                    is TextEditorBottomBarAction.Edit ->
+                                        viewModel.setEditMode(lazyListState.firstVisibleItemIndex)
+                                    is TextEditorBottomBarAction ->
+                                        viewModel.onBottomBarAction(action)
                                 }
-                                val line = (startLine +
-                                    ((nextStartLine - startLine) * fractionWithinChunk).toInt())
-                                    .coerceIn(1, uiState.totalLineCount.coerceAtLeast(1))
-                                lineTooltipTemplate.format(line)
                             },
                         )
                     }
-                }
-            }
-            if (uiState.isRestoringContent) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LargeInfiniteSpinnerIndicator()
-                }
-            }
-            LaunchedEffect(showBottomBar) {
-                if (showBottomBar) {
-                    bottomBarEntranceOffset.snapTo(bottomBarSlideDistancePx)
-                    bottomBarEntranceOffset.animateTo(0f, animationSpec = tween(ENTRANCE_ANIMATION_MS))
-                } else {
-                    bottomBarEntranceOffset.snapTo(bottomBarSlideDistancePx)
-                }
-            }
-            if (showBottomBar) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 16.dp)
-                        .graphicsLayer {
-                            translationY =
-                                bottomBarEntranceOffset.value + bottomBarTranslationY
-                        },
-                ) {
-                    MegaFloatingToolbar(
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        actions = uiState.bottomBarActions,
-                        actionsEnabled = true,
-                        onActionPressed = { action ->
-                            when (action) {
-                                is TextEditorBottomBarAction.Edit ->
-                                    viewModel.setEditMode(lazyListState.firstVisibleItemIndex)
-                                is TextEditorBottomBarAction ->
-                                    viewModel.onBottomBarAction(action)
-                            }
-                        },
-                    )
                 }
             }
         }
