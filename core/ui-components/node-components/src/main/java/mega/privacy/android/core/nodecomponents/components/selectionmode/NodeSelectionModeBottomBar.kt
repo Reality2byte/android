@@ -7,7 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -122,7 +122,7 @@ fun SelectionModeBottomBar(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .systemBarsPadding()
+                .navigationBarsPadding()
                 .padding(bottom = 16.dp)
         ) {
             MegaFloatingToolbar(
