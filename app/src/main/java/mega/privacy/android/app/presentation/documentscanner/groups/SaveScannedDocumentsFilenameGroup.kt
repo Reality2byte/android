@@ -7,16 +7,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -32,10 +34,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.drop
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.app.presentation.documentscanner.model.ScanFileType
 import mega.privacy.android.domain.entity.documentscanner.ScanFilenameValidationStatus
@@ -72,19 +74,36 @@ internal fun SaveScannedDocumentsFilenameGroup(
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
 
-    // Used to de-select the text when the TextField is focused and the User selects the Text again
-    var keepWholeSelection by rememberSaveable { mutableStateOf(false) }
-    if (keepWholeSelection) {
-        SideEffect { keepWholeSelection = false }
-    }
-
-    var filenameValueState by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(filename))
-    }
+    val filenameState = rememberTextFieldState(filename)
 
     LaunchedEffect(filename) {
-        if (filename != filenameValueState.text) {
-            filenameValueState = TextFieldValue(filename)
+        if (filename != filenameState.text.toString()) {
+            filenameState.setTextAndPlaceCursorAtEnd(filename)
+        }
+    }
+
+    LaunchedEffect(filenameState) {
+        snapshotFlow { filenameState.text.toString() }
+            .drop(1)
+            .collect(onFilenameChanged)
+    }
+
+    // Highlight the filename (without its extension) each time the field gains focus. Applied after
+    // a frame so the focusing tap has already positioned its cursor, otherwise that tap would
+    // collapse the programmatic selection.
+    LaunchedEffect(isFocused) {
+        if (isFocused) {
+            withFrameNanos { }
+            val text = filenameState.text.toString()
+            val fileSuffix = scanFileType.fileSuffix
+            val lastFileSuffixIndex = text.lastIndexOf(fileSuffix)
+            val selectionEnd =
+                if (lastFileSuffixIndex != -1 && lastFileSuffixIndex == text.length - fileSuffix.length) {
+                    lastFileSuffixIndex
+                } else {
+                    text.length
+                }
+            filenameState.edit { selection = TextRange(0, selectionEnd) }
         }
     }
 
@@ -115,53 +134,21 @@ internal fun SaveScannedDocumentsFilenameGroup(
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
-                        if (focusState.isFocused) {
-
-                            val fileSuffix = scanFileType.fileSuffix
-                            val lastFileSuffixIndex = filename.lastIndexOf(fileSuffix)
-
-                            filenameValueState = filenameValueState.copy(
-                                selection = if (lastFileSuffixIndex != -1 && lastFileSuffixIndex == filename.length - fileSuffix.length) {
-                                    // If the filename contains the expected suffix, highlight the filename without the suffix
-                                    TextRange(0, lastFileSuffixIndex)
-                                } else {
-                                    // Else, highlight the entire filename
-                                    TextRange(0, filename.length)
-                                }
-                            )
-                            keepWholeSelection = true
-                        } else {
-                            // When the Text Field loses focus, de-select the entire filename
-                            filenameValueState = filenameValueState.copy(
-                                selection = TextRange(0, 0)
-                            )
-                        }
                     }
                     .testTag(SAVE_SCANNED_DOCUMENTS_FILENAME_GROUP_FILENAME_TEXT_FIELD),
-                textFieldValue = filenameValueState,
+                state = filenameState,
                 placeholder = "",
                 showIndicatorLine = isFocused || (filenameValidationStatus != null && filenameValidationStatus != ScanFilenameValidationStatus.ValidFilename),
-                onTextChange = { newTextFieldValue ->
-                    onFilenameChanged(newTextFieldValue.text)
-
-                    if (keepWholeSelection) {
-                        keepWholeSelection = false
-                    } else {
-                        filenameValueState = newTextFieldValue
-                    }
-                },
                 errorText = getFilenameErrorMessage(
                     filenameValidationStatus = filenameValidationStatus,
                     scanFileType = scanFileType,
                 ),
                 imeAction = ImeAction.Done,
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                        focusManager.clearFocus(true)
-                        onFilenameConfirmed(filenameValueState.text)
-                    }
-                ),
+                onKeyboardAction = KeyboardActionHandler {
+                    keyboardController?.hide()
+                    focusManager.clearFocus(true)
+                    onFilenameConfirmed(filenameState.text.toString())
+                },
             )
 
             Image(

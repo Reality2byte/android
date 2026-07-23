@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState as ComposeTextFieldState
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
@@ -163,6 +167,82 @@ fun GenericTextField(
         }
     }
 )
+
+/**
+ * Text field generic backed by a `TextFieldState`.
+ *
+ * Uses the modern state-based [BasicTextField], whose selection is managed through the proper input
+ * channel. Prefer this overload when the field programmatically manipulates the selection (e.g.
+ * highlighting text on focus), as the [TextFieldValue] overload leaves stale selection handles
+ * behind in that scenario.
+ *
+ * @param state           The `TextFieldState` holding the text and selection.
+ * @param modifier        [Modifier]
+ * @param textFieldModifier [Modifier]
+ * @param placeholder     String to show when the field is empty.
+ * @param errorText       Error to show if any.
+ * @param imeAction       [ImeAction]
+ * @param keyboardType Specifies the type of keys available for the Keyboard (e.g. Text, Number)
+ * @param onKeyboardAction Handler invoked when the IME action is performed.
+ * @param lineLimits The line limits of the text field.
+ * @param trailingIcon  the optional trailing icon to be displayed at the end of the text field container
+ * @param showIndicatorLine when set to false the indicator line under the text won't be shown
+ */
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun GenericTextField(
+    state: ComposeTextFieldState,
+    modifier: Modifier = Modifier,
+    textFieldModifier: Modifier = Modifier,
+    placeholder: String = "",
+    errorText: String? = null,
+    imeAction: ImeAction = ImeAction.Done,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    onKeyboardAction: KeyboardActionHandler? = null,
+    lineLimits: TextFieldLineLimits = TextFieldLineLimits.SingleLine,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    showIndicatorLine: Boolean = true,
+) = Column(modifier = modifier) {
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isError = errorText != null
+
+    val colors = textFieldColors(showIndicatorLine)
+    val customTextSelectionColors = customTextSelectionColors()
+
+    CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
+        BasicTextField(
+            state = state,
+            modifier = textFieldModifier
+                .testTag(GENERIC_TEXT_FIELD_TEXT_TAG)
+                .background(Color.Transparent)
+                .indicatorLine(true, isError, interactionSource, colors)
+                .fillMaxWidth(),
+            textStyle = MaterialTheme.typography.body1.copy(color = DSTokens.colors.text.primary),
+            cursorBrush = SolidColor(colors.cursorColor(isError).value),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = imeAction,
+            ),
+            onKeyboardAction = onKeyboardAction,
+            lineLimits = lineLimits,
+            interactionSource = interactionSource,
+            decorator = TextFieldDecorator { innerTextField ->
+                GenericDecorationBox(
+                    text = state.text.toString(),
+                    innerTextField = innerTextField,
+                    trailingIcon = trailingIcon,
+                    singleLine = lineLimits == TextFieldLineLimits.SingleLine,
+                    interactionSource = interactionSource,
+                    isError = isError,
+                    placeholder = placeholder,
+                    colors = colors,
+                )
+            },
+        )
+    }
+
+    GenericError(errorText)
+}
 
 private data class BasicTextFieldParams<T>(
     val value: T,
