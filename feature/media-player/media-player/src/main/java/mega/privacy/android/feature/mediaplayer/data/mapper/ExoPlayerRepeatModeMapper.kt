@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.mapper
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.Player.REPEAT_MODE_OFF
@@ -21,6 +21,6 @@ class ExoPlayerRepeatModeMapper @Inject constructor() {
         when (repeatToggleMode) {
             RepeatToggleMode.REPEAT_ONE -> REPEAT_MODE_ONE
             RepeatToggleMode.REPEAT_NONE -> REPEAT_MODE_OFF
-            else -> REPEAT_MODE_ALL
+            RepeatToggleMode.REPEAT_ALL -> REPEAT_MODE_ALL
         }
 }

@@ -9,7 +9,7 @@ import kotlinx.coroutines.test.runTest
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.analytics.tracker.AnalyticsTracker
 import mega.privacy.android.app.mediaplayer.gateway.AudioMediaControllerGateway
-import mega.privacy.android.app.mediaplayer.mapper.RepeatToggleModeByExoPlayerMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.app.mediaplayer.model.AudioControllerState
 import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
 import mega.privacy.android.app.utils.Constants.FOLDER_LINK_ADAPTER

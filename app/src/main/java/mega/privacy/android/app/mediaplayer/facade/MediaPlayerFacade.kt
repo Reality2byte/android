@@ -53,8 +53,8 @@ import kotlinx.coroutines.flow.flowOf
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.app.mediaplayer.MediaMegaPlayer
 import mega.privacy.android.app.mediaplayer.gateway.MediaPlayerGateway
-import mega.privacy.android.app.mediaplayer.mapper.ExoPlayerRepeatModeMapper
-import mega.privacy.android.app.mediaplayer.mapper.RepeatToggleModeByExoPlayerMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.ExoPlayerRepeatModeMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.app.mediaplayer.model.MediaPlaySources
 import mega.privacy.android.app.mediaplayer.model.PlayerNotificationCreatedParams
 import mega.privacy.android.app.mediaplayer.model.SpeedPlaybackItem

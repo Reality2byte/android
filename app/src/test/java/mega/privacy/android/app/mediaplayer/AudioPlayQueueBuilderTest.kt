@@ -7,7 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import mega.privacy.android.app.mediaplayer.mapper.AudioNodeToMediaItemMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.AudioNodeToMediaItemMapper
 import mega.privacy.android.app.mediaplayer.model.AudioPlayQueueParams
 import mega.privacy.android.app.utils.Constants.OFFLINE_ADAPTER
 import mega.privacy.android.app.utils.Constants.RECENTS_ADAPTER

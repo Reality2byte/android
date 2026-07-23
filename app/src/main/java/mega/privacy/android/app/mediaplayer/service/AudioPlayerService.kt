@@ -33,11 +33,10 @@ import kotlinx.coroutines.launch
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.app.appstate.MegaActivity
 import mega.privacy.android.app.mediaplayer.AudioPlayQueueBuilder
-import mega.privacy.android.app.mediaplayer.mapper.ExoPlayerRepeatModeMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.ExoPlayerRepeatModeMapper
 import mega.privacy.android.app.mediaplayer.miniplayer.MiniAudioPlayerController
 import mega.privacy.android.app.mediaplayer.model.AudioPlayQueueParams
 import mega.privacy.android.app.mediaplayer.model.MediaPlaySources
-import mega.privacy.android.app.mediaplayer.navigation.AudioPlayerScreenNavKey
 import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_REBUILD_PLAYLIST
 import mega.privacy.android.domain.entity.mediaplayer.MediaPlaybackInfo
 import mega.privacy.android.domain.entity.mediaplayer.MediaType
@@ -48,6 +47,7 @@ import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioB
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioRepeatModeUseCase
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioShuffleEnabledUseCase
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.TrackAudioPlaybackInfoUseCase
+import mega.privacy.android.app.mediaplayer.navigation.AudioPlayerScreenNavKey
 import mega.privacy.android.domain.usecase.setting.MonitorShowHiddenItemsUseCase
 import mega.privacy.mobile.analytics.event.AudioPlayerIsActivatedEvent
 import timber.log.Timber

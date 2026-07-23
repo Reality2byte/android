@@ -1,8 +1,8 @@
-package mega.privacy.android.app.presentation.mediaplayer
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import androidx.media3.common.Player
 import com.google.common.truth.Truth
-import mega.privacy.android.app.mediaplayer.mapper.ExoPlayerRepeatModeMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.ExoPlayerRepeatModeMapper
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory

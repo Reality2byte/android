@@ -1,15 +1,15 @@
-package mega.privacy.android.app.presentation.mediaplayer
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import androidx.media3.common.Player
 import com.google.common.truth.Truth.assertThat
-import mega.privacy.android.app.mediaplayer.mapper.RepeatToggleModeByExoPlayerMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RepeatToggleModeByExoPlayerMapperTest {
+internal class RepeatToggleModeByExoPlayerMapperTest {
     private val underTest = RepeatToggleModeByExoPlayerMapper()
 
     @TestFactory

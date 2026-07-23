@@ -23,6 +23,7 @@ dependencies {
     implementation(lib.mega.core.ui)
     implementation(lib.kotlin.ktx)
     implementation(lib.logging.timber)
+    implementation(google.media3.common)
     implementation(androidx.bundles.compose.bom)
     implementation(platform(androidx.compose.bom))
     implementation(androidx.hilt.navigation)

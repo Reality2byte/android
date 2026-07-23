@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.mapper
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import android.net.Uri
 import com.google.common.truth.Truth.assertThat
@@ -11,7 +11,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AudioNodeToMediaItemMapperTest {
+internal class AudioNodeToMediaItemMapperTest {
 
     private lateinit var underTest: AudioNodeToMediaItemMapper
 

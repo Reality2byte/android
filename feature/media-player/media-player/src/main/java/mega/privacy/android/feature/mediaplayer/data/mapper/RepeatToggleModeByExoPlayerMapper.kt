@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.mapper
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import androidx.media3.common.Player
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode

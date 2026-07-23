@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import mega.privacy.android.app.mediaplayer.mapper.AudioNodeToMediaItemMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.AudioNodeToMediaItemMapper
 import mega.privacy.android.app.mediaplayer.model.AudioPlayQueueParams
 import mega.privacy.android.app.mediaplayer.model.MediaPlaySources
 import mega.privacy.android.app.utils.Constants.CONTACT_FILE_ADAPTER

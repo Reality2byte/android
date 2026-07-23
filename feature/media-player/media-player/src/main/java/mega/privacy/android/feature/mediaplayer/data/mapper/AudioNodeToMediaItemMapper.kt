@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.mapper
+package mega.privacy.android.feature.mediaplayer.data.mapper
 
 import android.net.Uri
 import androidx.media3.common.MediaItem
