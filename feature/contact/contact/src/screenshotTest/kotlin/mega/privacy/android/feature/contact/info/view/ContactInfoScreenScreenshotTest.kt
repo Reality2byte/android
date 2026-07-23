@@ -42,10 +42,12 @@ class ContactInfoScreenScreenshotTest {
                     lastSeenMinutes = null,
                     areCredentialsVerified = true,
                     isNotificationEnabled = true,
+                    notificationsMutedUntilTimestamp = null,
                     retentionTimeSeconds = SECONDS_IN_DAY,
                     inSharesCount = 3,
                     enableCallButtons = true,
                     isOnline = true,
+                    showMuteOptionsEvent = consumed(),
                     closeEvent = consumed,
                 ),
             )

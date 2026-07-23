@@ -90,6 +90,7 @@ internal fun ContactInfoContent(
         SubtleDivider()
         ContactInfoChatSection(
             isNotificationEnabled = state.isNotificationEnabled,
+            notificationsMutedUntilTimestamp = state.notificationsMutedUntilTimestamp,
             retentionTimeSeconds = state.retentionTimeSeconds,
             showSharedFiles = state.showSharedFiles,
             showManageChatHistory = state.showManageChatHistory,
@@ -120,10 +121,12 @@ private fun ContactInfoContentPreview() {
                 lastSeenMinutes = null,
                 areCredentialsVerified = true,
                 isNotificationEnabled = true,
+                notificationsMutedUntilTimestamp = null,
                 retentionTimeSeconds = SECONDS_IN_DAY,
                 inSharesCount = 3,
                 enableCallButtons = true,
                 isOnline = true,
+                showMuteOptionsEvent = consumed(),
                 closeEvent = consumed,
             ),
             onSendMessageClick = {},

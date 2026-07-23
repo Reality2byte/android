@@ -12,6 +12,8 @@ import mega.android.core.ui.components.toggle.Toggle
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
 import mega.android.core.ui.theme.values.TextColor
+import java.text.DateFormat
+import java.util.Date
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
@@ -20,6 +22,8 @@ import mega.privacy.android.shared.resources.R as sharedR
  *
  * @param isNotificationEnabled true when chat notifications are enabled, false when muted, null
  * when unknown (rendered as enabled).
+ * @param notificationsMutedUntilTimestamp timestamp in seconds since the Epoch until which the
+ * notifications are muted; shown as the row subtitle when muted for a specific period.
  * @param retentionTimeSeconds chat history retention time in seconds; the manage chat history row
  * shows it as a subtitle when set.
  * @param showSharedFiles whether the chat shared files row is visible.
@@ -33,6 +37,7 @@ import mega.privacy.android.shared.resources.R as sharedR
 @Composable
 internal fun ContactInfoChatSection(
     isNotificationEnabled: Boolean?,
+    notificationsMutedUntilTimestamp: Long?,
     retentionTimeSeconds: Long?,
     showSharedFiles: Boolean,
     showManageChatHistory: Boolean,
@@ -46,10 +51,14 @@ internal fun ContactInfoChatSection(
         FlexibleLineListItem(
             modifier = Modifier.testTag(CONTACT_INFO_NOTIFICATIONS_ROW_TAG),
             title = stringResource(sharedR.string.contact_info_chat_notifications),
-            subtitle = if (isNotificationEnabled == false) {
-                stringResource(sharedR.string.contact_info_notifications_muted)
-            } else {
-                null
+            subtitle = when {
+                isNotificationEnabled != false -> null
+                notificationsMutedUntilTimestamp != null -> stringResource(
+                    sharedR.string.contact_info_notifications_muted_until,
+                    formatMutedUntilTime(notificationsMutedUntilTimestamp),
+                )
+
+                else -> stringResource(sharedR.string.contact_info_notifications_muted)
             },
             enableClick = false,
             trailingElement = {
@@ -90,6 +99,12 @@ internal fun ContactInfoChatSection(
     }
 }
 
+private fun formatMutedUntilTime(timestampSeconds: Long): String =
+    DateFormat.getTimeInstance(DateFormat.SHORT)
+        .format(Date(timestampSeconds * MILLISECONDS_IN_SECOND))
+
+private const val MILLISECONDS_IN_SECOND = 1000L
+
 internal const val CONTACT_INFO_CHAT_SECTION_TAG = "contact_info_chat_section"
 internal const val CONTACT_INFO_NOTIFICATIONS_ROW_TAG =
     "contact_info_chat_section:row_notifications"
@@ -108,6 +123,7 @@ private fun ContactInfoChatSectionPreview() {
     AndroidThemeForPreviews {
         ContactInfoChatSection(
             isNotificationEnabled = true,
+            notificationsMutedUntilTimestamp = null,
             retentionTimeSeconds = SECONDS_IN_DAY,
             showSharedFiles = true,
             showManageChatHistory = true,
@@ -125,9 +141,28 @@ private fun ContactInfoChatSectionMutedNoChatPreview() {
     AndroidThemeForPreviews {
         ContactInfoChatSection(
             isNotificationEnabled = false,
+            notificationsMutedUntilTimestamp = null,
             retentionTimeSeconds = null,
             showSharedFiles = false,
             showManageChatHistory = false,
+            onNotificationToggled = {},
+            onSharedFilesClick = {},
+            onManageChatHistoryClick = {},
+            onRemoveContactClick = {},
+        )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun ContactInfoChatSectionMutedUntilTimePreview() {
+    AndroidThemeForPreviews {
+        ContactInfoChatSection(
+            isNotificationEnabled = false,
+            notificationsMutedUntilTimestamp = 1893456000L,
+            retentionTimeSeconds = null,
+            showSharedFiles = true,
+            showManageChatHistory = true,
             onNotificationToggled = {},
             onSharedFilesClick = {},
             onManageChatHistoryClick = {},

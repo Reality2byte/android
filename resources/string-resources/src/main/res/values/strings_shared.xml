@@ -3501,6 +3501,8 @@
     <string name="contact_info_chat_notifications">Chat notifications</string>
     <!-- Contact info: subtitle of the chat notifications row when notifications are muted until turned back on -->
     <string name="contact_info_notifications_muted">Off</string>
+    <!-- Contact info: subtitle of the chat notifications row when notifications are muted until a specific time; the placeholder is that time, e.g. "8:00 AM" -->
+    <string name="contact_info_notifications_muted_until">Muted until %1$s</string>
     <!-- Contact info: title of the row that opens the list of files shared in the chat with the contact -->
     <string name="contact_info_shared_files">Shared files</string>
     <!-- Contact info: title of the row that opens the manage chat history screen -->

@@ -48,7 +48,7 @@ fun ContactInfoEntry(
         onVerifyCredentialsClick = {},
         onShareContactClick = {},
         onSharedFoldersClick = {},
-        onNotificationToggled = {},
+        onNotificationToggled = { viewModel.onNotificationsToggled() },
         onSharedFilesClick = {},
         onManageChatHistoryClick = {},
         onRemoveContactClick = {},

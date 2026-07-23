@@ -1,6 +1,8 @@
 package mega.privacy.android.feature.contact.info.model
 
 import de.palm.composestateevents.StateEvent
+import de.palm.composestateevents.StateEventWithContent
+import mega.privacy.android.domain.entity.chat.ChatPushNotificationMuteOption
 import mega.privacy.android.domain.entity.contacts.UserChatStatus
 import mega.privacy.android.shared.contact.model.AvatarData
 
@@ -40,10 +42,15 @@ sealed interface ContactInfoUiState {
      * @property areCredentialsVerified True when the contact's credentials are verified.
      * @property isNotificationEnabled True when chat notifications are enabled, false when muted,
      * null when unknown (no chat or not yet loaded).
+     * @property notificationsMutedUntilTimestamp Timestamp in seconds since the Epoch until which
+     * chat notifications are muted, or null when not muted for a specific period (either not muted
+     * at all or muted until turned back on).
      * @property retentionTimeSeconds Chat history retention time in seconds, or null when unknown.
      * @property inSharesCount Number of folders the contact shares with the user.
      * @property enableCallButtons True when the audio/video call buttons can be used.
      * @property isOnline True when the device is connected to the internet.
+     * @property showMuteOptionsEvent One-shot event requesting the mute options dialog, carrying
+     * the mute options to offer.
      * @property closeEvent
      */
     data class Data(
@@ -58,10 +65,12 @@ sealed interface ContactInfoUiState {
         val lastSeenMinutes: Int?,
         val areCredentialsVerified: Boolean,
         val isNotificationEnabled: Boolean?,
+        val notificationsMutedUntilTimestamp: Long?,
         val retentionTimeSeconds: Long?,
         val inSharesCount: Int,
         val enableCallButtons: Boolean,
         val isOnline: Boolean,
+        val showMuteOptionsEvent: StateEventWithContent<List<ChatPushNotificationMuteOption>>,
         override val closeEvent: StateEvent,
     ) : ContactInfoUiState {
 

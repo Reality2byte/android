@@ -42,6 +42,20 @@ class ContactInfoContentScreenshotTest {
     @PreviewTest
     @CombinedThemePreviews
     @Composable
+    fun ContactInfoContentNotificationsMutedUntil() {
+        AndroidThemeForPreviews {
+            ContactInfoContentUnderTest(
+                state = sampleState(
+                    isNotificationEnabled = false,
+                    notificationsMutedUntilTimestamp = 1767277800L,
+                ),
+            )
+        }
+    }
+
+    @PreviewTest
+    @CombinedThemePreviews
+    @Composable
     fun ContactInfoContentWithoutNickname() {
         AndroidThemeForPreviews {
             ContactInfoContentUnderTest(state = sampleState(nickname = null))
@@ -128,7 +142,7 @@ class ContactInfoContentScreenshotTest {
     }
 
     @Composable
-    private fun ContactInfoContentUnderTest(state: ContactInfoUiState.Loaded) {
+    private fun ContactInfoContentUnderTest(state: ContactInfoUiState.Data) {
         ContactInfoContent(
             state = state,
             onSendMessageClick = {},
@@ -152,11 +166,12 @@ class ContactInfoContentScreenshotTest {
         lastSeenMinutes: Int? = null,
         areCredentialsVerified: Boolean = true,
         isNotificationEnabled: Boolean? = true,
+        notificationsMutedUntilTimestamp: Long? = null,
         retentionTimeSeconds: Long? = SECONDS_IN_DAY,
         inSharesCount: Int = 3,
         enableCallButtons: Boolean = true,
         isOnline: Boolean = true,
-    ) = ContactInfoUiState.Loaded(
+    ) = ContactInfoUiState.Data(
         displayName = "Alice Anderson",
         nickname = nickname,
         email = "alice@example.com",
@@ -168,10 +183,12 @@ class ContactInfoContentScreenshotTest {
         lastSeenMinutes = lastSeenMinutes,
         areCredentialsVerified = areCredentialsVerified,
         isNotificationEnabled = isNotificationEnabled,
+        notificationsMutedUntilTimestamp = notificationsMutedUntilTimestamp,
         retentionTimeSeconds = retentionTimeSeconds,
         inSharesCount = inSharesCount,
         enableCallButtons = enableCallButtons,
         isOnline = isOnline,
+        showMuteOptionsEvent = consumed(),
         closeEvent = consumed,
     )
 }
