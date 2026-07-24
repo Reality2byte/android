@@ -1,5 +1,7 @@
 package mega.privacy.android.feature.sharelink.presentation
 
+import android.content.ClipDescription
+import android.os.Build
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
@@ -19,6 +21,9 @@ import com.google.common.truth.Truth.assertThat
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_DETAILS_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_COPY_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_DETAILS_TAG
+import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_PASSWORD_COPY_TAG
+import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_PASSWORD_DETAILS_TAG
+import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_PASSWORD_PROTECTED_TAG
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 import org.junit.Rule
@@ -82,6 +87,12 @@ class ShareLinkScreenTest {
             ),
         ),
         accountType = null,
+    )
+
+    private val passwordData = data.copy(
+        isPasswordSet = true,
+        password = "s3cretPass",
+        linkWithPassword = "https://mega.nz/#P!encryptedLink",
     )
 
     @Test
@@ -321,6 +332,122 @@ class ShareLinkScreenTest {
 
         composeRule.onNodeWithText(context.getString(sharedR.string.share_hidden_folder_description))
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the share button shares the plain link for a single node`() {
+        var shared: String? = null
+        setContent(uiState = data, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        assertThat(shared).isEqualTo(data.primary.link)
+    }
+
+    @Test
+    fun `test that the share button shares the key-less link when the key is separate`() {
+        var shared: String? = null
+        setContent(uiState = data.copy(isKeySeparate = true), onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        assertThat(shared).isEqualTo(data.primary.linkWithoutKey)
+    }
+
+    @Test
+    fun `test that the share button shares the password link when a password is set`() {
+        var shared: String? = null
+        setContent(uiState = passwordData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        assertThat(shared).isEqualTo(passwordData.linkWithPassword)
+    }
+
+    @Test
+    fun `test that the share button shares every link joined by newlines for multiple nodes`() {
+        var shared: String? = null
+        setContent(uiState = multiNodeData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        val expected = multiNodeData.nodeLinks.joinToString(separator = "\n") { it.link }
+        assertThat(shared).isEqualTo(expected)
+    }
+
+    @Test
+    fun `test that the password-protected helper and password card are displayed when a password is set`() {
+        setContent(uiState = passwordData)
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.share_link_password_protected_label))
+            .performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_PROTECTED_TAG, useUnmergedTree = true)
+            .assertExists()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DETAILS_TAG).performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the password card shows the masked password`() {
+        setContent(uiState = passwordData)
+
+        val masked = "•".repeat(passwordData.password!!.length)
+        composeRule.onNodeWithText(masked).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the access banner uses the password description when a password is set`() {
+        setContent(uiState = passwordData)
+
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_access_password_description)
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the password card is hidden when no password is set`() {
+        setContent(uiState = data)
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DETAILS_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_PROTECTED_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that tapping the password copy icon invokes onCopyPassword`() {
+        var copied = false
+        setContent(uiState = passwordData, onCopyPassword = { copied = true })
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+
+        assertThat(copied).isTrue()
+    }
+
+    @Test
+    fun `test that tapping the password copy icon copies the real password to the clipboard`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = passwordData, clipboard = clipboard)
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text)
+            .isEqualTo(passwordData.password)
+    }
+
+    @Test
+    fun `test that the copied password clip is flagged sensitive`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = passwordData, clipboard = clipboard)
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val sensitive = clipboard.clipEntry?.clipData?.description?.extras
+                ?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE)
+            assertThat(sensitive).isTrue()
+        }
     }
 
     private fun setContent(
