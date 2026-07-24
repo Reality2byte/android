@@ -1,9 +1,11 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.speed
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
@@ -86,12 +88,13 @@ object SpeedTool : EditorTool {
         Row(
             modifier = modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             SpeedOptions.forEach { speed ->
                 SpeedChip(
-                    label = "${if (speed % 1f == 0f) speed.toInt() else speed}×",
+                    label = "${if (speed % 1f == 0f) speed.toInt() else speed}x",
                     selected = state.speed.speed == speed,
                     onClick = { onAction(SpeedAction.SetSpeed(speed)) },
                     modifier = Modifier.weight(1f),

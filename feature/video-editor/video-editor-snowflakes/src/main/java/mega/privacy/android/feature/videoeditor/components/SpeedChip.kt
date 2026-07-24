@@ -32,21 +32,21 @@ fun SpeedChip(
     modifier: Modifier = Modifier,
 ) {
     val background =
-        if (selected) DSTokens.colors.brand.default.copy(alpha = 0.2f) else DSTokens.colors.background.surface3
-    val borderColor = if (selected) DSTokens.colors.brand.default else Color.Transparent
+        if (selected) DSTokens.colors.brand.containerDefault else DSTokens.colors.neutral.containerDefault
+    val borderColor = if (selected) DSTokens.colors.border.brand else Color.Transparent
     Box(
         modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .height(64.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(background)
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         MegaText(
             text = label,
             style = AppTheme.typography.titleSmall,
-            textColor = if (selected) TextColor.Brand else TextColor.Primary,
+            textColor = if (selected) TextColor.OnColor else TextColor.Secondary,
         )
     }
 }

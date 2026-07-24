@@ -14,13 +14,13 @@ import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.ScaleAndRotateTransformation
 import mega.privacy.android.feature.videoeditor.components.RotateTile
-import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.EditorTool
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolId
+import mega.privacy.android.icon.pack.IconPack
 
 /**
  * Built-in Rotate / Flip tool.
@@ -86,7 +86,7 @@ object RotateTool : EditorTool {
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             RotateTile(
