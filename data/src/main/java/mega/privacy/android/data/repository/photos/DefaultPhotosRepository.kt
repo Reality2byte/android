@@ -35,6 +35,7 @@ import mega.privacy.android.data.extensions.failWithException
 import mega.privacy.android.data.extensions.getRequestListener
 import mega.privacy.android.data.extensions.getValueFor
 import mega.privacy.android.data.extensions.toException
+import mega.privacy.android.data.gateway.DeviceGateway
 import mega.privacy.android.data.gateway.FileGateway
 import mega.privacy.android.data.gateway.api.MegaApiFolderGateway
 import mega.privacy.android.data.gateway.api.MegaApiGateway
@@ -139,6 +140,7 @@ internal class DefaultPhotosRepository @Inject constructor(
     private val mediaTimelineSectionMapper: MediaTimelineSectionMapper,
     private val mediaTimelineFilterMapper: MediaTimelineFilterMapper,
     private val mediaTimelineListFilterMapper: MediaTimelineListFilterMapper,
+    private val deviceGateway: DeviceGateway,
 ) : PhotosRepository {
     @Volatile
     private var isInitialized: Boolean = false
@@ -326,13 +328,15 @@ internal class DefaultPhotosRepository @Inject constructor(
         filter: MediaTimelineFilter,
         order: SortOrder,
     ) = withContext(ioDispatcher) {
+        val timezoneOffset = deviceGateway.getCurrentTimezoneOffset().also {
+            Timber.d("Timezone: $it")
+        }
         val sections = megaApiFacade
             .groupAllNodesByDate(
-                mediaTimelineFilterMapper(filter),
+                mediaTimelineFilterMapper(filter, timezoneOffset),
                 sortOrderIntMapper(order),
                 MegaCancelToken.createInstance()
             ) ?: return@withContext emptyList()
-
 
         mediaTimelineSectionMapper(sections)
     }

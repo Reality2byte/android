@@ -54,7 +54,7 @@ internal class MediaTimelineFilterMapperTest {
                 MegaGroupNodesByDateFilter.createInstance()
             }.thenReturn(sdkFilter)
 
-            underTest(filter)
+            underTest(filter, TIMEZONE_OFFSET)
 
             verify(sdkFilter).byGranularity(GRANULARITY)
             verify(sdkFilter).byCategory(CATEGORY)
@@ -82,7 +82,7 @@ internal class MediaTimelineFilterMapperTest {
                 MegaGroupNodesByDateFilter.createInstance()
             }.thenReturn(sdkFilter)
 
-            underTest(filter)
+            underTest(filter, TIMEZONE_OFFSET)
 
             verify(sdkFilter).byLocationHandles(handleList)
             verify(sdkFilter, never()).byLocation(any())
@@ -110,11 +110,32 @@ internal class MediaTimelineFilterMapperTest {
                 MegaGroupNodesByDateFilter.createInstance()
             }.thenReturn(sdkFilter)
 
-            underTest(filter)
+            underTest(filter, TIMEZONE_OFFSET)
 
             verify(sdkFilter).byLocation(LOCATION)
             verify(sdkFilter).byExcludeLocationHandles(handleList)
             verify(sdkFilter, never()).byLocationHandles(any())
+        }
+    }
+
+    @Test
+    fun `test that timezone offset is applied to the sdk filter`() {
+        val filter = MediaTimelineFilter(
+            granularity = Granularity.Day,
+            category = Category.All,
+            location = Location.CloudDriveAndVault,
+            sensitivity = Sensitivity.ShowAll,
+        )
+
+        val sdkFilter = mock<MegaGroupNodesByDateFilter>()
+        mockStatic(MegaGroupNodesByDateFilter::class.java).use { mockedStatic ->
+            mockedStatic.`when`<MegaGroupNodesByDateFilter> {
+                MegaGroupNodesByDateFilter.createInstance()
+            }.thenReturn(sdkFilter)
+
+            underTest(filter, TIMEZONE_OFFSET)
+
+            verify(sdkFilter).byUtcOffset(TIMEZONE_OFFSET)
         }
     }
 
@@ -125,5 +146,6 @@ internal class MediaTimelineFilterMapperTest {
         private const val LOCATION = 1
         private const val PRIMARY_HANDLE = 100L
         private const val SECONDARY_HANDLE = 200L
+        private const val TIMEZONE_OFFSET = "+09:00"
     }
 }

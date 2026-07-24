@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import mega.privacy.android.data.gateway.DeviceGateway
 import mega.privacy.android.data.gateway.FileGateway
 import mega.privacy.android.data.gateway.api.MegaApiFolderGateway
 import mega.privacy.android.data.gateway.api.MegaApiGateway
@@ -124,6 +125,7 @@ class DefaultPhotosRepositoryTest {
     private val mediaTimelineSectionMapper = mock<MediaTimelineSectionMapper>()
     private val mediaTimelineFilterMapper = mock<MediaTimelineFilterMapper>()
     private val mediaTimelineListFilterMapper = mock<MediaTimelineListFilterMapper>()
+    private val deviceGateway = mock<DeviceGateway>()
     private val ioDispatcher = UnconfinedTestDispatcher()
     private val appScope: CoroutineScope = CoroutineScope(UnconfinedTestDispatcher())
 
@@ -139,6 +141,8 @@ class DefaultPhotosRepositoryTest {
         sensitivity = MediaTimelineFilter.Sensitivity.ShowAll,
     )
 
+    private val timezoneOffset = "+09:00"
+
     @Before
     fun setUp() {
         whenever(nodeRepository.monitorNodeUpdates())
@@ -146,6 +150,8 @@ class DefaultPhotosRepositoryTest {
 
         whenever(nodeRepository.monitorOfflineNodeUpdates())
             .thenReturn(flowOf())
+
+        whenever(deviceGateway.getCurrentTimezoneOffset()).thenReturn(timezoneOffset)
     }
 
     @Test
@@ -422,7 +428,8 @@ class DefaultPhotosRepositoryTest {
                     count = 5L,
                 ),
             )
-            whenever(mediaTimelineFilterMapper(mediaTimelineFilter)).thenReturn(sdkFilter)
+            whenever(mediaTimelineFilterMapper(eq(mediaTimelineFilter), eq(timezoneOffset)))
+                .thenReturn(sdkFilter)
             whenever(
                 megaApiGateway.groupAllNodesByDate(eq(sdkFilter), any(), anyOrNull())
             ).thenReturn(sectionList)
@@ -444,7 +451,7 @@ class DefaultPhotosRepositoryTest {
     @Test
     fun `test that getMediaTimelineSections returns an empty list when the gateway returns null`() =
         runTest {
-            whenever(mediaTimelineFilterMapper(mediaTimelineFilter))
+            whenever(mediaTimelineFilterMapper(eq(mediaTimelineFilter), eq(timezoneOffset)))
                 .thenReturn(mock<MegaGroupNodesByDateFilter>())
             whenever(
                 megaApiGateway.groupAllNodesByDate(any(), any(), anyOrNull())
@@ -468,7 +475,8 @@ class DefaultPhotosRepositoryTest {
     fun `test that getMediaTimelineSections passes the mapped sort order to the gateway`() =
         runTest {
             val sdkFilter = mock<MegaGroupNodesByDateFilter>()
-            whenever(mediaTimelineFilterMapper(mediaTimelineFilter)).thenReturn(sdkFilter)
+            whenever(mediaTimelineFilterMapper(eq(mediaTimelineFilter), eq(timezoneOffset)))
+                .thenReturn(sdkFilter)
             whenever(sortOrderIntMapper(SortOrder.ORDER_MODIFICATION_ASC)).thenReturn(9)
             whenever(
                 megaApiGateway.groupAllNodesByDate(eq(sdkFilter), any(), anyOrNull())
@@ -620,6 +628,7 @@ class DefaultPhotosRepositoryTest {
         mediaTimelineSectionMapper = mediaTimelineSectionMapper,
         mediaTimelineFilterMapper = mediaTimelineFilterMapper,
         mediaTimelineListFilterMapper = mediaTimelineListFilterMapper,
+        deviceGateway = deviceGateway,
     )
 
     private fun createMegaNode(

@@ -22,7 +22,14 @@ internal class MediaTimelineFilterMapper @Inject constructor(
     private val megaHandleListMapper: MegaHandleListMapper,
 ) {
 
-    operator fun invoke(filter: MediaTimelineFilter): MegaGroupNodesByDateFilter =
+    /**
+     * @param filter the domain filter describing how to scope and group media nodes.
+     * @param timezoneOffset the device's current UTC offset formatted as ±HH:MM (e.g. "+09:00").
+     */
+    operator fun invoke(
+        filter: MediaTimelineFilter,
+        timezoneOffset: String,
+    ): MegaGroupNodesByDateFilter =
         MegaGroupNodesByDateFilter.createInstance().also {
             it.byGranularity(mediaTimelineGranularityIntMapper(filter.granularity))
             it.byCategory(mediaTimelineCategoryIntMapper(filter.category))
@@ -32,5 +39,6 @@ internal class MediaTimelineFilterMapper @Inject constructor(
                 locationIntMapper = mediaTimelineLocationIntMapper,
                 megaHandleListMapper = megaHandleListMapper,
             )
+            it.byUtcOffset(timezoneOffset)
         }
 }

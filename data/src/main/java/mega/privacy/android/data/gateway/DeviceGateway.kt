@@ -131,4 +131,9 @@ interface DeviceGateway {
      * Get current timezone
      */
     fun getTimezone(): String
+
+    /**
+     * Get the device's current UTC offset formatted as ±HH:MM (e.g. "+09:00", "-05:30").
+     */
+    fun getCurrentTimezoneOffset(): String
 }

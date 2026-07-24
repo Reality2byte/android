@@ -28,9 +28,12 @@ import mega.privacy.android.domain.entity.BatteryInfo
 import mega.privacy.android.domain.qualifier.ApplicationScope
 import timber.log.Timber
 import java.net.NetworkInterface
+import java.time.Instant
 import java.time.LocalTime
+import java.time.ZoneId
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.abs
 
 /**
  * [DeviceGateway] implementation
@@ -149,6 +152,19 @@ internal class AndroidDeviceGateway @Inject constructor(
     }
 
     override fun getTimezone(): String = Calendar.getInstance().timeZone.id
+
+    override fun getCurrentTimezoneOffset(): String {
+        val totalSeconds = ZoneId.systemDefault().rules.getOffset(Instant.now()).totalSeconds
+        val sign = if (totalSeconds < 0) "-" else "+"
+        val absSeconds = abs(totalSeconds)
+        return String.format(
+            Locale.US,
+            "%s%02d:%02d",
+            sign,
+            absSeconds / 3600,
+            (absSeconds % 3600) / 60,
+        )
+    }
 
     override val monitorBatteryInfo =
         context.registerReceiverAsFlow(
