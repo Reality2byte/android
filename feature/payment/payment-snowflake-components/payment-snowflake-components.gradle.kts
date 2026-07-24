@@ -41,5 +41,6 @@ dependencies {
     testImplementation(testlib.bundles.ui.test)
     testImplementation(testlib.bundles.unit.test)
     testImplementation(testlib.bundles.junit5.api)
+    testImplementation(lib.coroutines.test)
     testRuntimeOnly(testlib.junit.jupiter.engine)
 }
