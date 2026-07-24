@@ -10,7 +10,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.palm.composestateevents.StateEventWithContent
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +35,7 @@ import mega.privacy.android.domain.entity.contacts.LocalContact
 import mega.privacy.android.domain.entity.qrcode.QRCodeQueryResults
 import mega.privacy.android.domain.entity.qrcode.ScannedContactLinkResult
 import mega.privacy.android.domain.entity.uri.UriPath
+import mega.privacy.android.domain.usecase.IsEmailValidUseCase
 import mega.privacy.android.domain.usecase.call.MonitorParticipantsLimitWarningUseCase
 import mega.privacy.android.domain.usecase.contact.GetContactVerificationWarningUseCase
 import mega.privacy.android.domain.usecase.contact.GetContactsToAddToChatUseCase
@@ -43,10 +43,10 @@ import mega.privacy.android.domain.usecase.contact.GetContactsUseCase
 import mega.privacy.android.domain.usecase.contact.GetLocalContactsFromUriUseCase
 import mega.privacy.android.domain.usecase.contact.GetLocalContactsUseCase
 import mega.privacy.android.domain.usecase.contact.InviteContactWithHandleUseCase
-import mega.privacy.android.domain.usecase.IsEmailValidUseCase
 import mega.privacy.android.domain.usecase.environment.GetDeviceSdkVersionUseCase
 import mega.privacy.android.domain.usecase.qrcode.ParseScannedContactLinkHandleUseCase
 import mega.privacy.android.domain.usecase.qrcode.QueryScannedContactLinkUseCase
+import mega.privacy.android.feature.contact.add.AddContactViewModel.Companion.ANDROID_PICKER_MIN_SDK
 import mega.privacy.android.feature.contact.add.model.AddContactUiState
 import mega.privacy.android.feature.contact.add.model.PhoneContactsSection
 import mega.privacy.android.feature.contact.add.model.ScannedContactDialog
@@ -301,7 +301,11 @@ class AddContactViewModel @AssistedInject constructor(
     }
 
     private suspend fun handleScannedCode(rawValue: String?) {
-        val scannedHandle = rawValue?.let { parseScannedContactLinkHandleUseCase(it) }
+        val scannedHandle = rawValue?.let {
+            runCatching { parseScannedContactLinkHandleUseCase(it) }.onFailure { error ->
+                Timber.e(error)
+            }.getOrNull()
+        }
         if (scannedHandle == null) {
             showScannedContactDialog(ScannedContactDialog.InvalidCode)
             return

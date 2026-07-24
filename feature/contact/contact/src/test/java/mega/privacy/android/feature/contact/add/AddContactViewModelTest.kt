@@ -569,6 +569,21 @@ class AddContactViewModelTest {
         }
 
     @Test
+    fun `test that invalid code dialog is shown when parsing the scanned code fails`() = runTest {
+        stubContactsFlow(emptyList())
+        whenever(scannerHandler.scanBarcode()).thenReturn(BarcodeScanResult.Success(SCANNED_CODE))
+        whenever(parseScannedContactLinkHandleUseCase(SCANNED_CODE))
+            .thenAnswer { throw RuntimeException("parse failed") }
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.onScanQrClicked()
+            assertThat(awaitDialog()).isEqualTo(ScannedContactDialog.InvalidCode)
+        }
+        verifyNoInteractions(queryScannedContactLinkUseCase)
+    }
+
+    @Test
     fun `test that invalid code dialog is shown when the scanned value is null`() = runTest {
         stubContactsFlow(emptyList())
         whenever(scannerHandler.scanBarcode()).thenReturn(BarcodeScanResult.Success(null))
