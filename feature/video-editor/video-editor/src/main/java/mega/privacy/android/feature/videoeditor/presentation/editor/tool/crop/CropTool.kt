@@ -16,6 +16,7 @@ import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Crop
 import mega.privacy.android.feature.videoeditor.components.AspectRatioChip
+import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
@@ -112,12 +113,22 @@ object CropTool : EditorTool {
             CropPreset.entries.forEach { preset ->
                 AspectRatioChip(
                     label = preset.displayName,
-                    aspectRatio = preset.ratio,
-                    isFree = preset.free,
+                    icon = preset.icon(),
                     selected = state.crop.selectedPreset == preset,
                     onClick = { onAction(CropAction.SetPreset(preset)) },
                 )
             }
         }
     }
+}
+
+private fun CropPreset.icon(): ImageVector = when (this) {
+    CropPreset.FREE -> IconPack.Medium.Thin.Outline.FormatFreeform
+    CropPreset.ORIGINAL -> IconPack.Medium.Thin.Outline.FormatOriginal
+    CropPreset.SQUARE -> IconPack.Medium.Thin.Outline.FormatSquare
+    CropPreset.PORTRAIT_9_16 -> IconPack.Medium.Thin.Outline.Format9x16
+    CropPreset.LANDSCAPE_16_9 -> IconPack.Medium.Thin.Outline.Format16x9
+    CropPreset.PORTRAIT_4_5 -> IconPack.Medium.Thin.Outline.Format4x5
+    CropPreset.PORTRAIT_3_4 -> IconPack.Medium.Thin.Outline.Format3x4
+    CropPreset.STANDARD_4_3 -> IconPack.Medium.Thin.Outline.Format4x3
 }

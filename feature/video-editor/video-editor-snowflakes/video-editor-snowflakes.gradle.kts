@@ -14,6 +14,7 @@ dependencies {
     lintChecks(project(":lint"))
 
     //core components
+    implementation(project(":resources:icon-pack"))
     implementation(lib.mega.core.ui)
     implementation(lib.mega.core.ui.tokens)
     implementation(lib.logging.timber)

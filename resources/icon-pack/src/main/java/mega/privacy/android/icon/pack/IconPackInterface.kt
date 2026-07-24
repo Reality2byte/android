@@ -181,6 +181,14 @@ interface IconPackInterface {
                 val FolderUsers: ImageVector
                 val FolderSearch: ImageVector
                 val Filter: ImageVector
+                val Format16x9: ImageVector
+                val Format3x4: ImageVector
+                val Format4x3: ImageVector
+                val Format4x5: ImageVector
+                val Format9x16: ImageVector
+                val FormatFreeform: ImageVector
+                val FormatOriginal: ImageVector
+                val FormatSquare: ImageVector
                 val GearSix: ImageVector
                 val Gif: ImageVector
                 val HardDrive: ImageVector

@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -26,6 +27,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.tokens.theme.DSTokens
 import kotlin.math.hypot
+
+private const val HANDLE_CORNER_RADIUS = 12f
 
 /**
  * Free-form crop overlay: a scrim + draggable corners + pan/pinch on the video.
@@ -241,10 +244,13 @@ private fun DrawScope.drawCropOverlay(
         ),
     )
 
-    drawRect(
+    // Same radius as the corner handles so the frame stays hidden under them
+    // instead of poking a square corner out past the rounded handle.
+    drawRoundRect(
         color = Color.White,
         topLeft = Offset(cropScreen.left, cropScreen.top),
         size = Size(cropScreen.right - cropScreen.left, cropScreen.bottom - cropScreen.top),
+        cornerRadius = CornerRadius(HANDLE_CORNER_RADIUS),
         style = Stroke(width = 3f),
     )
     val w = cropScreen.right - cropScreen.left
@@ -265,7 +271,7 @@ private fun DrawScope.drawCropOverlay(
     }
     if (drawHandles) {
         val cornerLen = 36f
-        val cornerRadius = 12f
+        val cornerRadius = HANDLE_CORNER_RADIUS
         val stroke = 10f
         val handleStyle = Stroke(
             width = stroke,

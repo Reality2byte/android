@@ -77,6 +77,14 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFolderOpenI
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFolderPlus01ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFolderSearchImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFolderUsersImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat16x9ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat3x4ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat4x3ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat4x5ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat9x16ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormatFreeformImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormatOriginalImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormatSquareImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineGearSixImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineGifImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineHardDriveImageVector
@@ -414,6 +422,30 @@ public object IconPack : IconPackInterface {
 
                 override val FolderUsers: ImageVector by
                         lazy { createMediumThinOutlineFolderUsersImageVector() }
+
+                override val Format16x9: ImageVector by
+                        lazy { createMediumThinOutlineFormat16x9ImageVector() }
+
+                override val Format3x4: ImageVector by
+                        lazy { createMediumThinOutlineFormat3x4ImageVector() }
+
+                override val Format4x3: ImageVector by
+                        lazy { createMediumThinOutlineFormat4x3ImageVector() }
+
+                override val Format4x5: ImageVector by
+                        lazy { createMediumThinOutlineFormat4x5ImageVector() }
+
+                override val Format9x16: ImageVector by
+                        lazy { createMediumThinOutlineFormat9x16ImageVector() }
+
+                override val FormatFreeform: ImageVector by
+                        lazy { createMediumThinOutlineFormatFreeformImageVector() }
+
+                override val FormatOriginal: ImageVector by
+                        lazy { createMediumThinOutlineFormatOriginalImageVector() }
+
+                override val FormatSquare: ImageVector by
+                        lazy { createMediumThinOutlineFormatSquareImageVector() }
 
                 override val GearSix: ImageVector by
                         lazy { createMediumThinOutlineGearSixImageVector() }
