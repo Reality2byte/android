@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer
+package mega.privacy.android.feature.mediaplayer.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,9 +57,7 @@ import mega.android.core.ui.components.image.MegaIcon
 import mega.android.core.ui.components.image.MegaIconWithIndicator
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
-import mega.privacy.android.app.presentation.videoplayer.view.DarkStatusBarEffect
-import mega.privacy.android.app.presentation.videoplayer.view.TransparentNavigationBarEffect
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import mega.privacy.android.domain.entity.node.NodeSourceType
 import mega.privacy.android.domain.entity.node.thumbnail.ThumbnailData
 import mega.privacy.android.icon.pack.IconPack

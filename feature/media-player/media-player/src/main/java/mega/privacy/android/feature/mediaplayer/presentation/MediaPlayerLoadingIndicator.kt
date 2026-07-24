@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer
+package mega.privacy.android.feature.mediaplayer.presentation
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat

@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer
+package mega.privacy.android.feature.mediaplayer.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -7,12 +7,12 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import mega.android.core.ui.components.toolbar.TransparentTopBar
 import mega.android.core.ui.model.menu.MenuActionString
-import mega.privacy.android.app.R
+import mega.privacy.android.core.R as coreR
 import mega.privacy.android.icon.pack.IconPack
 
 internal data object AudioPlayerMoreActionsMenuAction : MenuActionString(
     icon = IconPack.Medium.Thin.Outline.MoreVertical,
-    descriptionRes = R.string.label_more,
+    descriptionRes = coreR.string.label_more,
     testTag = AUDIO_PLAYER_MORE_ACTIONS_BUTTON_TEST_TAG,
 )
 

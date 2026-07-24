@@ -11,7 +11,8 @@ import mega.privacy.android.analytics.tracker.AnalyticsTracker
 import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
 import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
+import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerViewModel
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import mega.privacy.android.app.utils.Constants.FOLDER_LINK_ADAPTER
 import mega.privacy.android.app.utils.Constants.FROM_ALBUM_SHARING
 import mega.privacy.android.app.utils.Constants.FROM_CHAT

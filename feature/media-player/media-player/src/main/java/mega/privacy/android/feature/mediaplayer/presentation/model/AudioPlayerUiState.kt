@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.model
+package mega.privacy.android.feature.mediaplayer.presentation.model
 
 import androidx.compose.runtime.Stable
 import mega.privacy.android.domain.entity.node.NodeSourceType

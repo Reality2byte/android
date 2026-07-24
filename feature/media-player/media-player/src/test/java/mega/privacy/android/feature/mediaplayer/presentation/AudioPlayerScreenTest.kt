@@ -1,4 +1,4 @@
-package mega.privacy.android.app.presentation.audioplayer
+package mega.privacy.android.feature.mediaplayer.presentation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,16 +10,16 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.media3.common.Player
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mega.privacy.android.app.mediaplayer.AUDIO_PLAYER_CONTENT_TAG
-import mega.privacy.android.app.mediaplayer.AudioPlayerScreen
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
 import mega.privacy.android.domain.entity.node.NodeSourceType
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.robolectric.annotation.Config
 
+@Config(sdk = [34])
 @RunWith(AndroidJUnit4::class)
 class AudioPlayerScreenTest {
 
@@ -294,4 +294,6 @@ class AudioPlayerScreenTest {
 
         verify(onPlaylistClicked).invoke()
     }
+
+    // endregion
 }

@@ -13,16 +13,16 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import mega.privacy.android.app.mediaplayer.AudioPlayerLaunchSourceHolder
-import mega.privacy.android.app.mediaplayer.AudioPlayerScreen
-import mega.privacy.android.app.mediaplayer.AudioPlayerViewModel
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
 import mega.privacy.android.core.nodecomponents.action.NodeOptionsActionViewModel
 import mega.privacy.android.core.nodecomponents.action.rememberSingleNodeActionHandler
-import mega.privacy.android.core.nodecomponents.sheet.options.HandleNodeOptionsActionResult
 import mega.privacy.android.core.nodecomponents.sheet.options.DarkNodeOptionsBottomSheetNavKey
+import mega.privacy.android.core.nodecomponents.sheet.options.HandleNodeOptionsActionResult
 import mega.privacy.android.domain.entity.node.NodeSourceType
 import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.feature.mediaplayer.components.PlaybackSpeedBottomSheet
+import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerScreen
+import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerViewModel
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import mega.privacy.android.navigation.contract.NavigationHandler
 
 /**

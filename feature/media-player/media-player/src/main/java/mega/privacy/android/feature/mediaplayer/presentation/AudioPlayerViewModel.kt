@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer
+package mega.privacy.android.feature.mediaplayer.presentation
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel
@@ -14,25 +14,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.analytics.Analytics
-import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
-import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
-import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
-import mega.privacy.android.app.utils.Constants.FOLDER_LINK_ADAPTER
-import mega.privacy.android.app.utils.Constants.FROM_ALBUM_SHARING
-import mega.privacy.android.app.utils.Constants.FROM_CHAT
-import mega.privacy.android.app.utils.Constants.FROM_IMAGE_VIEWER
-import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_ADAPTER_TYPE
-import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_CHAT_ID
-import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_HANDLE
-import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_MSG_ID
-import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_REBUILD_PLAYLIST
-import mega.privacy.android.app.utils.Constants.INVALID_VALUE
-import mega.privacy.android.app.utils.Constants.OFFLINE_ADAPTER
-import mega.privacy.android.app.utils.Constants.URL_FILE_LINK
-import mega.privacy.android.app.utils.Constants.URL_LOCAL_FILE_PATH
-import mega.privacy.android.app.utils.Constants.VERSIONS_ADAPTER
-import mega.privacy.android.app.utils.Constants.ZIP_ADAPTER
 import mega.privacy.android.core.coroutine.asUiStateFlow
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import mega.privacy.android.domain.entity.node.NodeSourceType
@@ -41,6 +22,10 @@ import mega.privacy.android.domain.entity.node.thumbnail.ThumbnailRequest
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.SetAudioRepeatModeUseCase
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.SetAudioShuffleEnabledUseCase
 import mega.privacy.android.domain.usecase.node.GetNodeByHandleUseCase
+import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
+import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
+import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import mega.privacy.android.shared.nodes.model.NodeSourceTypeInt.FILE_LINK_ADAPTER
 import mega.privacy.android.shared.nodes.model.NodeSourceTypeInt.RUBBISH_BIN_ADAPTER
 import mega.privacy.mobile.analytics.event.AudioPlayerLoopPlayingItemEnabledEvent
@@ -332,5 +317,24 @@ class AudioPlayerViewModel @Inject constructor(
         // The 12-minute threshold is defined in the design specification.
         private const val PODCAST_MODE_DURATION_MS = 12 * 60 * 1_000L
         private const val SEEK_15_SECONDS_MS = 15_000L
+
+        // Intent extra keys — must match values used in :app when building the launch intent
+        private const val INTENT_EXTRA_KEY_HANDLE = "HANDLE"
+        private const val INTENT_EXTRA_KEY_ADAPTER_TYPE = "adapterType"
+        private const val INTENT_EXTRA_KEY_REBUILD_PLAYLIST = "REBUILD_PLAYLIST"
+        private const val INTENT_EXTRA_KEY_CHAT_ID = "chatId"
+        private const val INTENT_EXTRA_KEY_MSG_ID = "msgId"
+        private const val URL_FILE_LINK = "URL_FILE_LINK"
+        private const val URL_LOCAL_FILE_PATH = "URL_LOCAL_FILE_PATH"
+
+        // Adapter type codes — must match values in :app Constants
+        private const val INVALID_VALUE = -1
+        private const val OFFLINE_ADAPTER = 2004
+        private const val FOLDER_LINK_ADAPTER = 2005
+        private const val ZIP_ADAPTER = 2008
+        private const val FROM_CHAT = 2020
+        private const val VERSIONS_ADAPTER = 2035
+        private const val FROM_IMAGE_VIEWER = 2036
+        private const val FROM_ALBUM_SHARING = 2041
     }
 }

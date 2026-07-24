@@ -46,6 +46,7 @@ dependencies {
 
     testImplementation(project(":core-test"))
     testImplementation(project(":core-ui-test"))
+    testImplementation(testlib.bundles.ui.test)
     testImplementation(testlib.bundles.unit.test)
     testImplementation(testlib.bundles.junit5.api)
     testRuntimeOnly(testlib.junit.jupiter.engine)

@@ -5,8 +5,8 @@ import androidx.media3.common.Player
 import com.android.tools.screenshot.PreviewTest
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
-import mega.privacy.android.app.mediaplayer.AudioPlayerScreen
-import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
+import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerScreen
+import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 
 /**
  * Baseline screenshots for [AudioPlayerScreen] across every meaningful UI
