@@ -11,6 +11,7 @@ import mega.privacy.android.domain.usecase.node.GetNestedParentFoldersUseCase
 import mega.privacy.android.domain.usecase.node.IsNodeInBackupsUseCase
 import mega.privacy.android.domain.usecase.node.IsNodeInCloudDriveUseCase
 import mega.privacy.android.domain.usecase.node.joinAsPath
+import mega.privacy.android.domain.usecase.node.sanitizeAsOfflinePathSegment
 import javax.inject.Inject
 
 /**
@@ -45,7 +46,7 @@ class GetOfflineNodeInformationUseCase @Inject constructor(
             parents = parents.drop(1)
         }
         val path = parents.joinAsPath()
-        val name = originalName ?: node.name
+        val name = (originalName ?: node.name).sanitizeAsOfflinePathSegment()
 
         return when {
             isInBackups -> {

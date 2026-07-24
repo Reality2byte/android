@@ -12,7 +12,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -85,6 +87,46 @@ class RemoveOfflineNodeUseCaseTest {
             )
         }
 
+    @Test
+    fun `test that delete is skipped when the resolved offline path escapes the offline root`() =
+        runTest {
+            val info = mock<OtherOfflineNodeInformation> {
+                whenever(it.id).thenReturn(1)
+                whenever(it.parentId).thenReturn(-1)
+                whenever(it.isFolder).thenReturn(false)
+                whenever(it.path).thenReturn("${File.separator}..${File.separator}..${File.separator}")
+                whenever(it.name).thenReturn("databases")
+                whenever(it.handle).thenReturn(handle1)
+            }
+            whenever(nodeRepository.getOfflineNodeInformation(nodeId1)).thenReturn(info)
+            whenever(fileRepository.getOfflinePath()).thenReturn(offlineRoot)
+
+            underTest(nodeId = nodeId1)
+
+            verify(fileRepository, never()).deleteFolderAndItsFiles(any())
+        }
+
+    @Test
+    fun `test that delete is performed when the resolved offline path is contained in the offline root`() =
+        runTest {
+            val info = mock<OtherOfflineNodeInformation> {
+                whenever(it.id).thenReturn(1)
+                whenever(it.parentId).thenReturn(-1)
+                whenever(it.isFolder).thenReturn(false)
+                whenever(it.path).thenReturn("${File.separator}folder${File.separator}")
+                whenever(it.name).thenReturn("file.txt")
+                whenever(it.handle).thenReturn(handle1)
+            }
+            whenever(nodeRepository.getOfflineNodeInformation(nodeId1)).thenReturn(info)
+            whenever(fileRepository.getOfflinePath()).thenReturn(offlineRoot)
+
+            underTest(nodeId = nodeId1)
+
+            verify(fileRepository).deleteFolderAndItsFiles(
+                "$offlineRoot${File.separator}folder${File.separator}file.txt"
+            )
+        }
+
     private fun stubPaths() = runTest {
         whenever(fileRepository.getOfflinePath()).thenReturn(offlinePath)
         val offlineRootFolderNodeInformation1: OtherOfflineNodeInformation = mock {
@@ -138,6 +180,7 @@ class RemoveOfflineNodeUseCaseTest {
         private const val handle3 = "3456"
         private const val handle4 = "4567"
         private const val offlinePath = "offlinePath"
+        private const val offlineRoot = "/data/user/0/app/files/MEGA Offline"
         private val nodeId1 = NodeId(1)
         private val nodeId2 = NodeId(2)
         private val nodeId3 = NodeId(3)

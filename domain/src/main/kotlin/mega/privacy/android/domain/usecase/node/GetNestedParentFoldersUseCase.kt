@@ -31,7 +31,7 @@ class GetNestedParentFoldersUseCase @Inject constructor(
  * Util extension to join the returned value of this use-case as a single string path.
  */
 fun List<Node>.joinAsPath(): String =
-    this.map { it.name }
+    this.map { it.name.sanitizeAsOfflinePathSegment() }
         .filterNot { it == File.separator }
         .takeIf { it.isNotEmpty() }
         ?.joinToString(
@@ -41,3 +41,13 @@ fun List<Node>.joinAsPath(): String =
         ) {
             it.removePrefix(File.separator).removeSuffix(File.separator)
         } ?: File.separator
+
+/**
+ * Neutralizes a single path segment built from an attacker-controlled node or
+ * folder name so it cannot escape the offline root: embedded path separators are
+ * replaced and directory-traversal segments ("." / "..") are collapsed to a safe
+ * placeholder. Legitimate names contain none of these and are returned unchanged.
+ */
+fun String.sanitizeAsOfflinePathSegment(): String =
+    replace(File.separatorChar, '_')
+        .let { if (it == "." || it == "..") "_" else it }

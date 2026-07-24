@@ -9,6 +9,7 @@ import mega.privacy.android.domain.qualifier.IoDispatcher
 import mega.privacy.android.domain.repository.FileSystemRepository
 import mega.privacy.android.domain.repository.NodeRepository
 import mega.privacy.android.domain.usecase.pdf.CheckIfShouldDeleteLastPageViewedInPdfUseCase
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -51,7 +52,9 @@ class RemoveOfflineNodeUseCase @Inject constructor(
                 else -> fileRepository.getOfflinePath()
             }
             val filePath = "$offlinePath${path}${name}"
-            fileRepository.deleteFolderAndItsFiles(filePath)
+            if (File(filePath).normalize().startsWith(File(offlinePath).normalize())) {
+                fileRepository.deleteFolderAndItsFiles(filePath)
+            }
         }
     }
 

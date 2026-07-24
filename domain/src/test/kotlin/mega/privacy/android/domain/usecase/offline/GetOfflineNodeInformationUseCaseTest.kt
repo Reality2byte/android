@@ -123,6 +123,27 @@ internal class GetOfflineNodeInformationUseCaseTest {
             assertThat(actual).isInstanceOf(IncomingShareOfflineNodeInformation::class.java)
         }
 
+    @Test
+    fun `test that invoke sanitizes parent names attempting path traversal`() = runTest {
+        stubNodes()
+        whenever(parent.name).thenReturn("..")
+        whenever(grandParent.name).thenReturn("..")
+        whenever(getNestedParentFoldersUseCase(node)).thenReturn(listOf(grandParent, parent))
+        whenever(isNodeInBackupsUseCase(any())).thenReturn(false)
+        whenever(isNodeInCloudDriveUseCase(any())).thenReturn(false)
+        val actual = underTest.invoke(node)
+        assertThat(actual.path).doesNotContain("..")
+    }
+
+    @Test
+    fun `test that invoke sanitizes the node name when it attempts path traversal`() = runTest {
+        stubNodes()
+        stubFolderTree()
+        whenever(node.name).thenReturn("..")
+        val actual = underTest.invoke(node)
+        assertThat(actual.name).isNotEqualTo("..")
+    }
+
     private fun stubNodes() {
         whenever(node.id).thenReturn(nodeId)
         whenever(node.name).thenReturn(NODE_NAME)

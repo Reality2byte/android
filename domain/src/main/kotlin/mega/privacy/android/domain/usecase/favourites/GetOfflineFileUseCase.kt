@@ -43,8 +43,15 @@ class GetOfflineFileUseCase @Inject constructor(
         }
     }
 
-    private fun getFile(vararg paths: String) =
-        File(paths.filterNot { it == File.separator }
-            .joinToString(separator = File.separator))
+    private fun getFile(root: String, vararg subPaths: String): File {
+        val file = File(
+            (listOf(root) + subPaths.filterNot { it == File.separator })
+                .joinToString(separator = File.separator)
+        )
+        require(file.normalize().startsWith(File(root).normalize())) {
+            "Offline file path escapes the offline root"
+        }
+        return file
+    }
 
 }

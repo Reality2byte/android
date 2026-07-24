@@ -11,6 +11,7 @@ import mega.privacy.android.domain.usecase.favourites.GetOfflineFileUseCase
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -213,5 +214,43 @@ class GetOfflineFileUseCaseTest {
             val actual = underTest(input)
 
             assertThat(actual.path).isEqualTo(expected)
+        }
+
+    @Test
+    fun `test that a resolved path escaping the offline root throws`() =
+        runTest {
+            val input = OtherOfflineNodeInformation(
+                path = "..${File.separator}..${File.separator}databases",
+                name = fileName,
+                handle = handle,
+                isFolder = false,
+                lastModifiedTime = 0,
+                id = 1,
+                parentId = -1
+            )
+
+            val exception = runCatching { underTest(input) }.exceptionOrNull()
+
+            assertThat(exception).isInstanceOf(IllegalArgumentException::class.java)
+        }
+
+    @Test
+    fun `test that a contained path is not rejected when the offline root is the file separator`() =
+        runTest {
+            whenever(fileSystemRepository.getOfflinePath()).thenReturn(File.separator)
+            val input = OtherOfflineNodeInformation(
+                path = "folder",
+                name = fileName,
+                handle = handle,
+                isFolder = false,
+                lastModifiedTime = 0,
+                id = 1,
+                parentId = -1
+            )
+
+            val actual = underTest(input)
+
+            assertThat(actual.path)
+                .isEqualTo(File.separator + "folder" + File.separator + fileName)
         }
 }
