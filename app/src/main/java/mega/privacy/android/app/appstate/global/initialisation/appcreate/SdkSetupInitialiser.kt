@@ -1,12 +1,8 @@
-package mega.privacy.android.app.initializer
+package mega.privacy.android.app.appstate.global.initialisation.appcreate
 
 import android.app.ActivityManager
 import android.content.Context
-import androidx.startup.Initializer
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mega.privacy.android.app.listeners.global.GlobalListener
@@ -14,97 +10,61 @@ import mega.privacy.android.app.utils.Util
 import mega.privacy.android.data.qualifier.MegaApi
 import mega.privacy.android.domain.qualifier.ApplicationScope
 import mega.privacy.android.domain.usecase.global.InitialiseGlobalListenersUseCase
+import mega.privacy.android.navigation.contract.initialisation.SynchronousAppCreateInitialiser
 import nz.mega.sdk.MegaApiAndroid
 import nz.mega.sdk.MegaApiJava
 import timber.log.Timber
 import java.util.Locale
+import javax.inject.Inject
 
 /**
- * Setup mega api initializer
+ * Configures the core MEGA SDK instance and attaches its global listeners.
  *
+ * Synchronous: SSL retry, transfer methods and the global listeners must be in place before any
+ * other unit or app code talks to the SDK. Buffer size, SDK language and the resource limit stay
+ * fire-and-forget in the application scope, exactly as they ran at androidx.startup provider
+ * time.
  */
-class SetupMegaApiInitializer : Initializer<Unit> {
+internal class SdkSetupInitialiser @Inject constructor(
+    @MegaApi private val megaApi: MegaApiAndroid,
+    private val globalListener: GlobalListener,
+    private val initialiseGlobalListenersUseCase: InitialiseGlobalListenersUseCase,
+    @ApplicationScope private val appScope: CoroutineScope,
+    @ApplicationContext private val context: Context,
+) : SynchronousAppCreateInitialiser {
+    override val name = "SdkSetupInitialiser"
 
-    /**
-     * Setup mega api initializer entry point
-     *
-     */
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface SetupMegaApiInitializerEntryPoint {
-        /**
-         * Mega api
-         *
-         */
-        @MegaApi
-        fun megaApi(): MegaApiAndroid
-
-        /**
-         * Global listener
-         *
-         */
-        fun globalListener(): GlobalListener
-
-        /**
-         * App scope
-         *
-         */
-        @ApplicationScope
-        fun appScope(): CoroutineScope
-
-        /**
-         * Initialise global request listener use case
-         *
-         * @return [InitialiseGlobalRequestListenerUseCase]
-         */
-        fun initialiseGlobalRequestListenerUseCase(): InitialiseGlobalListenersUseCase
-    }
-
-    /**
-     * Create
-     *
-     */
-    override fun create(context: Context) {
-        if (!context.canResolveHiltEntryPoints()) return
-        val entryPoint =
-            EntryPointAccessors.fromApplication(
-                context,
-                SetupMegaApiInitializerEntryPoint::class.java
-            )
-        val megaApi = entryPoint.megaApi()
+    override operator fun invoke() {
         megaApi.retrySSLerrors(true)
         megaApi.downloadMethod = MegaApiJava.TRANSFER_METHOD_AUTO_ALTERNATIVE
         megaApi.uploadMethod = MegaApiJava.TRANSFER_METHOD_AUTO_ALTERNATIVE
-        addListeners(megaApi, entryPoint)
-        entryPoint.appScope().launch {
-            setStreamingBufferSize(megaApi, context)
-            setSDKLanguage(megaApi)
-            setResourceLimit(megaApi)
+        addListeners()
+        appScope.launch {
+            setStreamingBufferSize()
+            setSDKLanguage()
+            setResourceLimit()
         }
     }
 
-    private fun addListeners(
-        megaApiAndroid: MegaApiAndroid,
-        setupMegaApiInitializerEntryPoint: SetupMegaApiInitializerEntryPoint,
-    ) {
+    private fun addListeners() {
         Timber.d("ADD REQUEST LISTENER")
-        setupMegaApiInitializerEntryPoint.appScope().launch {
-            setupMegaApiInitializerEntryPoint.initialiseGlobalRequestListenerUseCase()()
+        appScope.launch {
+            initialiseGlobalListenersUseCase()
         }
 
-        megaApiAndroid.addGlobalListener(setupMegaApiInitializerEntryPoint.globalListener())
+        megaApi.addGlobalListener(globalListener)
     }
 
-    private fun setStreamingBufferSize(megaApiAndroid: MegaApiAndroid, context: Context) {
+    private fun setStreamingBufferSize() {
         val memoryInfo = ActivityManager.MemoryInfo()
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(memoryInfo)
         if (memoryInfo.totalMem > BUFFER_COMP) {
             Timber.d("Total mem: %d allocate 32 MB", memoryInfo.totalMem)
-            megaApiAndroid.httpServerSetMaxBufferSize(MAX_BUFFER_32MB)
+            megaApi.httpServerSetMaxBufferSize(MAX_BUFFER_32MB)
         } else {
             Timber.d("Total mem: %d allocate 16 MB", memoryInfo.totalMem)
-            megaApiAndroid.httpServerSetMaxBufferSize(MAX_BUFFER_16MB)
+            megaApi.httpServerSetMaxBufferSize(MAX_BUFFER_16MB)
         }
     }
 
@@ -113,7 +73,7 @@ class SetupMegaApiInitializer : Initializer<Unit> {
      * Language code is from current system setting.
      * Need to distinguish simplified and traditional Chinese.
      */
-    private fun setSDKLanguage(megaApi: MegaApiAndroid) {
+    private fun setSDKLanguage() {
         val locale = Locale.getDefault()
         var langCode: String?
 
@@ -131,7 +91,7 @@ class SetupMegaApiInitializer : Initializer<Unit> {
         Timber.d("Result: $result Language: $langCode")
     }
 
-    private fun setResourceLimit(megaApi: MegaApiAndroid) {
+    private fun setResourceLimit() {
         // Set the proper resource limit to try avoid issues when the number of parallel transfers is very big.
         val desirableRLimit = 20000 // SDK team recommended value
         val currentLimit = megaApi.platformGetRLimitNumFile()
@@ -147,16 +107,6 @@ class SetupMegaApiInitializer : Initializer<Unit> {
             Timber.d("Resource limit is set to ${megaApi.platformGetRLimitNumFile()}")
         }
     }
-
-    /**
-     * Dependencies
-     *
-     */
-    override fun dependencies(): List<Class<out Initializer<*>>> =
-        listOf(
-            LoggerInitializer::class.java, NativeLibraryInitializer::class.java,
-            WebRtcContextInitializer::class.java
-        )
 
     companion object {
         private const val BUFFER_COMP: Long = 1073741824 // 1 GB

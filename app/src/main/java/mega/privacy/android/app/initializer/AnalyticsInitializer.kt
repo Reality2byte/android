@@ -15,6 +15,5 @@ class AnalyticsInitializer : Initializer<Unit> {
         Analytics.initialise(context)
     }
 
-    override fun dependencies(): MutableList<Class<out Initializer<*>>> =
-        mutableListOf(LoggerInitializer::class.java, SetupMegaApiInitializer::class.java)
+    override fun dependencies(): MutableList<Class<out Initializer<*>>> = mutableListOf()
 }

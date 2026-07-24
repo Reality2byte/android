@@ -47,14 +47,7 @@ class PasscodeInitializer : Initializer<Unit> {
 
     /**
      * Dependencies
-     *
-     * Api needs to be initialised as it is a dependency the database handler which is required
-     * for the passcode data store migration
      */
     override fun dependencies(): MutableList<Class<out Initializer<*>>> =
-        mutableListOf(
-            ProcessLifecycleInitializer::class.java,
-            LoggerInitializer::class.java,
-            SetupMegaApiInitializer::class.java
-        )
+        mutableListOf(ProcessLifecycleInitializer::class.java)
 }

@@ -11,9 +11,13 @@ import mega.privacy.android.app.appstate.global.initialisation.appcreate.ChatApi
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CoilImageLoaderInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CrashReportingInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.FcmTopicInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.FolderApiSetupInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.GreeterInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.LoggingInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.MiscFlagsInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.NetworkStateInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.RemoteConfigInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.SdkSetupInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ThemeInitialiser
 import mega.privacy.android.navigation.contract.initialisation.AsyncAppCreateInitialiser
 import mega.privacy.android.navigation.contract.initialisation.SynchronousAppCreateInitialiser
@@ -36,6 +40,7 @@ internal class AppCreateInitialisersModule {
         greeterInitialiser: GreeterInitialiser,
         networkStateInitialiser: NetworkStateInitialiser,
         fcmTopicInitialiser: FcmTopicInitialiser,
+        remoteConfigInitialiser: RemoteConfigInitialiser,
     ): Set<@JvmSuppressWildcards AsyncAppCreateInitialiser> = setOf(
         miscFlagsInitialiser,
         apiServerInitialiser,
@@ -43,17 +48,24 @@ internal class AppCreateInitialisersModule {
         greeterInitialiser,
         fcmTopicInitialiser,
         networkStateInitialiser,
+        remoteConfigInitialiser,
     )
 
     @Provides
     fun provideSyncAppCreateInitialisers(
+        loggingInitialiser: LoggingInitialiser,
+        sdkSetupInitialiser: SdkSetupInitialiser,
+        folderApiSetupInitialiser: FolderApiSetupInitialiser,
         crashReportingInitialiser: CrashReportingInitialiser,
         themeInitialiser: ThemeInitialiser,
         callObserverInitialiser: CallObserverInitialiser,
         chatApiInitialiser: ChatApiInitialiser,
         coilImageLoaderInitialiser: CoilImageLoaderInitialiser,
     ): List<@JvmSuppressWildcards SynchronousAppCreateInitialiser> = listOf(
+        loggingInitialiser,
         crashReportingInitialiser,
+        sdkSetupInitialiser,
+        folderApiSetupInitialiser,
         themeInitialiser,
         callObserverInitialiser,
         chatApiInitialiser,

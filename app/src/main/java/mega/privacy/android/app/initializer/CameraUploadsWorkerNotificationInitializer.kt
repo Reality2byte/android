@@ -65,6 +65,5 @@ class CameraUploadsWorkerNotificationInitializer : Initializer<Unit> {
     /**
      * Dependencies
      */
-    override fun dependencies(): List<Class<out Initializer<*>>> =
-        listOf(LoggerInitializer::class.java)
+    override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()
 }
