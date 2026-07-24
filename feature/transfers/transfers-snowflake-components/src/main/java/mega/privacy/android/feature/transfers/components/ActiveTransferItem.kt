@@ -16,13 +16,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -33,7 +29,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.image.MegaIcon
 import mega.android.core.ui.components.indicators.ProgressBarIndicator
@@ -73,8 +68,6 @@ fun ActiveTransferItem(
     isSelected: Boolean? = null,
     isBeingDragged: Boolean = false,
 ) {
-    val swipeToDismissBoxState = rememberSwipeToDismissBoxState()
-    val scope = rememberCoroutineScope()
     // Box isolates animateItem() from SwipeToDismissBox's anchor measure pass (AND-23610).
     Box(
         modifier = modifier
@@ -82,21 +75,17 @@ fun ActiveTransferItem(
             .fillMaxWidth()
             .testTag(TEST_TAG_ACTIVE_TRANSFER_ITEM + "_$tag")
     ) {
-        SwipeToDismissBox(
-            state = swipeToDismissBoxState,
-            backgroundContent = {
+        TransferSwipeToDismissBox(
+            backgroundContent = { swipeToDismissBoxState, thresholdCrossed ->
                 when (swipeToDismissBoxState.dismissDirection) {
                     SwipeToDismissBoxValue.EndToStart -> if (enableSwipeToDismiss) {
-                        MegaIcon(
+                        TransferSwipeToDismissBackground(
                             painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.Trash),
                             contentDescription = "Cancel icon",
-                            tint = IconColor.Inverse,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(DSTokens.colors.support.error)
-                                .wrapContentSize(Alignment.CenterEnd)
-                                .padding(12.dp)
-                                .testTag(TEST_TAG_CANCEL_ICON)
+                            triggerColor = DSTokens.colors.support.error,
+                            alignment = Alignment.CenterEnd,
+                            thresholdCrossed = thresholdCrossed,
+                            modifier = Modifier.testTag(TEST_TAG_CANCEL_ICON)
                         )
                     }
 
@@ -108,10 +97,8 @@ fun ActiveTransferItem(
             enableDismissFromEndToStart = enableSwipeToDismiss,
             onDismiss = { direction ->
                 if (direction == SwipeToDismissBoxValue.EndToStart) {
-                    scope.launch {
-                        swipeToDismissBoxState.snapTo(SwipeToDismissBoxValue.Settled) // we need to set it to settle state in case the cancel is undone and the item recycled
-                        onSetToCancel()
-                    }
+                    snapTo(SwipeToDismissBoxValue.Settled) // we need to set it to settle state in case the cancel is undone and the item recycled
+                    onSetToCancel()
                 }
             }
         ) {

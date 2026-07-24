@@ -4,18 +4,24 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mega.privacy.android.icon.pack.R as iconPackR
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class CompletedTransferItemTest {
 
     @get:Rule
     var composeRule = createComposeRule()
+
+    private val onClear = mock<() -> Unit>()
 
     private val name = "File name.pdf"
     private val downloadLocation = "63% of 1MB"
@@ -81,6 +87,30 @@ class CompletedTransferItemTest {
         }
     }
 
+    @Test
+    fun `test that short swipe to left does not invoke onClear`() {
+        initComposeRuleContent(uploadCompletedTransfer)
+        with(composeRule) {
+            onNodeWithTag(TEST_TAG_COMPLETED_TRANSFER_ITEM).performTouchInput {
+                swipeLeft(startX = width.toFloat(), endX = width * 0.8f)
+            }
+            waitForIdle()
+        }
+        verifyNoInteractions(onClear)
+    }
+
+    @Test
+    fun `test that swipe to left invokes onClear when passing the dismiss threshold`() {
+        initComposeRuleContent(uploadCompletedTransfer)
+        with(composeRule) {
+            onNodeWithTag(TEST_TAG_COMPLETED_TRANSFER_ITEM).performTouchInput {
+                swipeLeft()
+            }
+            waitForIdle()
+        }
+        verify(onClear).invoke()
+    }
+
     private fun initComposeRuleContent(completedTransferUI: CompletedTransferUI) =
         with(completedTransferUI) {
             composeRule.setContent {
@@ -95,7 +125,7 @@ class CompletedTransferItemTest {
                     isSelected = isSelected,
                     enableSwipeToDismiss = true,
                     onMoreClicked = mock(),
-                    onClear = mock(),
+                    onClear = onClear,
                 )
             }
         }

@@ -4,12 +4,16 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mega.privacy.android.icon.pack.R
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 
 @RunWith(AndroidJUnit4::class)
 class ActiveTransferItemTest {
@@ -18,6 +22,7 @@ class ActiveTransferItemTest {
     var composeRule = createComposeRule()
 
     private val onPlayPauseClicked = mock<() -> Unit>()
+    private val onSetToCancel = mock<() -> Unit>()
     private val name = "File name.pdf"
     private val progressSizeString = "6MB of 10MB"
     private val progressPercentString = "60%"
@@ -113,6 +118,44 @@ class ActiveTransferItemTest {
         }
     }
 
+    @Test
+    fun `test that short swipe to left does not invoke onSetToCancel`() {
+        initComposeRuleContent(activeTransferUI())
+        with(composeRule) {
+            onNodeWithTag(TEST_TAG_ACTIVE_TRANSFER_ITEM + "_$tag").performTouchInput {
+                swipeLeft(startX = width.toFloat(), endX = width * 0.8f)
+            }
+            waitForIdle()
+        }
+        verifyNoInteractions(onSetToCancel)
+    }
+
+    @Test
+    fun `test that swipe to left invokes onSetToCancel when passing the dismiss threshold`() {
+        initComposeRuleContent(activeTransferUI())
+        with(composeRule) {
+            onNodeWithTag(TEST_TAG_ACTIVE_TRANSFER_ITEM + "_$tag").performTouchInput {
+                swipeLeft()
+            }
+            waitForIdle()
+        }
+        verify(onSetToCancel).invoke()
+    }
+
+    private fun activeTransferUI() = ActiveTransferUI(
+        isDownload = true,
+        fileTypeResId = R.drawable.ic_pdf_medium_solid,
+        previewUri = null,
+        fileName = name,
+        progressSizeString = progressSizeString,
+        progressPercentageString = progressPercentString,
+        progress = progress,
+        speed = speed,
+        isPaused = false,
+        hasIssues = false,
+        areTransfersPaused = false,
+    )
+
     private fun initComposeRuleContent(activeTransferUI: ActiveTransferUI) =
         with(activeTransferUI) {
             composeRule.setContent {
@@ -132,7 +175,7 @@ class ActiveTransferItemTest {
                     enableSwipeToDismiss = true,
                     areTransfersPaused = areTransfersPaused,
                     onPlayPauseClicked = onPlayPauseClicked,
-                    onSetToCancel = mock(),
+                    onSetToCancel = onSetToCancel,
                 )
             }
         }

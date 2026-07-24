@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,39 +89,30 @@ internal fun CompletedTransferItem(
     modifier: Modifier = Modifier,
     isSelected: Boolean? = null,
 ) {
-    val swipeToDismissBoxState = rememberSwipeToDismissBoxState()
-
     // Box isolates animateItem() from SwipeToDismissBox's anchor measure pass (AND-23610).
     Box(modifier = modifier.fillMaxWidth()) {
-        SwipeToDismissBox(
-            state = swipeToDismissBoxState,
-            backgroundContent = {
+        TransferSwipeToDismissBox(
+            backgroundContent = { swipeToDismissBoxState, thresholdCrossed ->
                 when (swipeToDismissBoxState.dismissDirection) {
                     SwipeToDismissBoxValue.StartToEnd -> if (enableSwipeToDismiss && enableDismissFromStartToEnd) {
-                        MegaIcon(
+                        TransferSwipeToDismissBackground(
                             painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.RotateCcw),
                             contentDescription = "Retry icon",
-                            tint = IconColor.Inverse,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(DSTokens.colors.support.info)
-                                .wrapContentSize(Alignment.CenterStart)
-                                .padding(12.dp)
-                                .testTag(TEST_TAG_RETRY_ICON)
+                            triggerColor = DSTokens.colors.support.info,
+                            alignment = Alignment.CenterStart,
+                            thresholdCrossed = thresholdCrossed,
+                            modifier = Modifier.testTag(TEST_TAG_RETRY_ICON)
                         )
                     }
 
                     SwipeToDismissBoxValue.EndToStart -> if (enableSwipeToDismiss) {
-                        MegaIcon(
+                        TransferSwipeToDismissBackground(
                             painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.Eraser),
                             contentDescription = "Clear icon",
-                            tint = IconColor.Inverse,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(DSTokens.colors.support.error)
-                                .wrapContentSize(Alignment.CenterEnd)
-                                .padding(12.dp)
-                                .testTag(TEST_TAG_CLEAR_ICON)
+                            triggerColor = DSTokens.colors.support.error,
+                            alignment = Alignment.CenterEnd,
+                            thresholdCrossed = thresholdCrossed,
+                            modifier = Modifier.testTag(TEST_TAG_CLEAR_ICON)
                         )
                     }
 
