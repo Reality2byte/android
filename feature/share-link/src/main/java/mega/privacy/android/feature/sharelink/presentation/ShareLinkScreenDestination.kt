@@ -9,16 +9,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import de.palm.composestateevents.EventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import de.palm.composestateevents.EventEffect
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
+import mega.privacy.android.navigation.ExtraConstant.TYPE_TEXT_PLAIN
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.contract.queue.snackbar.rememberSnackBarQueue
-import mega.privacy.android.navigation.ExtraConstant.TYPE_TEXT_PLAIN
 import mega.privacy.android.navigation.destination.GetLinkNavKey
 import mega.privacy.android.navigation.destination.LinkSettingsNavKey
 import mega.privacy.android.navigation.destination.ShareLinkNavKey
@@ -44,9 +44,10 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
                 }
             }
         ) {
-            val viewModel = hiltViewModel<ShareLinkViewModel, ShareLinkViewModel.Factory> { factory ->
-                factory.create(ShareLinkViewModel.Args(handles = key.handles))
-            }
+            val viewModel =
+                hiltViewModel<ShareLinkViewModel, ShareLinkViewModel.Factory> { factory ->
+                    factory.create(ShareLinkViewModel.Args(handles = key.handles))
+                }
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val resources = LocalResources.current
             val context = LocalContext.current
@@ -100,6 +101,13 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
                         )
                     }
                 },
+                onCopyPassword = {
+                    coroutineScope.launch {
+                        snackbarQueue.queueMessage(
+                            resources.getString(sharedR.string.share_link_password_copied_snackbar)
+                        )
+                    }
+                },
             )
         }
     }
@@ -113,9 +121,10 @@ fun EntryProviderScope<NavKey>.linkSettingsScreen(
     navigationHandler: NavigationHandler,
 ) {
     entry<LinkSettingsNavKey> { key ->
-        val viewModel = hiltViewModel<LinkSettingsViewModel, LinkSettingsViewModel.Factory> { factory ->
-            factory.create(LinkSettingsViewModel.Args(handles = key.handles))
-        }
+        val viewModel =
+            hiltViewModel<LinkSettingsViewModel, LinkSettingsViewModel.Factory> { factory ->
+                factory.create(LinkSettingsViewModel.Args(handles = key.handles))
+            }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val resources = LocalResources.current
         val snackbarQueue = rememberSnackBarQueue()
@@ -157,12 +166,17 @@ private fun Context.shareLinksAsPlainText(text: String, subject: String?) {
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = TYPE_TEXT_PLAIN
         putExtra(Intent.EXTRA_TEXT, text)
-        subject?.let { putExtra(Intent.EXTRA_SUBJECT, it) }
+        subject?.let {
+            putExtra(Intent.EXTRA_SUBJECT, it)
+            putExtra(Intent.EXTRA_TITLE, it)
+        }
     }
-    startActivity(
-        Intent.createChooser(shareIntent, getString(sharedR.string.general_share))
-    )
+    val chooser = Intent.createChooser(shareIntent, getString(sharedR.string.general_share)).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(chooser)
 }
+
 
 /** MEGA security help page opened from the "Separate link and key" learn-more link. */
 private const val SEPARATE_KEY_LEARN_MORE_URL = "https://mega.io/security"

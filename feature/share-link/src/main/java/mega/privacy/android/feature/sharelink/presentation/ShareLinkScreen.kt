@@ -1,6 +1,9 @@
 package mega.privacy.android.feature.sharelink.presentation
 
 import android.content.ClipData
+import android.content.ClipDescription
+import android.os.Build
+import android.os.PersistableBundle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
@@ -71,6 +75,7 @@ import mega.privacy.android.shared.resources.R as sharedR
  * nodes, every link joined by newlines.
  * @param onCopyLink Invoked when the copy icon on a link is tapped.
  * @param onCopyKey Invoked when the copy icon on the separate key card is tapped.
+ * @param onCopyPassword Invoked when the copy icon on the password card is tapped.
  * @param onLinksCopied Invoked once when the multi-node screen opens and all links have been
  * copied to the clipboard automatically.
  * @param onSensitiveWarningConfirmed Invoked when the user confirms the hidden-items warning.
@@ -87,6 +92,7 @@ fun ShareLinkScreen(
     onCopyLink: () -> Unit,
     onCopyKey: () -> Unit,
     modifier: Modifier = Modifier,
+    onCopyPassword: () -> Unit = {},
     onLinksCopied: () -> Unit = {},
     onSensitiveWarningConfirmed: () -> Unit = {},
     onSensitiveWarningDismissed: () -> Unit = {},
@@ -157,6 +163,7 @@ fun ShareLinkScreen(
                         uiState = uiState,
                         onCopyLink = onCopyLink,
                         onCopyKey = onCopyKey,
+                        onCopyPassword = onCopyPassword,
                     )
                 }
             }
@@ -203,11 +210,13 @@ private fun ShareLinkContent(
     onCopyLink: () -> Unit,
     onCopyKey: () -> Unit,
     modifier: Modifier = Modifier,
+    onCopyPassword: () -> Unit = {},
 ) {
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()
     val primary = uiState.primary
-    val displayLink = primary.linkWithoutKey?.takeIf { uiState.isKeySeparate } ?: primary.link
+    val password = uiState.password?.takeIf { uiState.isPasswordSet }
+    val displayLink = uiState.resolvedSingleLink()
     val separateKey = primary.key?.takeIf { uiState.isKeySeparate }
 
     Column(
@@ -226,14 +235,18 @@ private fun ShareLinkContent(
             InlineInfoBanner(
                 modifier = Modifier.testTag(SHARE_LINK_ACCESS_BANNER_TAG),
                 title = stringResource(sharedR.string.share_link_access_banner_title),
-                body = pluralStringResource(
-                    if (uiState.isKeySeparate) {
-                        sharedR.plurals.share_link_access_banner_description_with_key
-                    } else {
-                        sharedR.plurals.share_link_access_banner_description
-                    },
-                    uiState.handles.size,
-                ),
+                body = if (uiState.isPasswordSet) {
+                    stringResource(sharedR.string.share_link_access_password_description)
+                } else {
+                    pluralStringResource(
+                        if (uiState.isKeySeparate) {
+                            sharedR.plurals.share_link_access_banner_description_with_key
+                        } else {
+                            sharedR.plurals.share_link_access_banner_description
+                        },
+                        uiState.handles.size,
+                    )
+                },
                 showCancelButton = false,
             )
 
@@ -257,6 +270,16 @@ private fun ShareLinkContent(
                         }
                     }
                     onCopyKey()
+                },
+                passwordProtected = uiState.isPasswordSet,
+                maskedPassword = password?.let { "•".repeat(it.length) },
+                onCopyPassword = {
+                    password?.let {
+                        coroutineScope.launch {
+                            clipboard.setClipEntry(sensitiveClip(COPIED_PASSWORD_LABEL, it))
+                        }
+                    }
+                    onCopyPassword()
                 },
             )
         }
@@ -575,15 +598,39 @@ private fun ShareLinkScreenErrorPreview() {
 }
 
 /**
+ * The link shown and shared for a single node: the password-protected link when a password is set,
+ * the key-less link when the key is shared separately, otherwise the full link.
+ */
+private fun ShareLinkUiState.Data.resolvedSingleLink(): String = when {
+    isPasswordSet -> linkWithPassword ?: primary.link
+    isKeySeparate -> primary.linkWithoutKey ?: primary.link
+    else -> primary.link
+}
+
+/**
  * The link text placed on the system share sheet: for multiple nodes every link joined by
- * newlines; for a single node the link, or the key-less link when the key is shared separately.
+ * newlines; for a single node its [resolvedSingleLink].
  */
 private fun ShareLinkUiState.Data.shareableLinksText(): String =
     if (isMultiNode) {
         nodeLinks.joinToString(separator = "\n") { it.link }
     } else {
-        primary.linkWithoutKey?.takeIf { isKeySeparate } ?: primary.link
+        resolvedSingleLink()
     }
+
+/**
+ * A plain-text clip flagged sensitive on API 33+, so the OS keeps it out of the clipboard preview
+ * (used for the copied password).
+ */
+private fun sensitiveClip(label: String, text: String): ClipEntry {
+    val clip = ClipData.newPlainText(label, text)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        clip.description.extras = PersistableBundle().apply {
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+        }
+    }
+    return clip.toClipEntry()
+}
 
 internal const val SHARE_LINK_APP_BAR_TAG = "share_link_screen:app_bar"
 internal const val SHARE_LINK_SHARE_BUTTON_TAG = "share_link_screen:button_share"
@@ -595,3 +642,4 @@ internal const val SHARE_LINK_LOADING_TAG = "share_link_screen:loading"
 internal const val SHARE_LINK_ERROR_TAG = "share_link_screen:error"
 private const val COPIED_LINK_LABEL = "Copied Text"
 private const val COPIED_KEY_LABEL = "Copied Key"
+private const val COPIED_PASSWORD_LABEL = "Copied Password"

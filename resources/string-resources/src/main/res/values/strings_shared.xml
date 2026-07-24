@@ -3543,4 +3543,10 @@
     <string name="file_info_taken_down_action">Takedown Guidance Policy</string>
     <!-- Label of the toolbar action that opens the QR code scanner on the contact pickers -->
     <string name="contacts_qr_scan_action">Scan QR code</string>
+    <!-- Share link revamp: access banner body shown when the link is password protected -->
+    <string name="share_link_access_password_description">Only people with the password can open the link</string>
+    <!-- Share link revamp: helper shown under a password protected link, next to a lock icon -->
+    <string name="share_link_password_protected_label">Password protected</string>
+    <!-- Share link revamp: snackbar shown after the link password is copied to the clipboard -->
+    <string name="share_link_password_copied_snackbar">Password copied to clipboard</string>
 </resources>
