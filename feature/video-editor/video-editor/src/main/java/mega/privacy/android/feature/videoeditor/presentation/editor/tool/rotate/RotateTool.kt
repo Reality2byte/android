@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.RotateLeft
-import androidx.compose.material.icons.automirrored.filled.RotateRight
-import androidx.compose.material.icons.filled.Flip
 import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +14,7 @@ import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.ScaleAndRotateTransformation
 import mega.privacy.android.feature.videoeditor.components.RotateTile
+import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
@@ -88,25 +86,25 @@ object RotateTool : EditorTool {
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             RotateTile(
-                icon = Icons.AutoMirrored.Filled.RotateLeft,
+                icon = IconPack.Medium.Thin.Outline.RotateCcw,
                 label = "Left",
                 selected = false,
                 onClick = { onAction(RotateAction.RotateLeft) },
                 modifier = Modifier.weight(1f),
             )
             RotateTile(
-                icon = Icons.AutoMirrored.Filled.RotateRight,
+                icon = IconPack.Medium.Thin.Outline.RotateCw,
                 label = "Right",
                 selected = false,
                 onClick = { onAction(RotateAction.RotateRight) },
                 modifier = Modifier.weight(1f),
             )
             RotateTile(
-                icon = Icons.Filled.Flip,
+                icon = IconPack.Medium.Thin.Outline.FlipHorizontal,
                 label = "Flip",
                 selected = state.rotate.flipHorizontal,
                 onClick = { onAction(RotateAction.ToggleFlipHorizontal) },
