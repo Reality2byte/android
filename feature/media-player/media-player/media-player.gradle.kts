@@ -4,6 +4,8 @@ plugins {
     alias(convention.plugins.mega.android.library)
     alias(convention.plugins.mega.android.library.compose)
     alias(convention.plugins.mega.android.hilt)
+    alias(plugin.plugins.kotlin.serialisation)
+    id("kotlin-parcelize")
 }
 
 android {
@@ -17,16 +19,29 @@ dependencies {
 
     implementation(project(":feature:media-player:media-player-snowflake-components"))
     implementation(project(":core:navigation-contract"))
+    implementation(project(":core:coroutine"))
+    implementation(project(":core:ui-components:node-components"))
+    implementation(project(":core:analytics:analytics-tracker"))
     implementation(project(":resources:string-resources"))
+    implementation(project(":resources:icon-pack"))
+    implementation(project(":shared:nodes"))
+    implementation(project(":shared:original-core-ui"))
     implementation(project(":domain"))
 
     implementation(lib.mega.core.ui)
+    implementation(lib.mega.analytics)
     implementation(lib.kotlin.ktx)
     implementation(lib.logging.timber)
+    implementation(lib.coil3)
+    implementation(lib.coil.compose)
+    implementation(google.media3.ui)
     implementation(google.media3.common)
+    implementation(androidx.material3)
     implementation(androidx.bundles.compose.bom)
     implementation(platform(androidx.compose.bom))
     implementation(androidx.hilt.navigation)
+    implementation(androidx.lifecycle.viewmodel)
+    implementation(androidx.lifecycle.runtime.compose)
     implementation(androidx.navigation3.runtime)
 
     testImplementation(project(":core-test"))

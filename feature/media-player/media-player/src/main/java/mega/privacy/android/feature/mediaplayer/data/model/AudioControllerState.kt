@@ -1,10 +1,10 @@
-package mega.privacy.android.app.mediaplayer.model
+package mega.privacy.android.feature.mediaplayer.data.model
 
 import androidx.media3.common.Player
 import timber.log.Timber
 
 /**
- * Raw player state emitted by [mega.privacy.android.app.mediaplayer.gateway.AudioMediaControllerGateway].
+ * Raw player state emitted by [mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway].
  *
  * Represents the current snapshot of the Media3 MediaController state. The ViewModel maps this
  * into [AudioPlayerUiState] and applies domain-level side effects (analytics, persistence,

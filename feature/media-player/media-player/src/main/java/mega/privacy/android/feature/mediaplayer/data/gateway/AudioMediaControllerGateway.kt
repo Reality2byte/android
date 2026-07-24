@@ -1,8 +1,8 @@
-package mega.privacy.android.app.mediaplayer.gateway
+package mega.privacy.android.feature.mediaplayer.data.gateway
 
 import android.content.Intent
 import kotlinx.coroutines.flow.Flow
-import mega.privacy.android.app.mediaplayer.model.AudioControllerState
+import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
 
 /**
  * Gateway that abstracts all Media3 [androidx.media3.session.MediaController] and

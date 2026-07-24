@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import mega.privacy.android.app.mediaplayer.gateway.AudioMediaControllerFacade
-import mega.privacy.android.app.mediaplayer.gateway.AudioMediaControllerGateway
+import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
 
 /**
  * Hilt module that binds [AudioMediaControllerGateway] to [AudioMediaControllerFacade].

@@ -27,8 +27,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mega.privacy.android.app.mediaplayer.model.AudioControllerState
 import mega.privacy.android.app.mediaplayer.service.AudioPlayerService
+import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
+import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
 import mega.privacy.android.domain.qualifier.MainDispatcher
 import timber.log.Timber
 

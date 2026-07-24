@@ -14,9 +14,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.analytics.Analytics
-import mega.privacy.android.app.mediaplayer.gateway.AudioMediaControllerGateway
+import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControllerGateway
 import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
-import mega.privacy.android.app.mediaplayer.model.AudioControllerState
+import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
 import mega.privacy.android.app.mediaplayer.model.AudioPlayerUiState
 import mega.privacy.android.app.utils.Constants.FOLDER_LINK_ADAPTER
 import mega.privacy.android.app.utils.Constants.FROM_ALBUM_SHARING
