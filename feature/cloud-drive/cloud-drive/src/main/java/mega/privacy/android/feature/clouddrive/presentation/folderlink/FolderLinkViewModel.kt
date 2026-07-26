@@ -9,13 +9,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,6 +45,11 @@ import mega.privacy.android.domain.usecase.folderlink.FetchFolderNodesUseCase
 import mega.privacy.android.domain.usecase.folderlink.GetFolderLinkChildrenNodesUseCase
 import mega.privacy.android.domain.usecase.folderlink.GetFolderParentNodeUseCase
 import mega.privacy.android.domain.usecase.folderlink.LoginToFolderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.MonitorFolderSortOrderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.MonitorFolderViewTypeUseCase
+import mega.privacy.android.domain.usecase.folderpreference.SetFolderSortOrderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.SetFolderViewTypeUseCase
+import mega.privacy.android.domain.usecase.node.HandleToBase64UseCase
 import mega.privacy.android.domain.usecase.node.sort.MonitorSortCloudOrderUseCase
 import mega.privacy.android.domain.usecase.viewedlinks.RemoveViewedLinkByUrlUseCase
 import mega.privacy.android.domain.usecase.viewedlinks.SaveViewedLinkUseCase
@@ -76,6 +85,11 @@ internal class FolderLinkViewModel @AssistedInject constructor(
     private val removeViewedLinkByUrlUseCase: RemoveViewedLinkByUrlUseCase,
     private val getFeatureFlagValueUseCase: GetFeatureFlagValueUseCase,
     private val queryAdsUseCase: QueryAdsUseCase,
+    private val handleToBase64UseCase: HandleToBase64UseCase,
+    private val monitorFolderViewTypeUseCase: MonitorFolderViewTypeUseCase,
+    private val monitorFolderSortOrderUseCase: MonitorFolderSortOrderUseCase,
+    private val setFolderViewTypeUseCase: SetFolderViewTypeUseCase,
+    private val setFolderSortOrderUseCase: SetFolderSortOrderUseCase,
     @ApplicationScope private val applicationScope: CoroutineScope,
     @Assisted private val args: Args,
 ) : ViewModel() {
@@ -85,6 +99,13 @@ internal class FolderLinkViewModel @AssistedInject constructor(
     )
     val uiState: StateFlow<FolderLinkUiState> = _uiState.asStateFlow()
     private var browseFolderJob: Job? = null
+
+    /**
+     * The current folder's node handle, or null before a folder has loaded. Per-folder sort and
+     * view mode re-key off this so navigating into a subfolder applies that folder's preference.
+     */
+    private val currentFolderHandleFlow =
+        _uiState.map { it.currentFolderNode?.id?.longValue }.distinctUntilChanged()
 
     init {
         monitorViewType()
@@ -125,11 +146,23 @@ internal class FolderLinkViewModel @AssistedInject constructor(
     private fun onChangeViewTypeClicked() {
         viewModelScope.launch {
             runCatching {
-                val toggledViewType = when (_uiState.value.currentViewType) {
+                val state = _uiState.value
+                val toggledViewType = when (state.currentViewType) {
                     ViewType.LIST -> ViewType.GRID
                     ViewType.GRID -> ViewType.LIST
                 }
-                setViewTypeUseCase(toggledViewType)
+                val folderKey = state.currentFolderNode?.id?.longValue
+                    ?.let { handleToBase64UseCase(it) }
+                if (folderKey == null) {
+                    setViewTypeUseCase(toggledViewType)
+                } else {
+                    setFolderViewTypeUseCase(
+                        folderKey = folderKey,
+                        viewType = toggledViewType,
+                        currentSortOrder = state.selectedSortOrder,
+                        orElse = { setViewTypeUseCase(it) },
+                    )
+                }
                 val event = when (toggledViewType) {
                     ViewType.LIST -> ViewModeListMenuItemEvent
                     ViewType.GRID -> ViewModeGridMenuItemEvent
@@ -141,9 +174,18 @@ internal class FolderLinkViewModel @AssistedInject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun monitorViewType() {
         viewModelScope.launch {
-            monitorViewTypeUseCase()
+            currentFolderHandleFlow
+                .flatMapLatest { handle ->
+                    val orElse = monitorViewTypeUseCase()
+                    if (handle == null) orElse
+                    else monitorFolderViewTypeUseCase(
+                        folderKey = handleToBase64UseCase(handle),
+                        orElse = orElse,
+                    )
+                }
                 .catch { Timber.e(it) }
                 .collect { viewType ->
                     _uiState.update { it.copy(currentViewType = viewType) }
@@ -151,13 +193,22 @@ internal class FolderLinkViewModel @AssistedInject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun monitorSortOrder() {
-        monitorSortCloudOrderUseCase()
+        currentFolderHandleFlow
+            .flatMapLatest { handle ->
+                val orElse = monitorSortCloudOrderUseCase().filterNotNull()
+                if (handle == null) orElse
+                else monitorFolderSortOrderUseCase(
+                    folderKey = handleToBase64UseCase(handle),
+                    orElse = orElse,
+                )
+            }
             .catch { Timber.e(it) }
-            .filterNotNull()
             .onEach { order ->
+                val changed = _uiState.value.selectedSortOrder != order
                 updateSortOrder(order)
-                refreshCurrentFolder()
+                if (changed) refreshCurrentFolder()
             }
             .launchIn(viewModelScope)
     }
@@ -175,8 +226,20 @@ internal class FolderLinkViewModel @AssistedInject constructor(
     fun setSortOrder(sortConfiguration: NodeSortConfiguration) {
         viewModelScope.launch {
             runCatching {
+                val state = _uiState.value
                 val order = nodeSortConfigurationUiMapper(sortConfiguration)
-                setCloudSortOrderUseCase(order)
+                val folderKey = state.currentFolderNode?.id?.longValue
+                    ?.let { handleToBase64UseCase(it) }
+                if (folderKey == null) {
+                    setCloudSortOrderUseCase(order)
+                } else {
+                    setFolderSortOrderUseCase(
+                        folderKey = folderKey,
+                        sortOrder = order,
+                        currentViewType = state.currentViewType,
+                        orElse = { setCloudSortOrderUseCase(it) },
+                    )
+                }
             }.onFailure {
                 Timber.e(it, "Failed to set sort order")
             }

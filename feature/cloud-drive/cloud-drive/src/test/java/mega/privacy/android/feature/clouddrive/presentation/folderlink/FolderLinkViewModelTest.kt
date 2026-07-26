@@ -5,8 +5,10 @@ import com.google.common.truth.Truth.assertThat
 import de.palm.composestateevents.triggered
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -35,6 +37,11 @@ import mega.privacy.android.domain.usecase.folderlink.FetchFolderNodesUseCase
 import mega.privacy.android.domain.usecase.folderlink.GetFolderLinkChildrenNodesUseCase
 import mega.privacy.android.domain.usecase.folderlink.GetFolderParentNodeUseCase
 import mega.privacy.android.domain.usecase.folderlink.LoginToFolderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.MonitorFolderSortOrderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.MonitorFolderViewTypeUseCase
+import mega.privacy.android.domain.usecase.folderpreference.SetFolderSortOrderUseCase
+import mega.privacy.android.domain.usecase.folderpreference.SetFolderViewTypeUseCase
+import mega.privacy.android.domain.usecase.node.HandleToBase64UseCase
 import mega.privacy.android.domain.usecase.node.sort.MonitorSortCloudOrderUseCase
 import mega.privacy.android.domain.usecase.viewedlinks.RemoveViewedLinkByUrlUseCase
 import mega.privacy.android.domain.usecase.viewedlinks.SaveViewedLinkUseCase
@@ -58,6 +65,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.stub
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -86,6 +94,13 @@ internal class FolderLinkViewModelTest {
     private val removeViewedLinkByUrlUseCase: RemoveViewedLinkByUrlUseCase = mock()
     private val getFeatureFlagValueUseCase: GetFeatureFlagValueUseCase = mock()
     private val queryAdsUseCase: QueryAdsUseCase = mock()
+    private val handleToBase64UseCase: HandleToBase64UseCase = mock()
+    private val monitorFolderViewTypeUseCase: MonitorFolderViewTypeUseCase = mock()
+    private val monitorFolderSortOrderUseCase: MonitorFolderSortOrderUseCase = mock()
+    private val setFolderViewTypeUseCase: SetFolderViewTypeUseCase = mock()
+    private val setFolderSortOrderUseCase: SetFolderSortOrderUseCase = mock()
+
+    private val folderKey = "folder_key_base64"
 
     private lateinit var underTest: FolderLinkViewModel
 
@@ -110,6 +125,11 @@ internal class FolderLinkViewModelTest {
             removeViewedLinkByUrlUseCase = removeViewedLinkByUrlUseCase,
             getFeatureFlagValueUseCase = getFeatureFlagValueUseCase,
             queryAdsUseCase = queryAdsUseCase,
+            handleToBase64UseCase = handleToBase64UseCase,
+            monitorFolderViewTypeUseCase = monitorFolderViewTypeUseCase,
+            monitorFolderSortOrderUseCase = monitorFolderSortOrderUseCase,
+            setFolderViewTypeUseCase = setFolderViewTypeUseCase,
+            setFolderSortOrderUseCase = setFolderSortOrderUseCase,
             applicationScope = CoroutineScope(UnconfinedTestDispatcher()),
             args = args,
         )
@@ -134,9 +154,19 @@ internal class FolderLinkViewModelTest {
             removeViewedLinkByUrlUseCase,
             getFeatureFlagValueUseCase,
             queryAdsUseCase,
+            handleToBase64UseCase,
+            monitorFolderViewTypeUseCase,
+            monitorFolderSortOrderUseCase,
+            setFolderViewTypeUseCase,
+            setFolderSortOrderUseCase,
         )
         whenever(monitorSortCloudOrderUseCase()).thenReturn(flowOf(SortOrder.ORDER_DEFAULT_ASC))
         whenever(monitorViewTypeUseCase()).thenReturn(flowOf(ViewType.LIST))
+        handleToBase64UseCase.stub { on { invoke(any()) } doReturn folderKey }
+        whenever(monitorFolderViewTypeUseCase(any(), any()))
+            .thenAnswer { it.getArgument<Flow<ViewType>>(1) }
+        whenever(monitorFolderSortOrderUseCase(any(), any()))
+            .thenAnswer { it.getArgument<Flow<SortOrder>>(1) }
     }
 
     private fun mockFolderNode(id: Long = 1L, name: String = "folder"): TypedFolderNode = mock {
@@ -941,6 +971,82 @@ internal class FolderLinkViewModelTest {
 
             verify(setViewTypeUseCase).invoke(ViewType.LIST)
         }
+
+    private suspend fun TestScope.initViewModelInFolder(folderId: Long = 42L): TypedFolderNode {
+        val url = "https://mega.nz/folder/abc"
+        val folder = mockFolderNode(id = folderId, name = "SubFolder")
+        whenever(hasCredentialsUseCase()).thenReturn(false)
+        whenever(loginToFolderUseCase(url)).thenReturn(FolderLoginStatus.SUCCESS)
+        whenever(fetchFolderNodesUseCase(anyOrNull(), anyOrNull())).thenReturn(
+            FetchFolderNodesResult()
+        )
+        stubNodeUiItemMapper()
+        whenever(getFolderLinkChildrenNodesUseCase(eq(folderId), anyOrNull())).thenReturn(emptyList())
+        initViewModel(FolderLinkViewModel.Args(uriString = url))
+        advanceUntilIdle()
+        underTest.processAction(FolderLinkAction.ItemClicked(mockFolderNodeUiItem(folder)))
+        advanceUntilIdle()
+        return folder
+    }
+
+    @Test
+    fun `test that SortOrderChanged stores the sort order for the current folder when a folder is open`() =
+        runTest {
+            initViewModelInFolder()
+
+            underTest.processAction(
+                FolderLinkAction.SortOrderChanged(
+                    NodeSortConfiguration(NodeSortOption.Size, SortDirection.Descending)
+                )
+            )
+            advanceUntilIdle()
+
+            verify(setFolderSortOrderUseCase).invoke(
+                eq(folderKey),
+                eq(SortOrder.ORDER_SIZE_DESC),
+                any(),
+                any(),
+            )
+        }
+
+    @Test
+    fun `test that ChangeViewTypeClicked stores the view type for the current folder when a folder is open`() =
+        runTest {
+            initViewModelInFolder()
+
+            underTest.processAction(FolderLinkAction.ChangeViewTypeClicked)
+            advanceUntilIdle()
+
+            verify(setFolderViewTypeUseCase).invoke(
+                eq(folderKey),
+                eq(ViewType.GRID),
+                any(),
+                any(),
+            )
+        }
+
+    @Test
+    fun `test that currentViewType reflects the per-folder value when a folder is open`() = runTest {
+        whenever(monitorFolderViewTypeUseCase(eq(folderKey), any())).thenReturn(flowOf(ViewType.GRID))
+
+        initViewModelInFolder()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().currentViewType).isEqualTo(ViewType.GRID)
+        }
+    }
+
+    @Test
+    fun `test that sort order reflects the per-folder value when a folder is open`() = runTest {
+        whenever(monitorFolderSortOrderUseCase(eq(folderKey), any()))
+            .thenReturn(flowOf(SortOrder.ORDER_SIZE_ASC))
+
+        initViewModelInFolder()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().selectedSortOrder).isEqualTo(SortOrder.ORDER_SIZE_ASC)
+        }
+    }
 
     private fun createNodeUiItem(node: TypedNode): NodeUiItem<TypedNode> =
         NodeUiItem(node = node, isSelected = false)
