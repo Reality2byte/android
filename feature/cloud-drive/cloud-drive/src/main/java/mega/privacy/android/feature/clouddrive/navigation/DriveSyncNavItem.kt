@@ -21,6 +21,7 @@ import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdenti
 import mega.privacy.mobile.analytics.event.CloudDriveBottomNavigationItemEvent
 
 class DriveSyncNavItem : MainNavItem {
+    override val id: String = "drive"
     override val destination: MainNavItemNavKey = DriveSyncNavKey()
     override val screen: EntryProviderScope<NavKey>.(NavigationHandler, NavigationUiController, TransferHandler) -> Unit =
         { navigationHandler, navigationController, transferHandler ->

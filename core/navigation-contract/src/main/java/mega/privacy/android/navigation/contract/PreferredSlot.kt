@@ -5,12 +5,14 @@ package mega.privacy.android.navigation.contract
  */
 sealed interface PreferredSlot {
     /**
-     * Specifies a specific slot number (1-based)
+     * Specifies a specific slot number (0-based)
      */
     data class Ordered(val slot: Int) : PreferredSlot
 
     /**
-     * Specifies that this item should be placed in the last available slot
+     * Specifies that this item is pinned to the last slot.
+     *
+     * The last slot is non-removable and reserved for the Menu item; only one item may use it.
      */
     data object Last : PreferredSlot
 } 

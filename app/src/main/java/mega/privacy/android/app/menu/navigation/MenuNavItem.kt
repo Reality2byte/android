@@ -30,6 +30,7 @@ class MenuNavItem(
     menuItems: Map<Int, NavDrawerItem>,
     monitorNotSeenUserAlertsCountUseCase: MonitorNotSeenUserAlertsCountUseCase,
 ) : MainNavItem {
+    override val id: String = "menu"
     override val destination: MainNavItemNavKey = MenuHomeScreen
     override val screen: EntryProviderScope<NavKey>.(NavigationHandler, NavigationUiController, TransferHandler) -> Unit =
         { navigationHandler, _, _ -> menuHomeScreen(navigationHandler::navigate) }

@@ -8,6 +8,13 @@ import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
 
 interface MainNavItem {
+    /**
+     * Stable, unique key used to persist this item (e.g. user-defined ordering).
+     *
+     * Once shipped, this value must never change — renaming a feature must not change its id,
+     * otherwise stored user preferences referencing it would be lost.
+     */
+    val id: String
     val destination: MainNavItemNavKey
     val screen: EntryProviderScope<NavKey>.(navigationHandler: NavigationHandler, navigationUiController: NavigationUiController, transferHandler: TransferHandler) -> Unit
     val icon: ImageVector
@@ -60,4 +67,21 @@ fun Iterable<MainNavItem>.sortedByPreferredSlot(): List<MainNavItem> {
             }
         }
     )
+}
+
+/**
+ * Orders the items according to a user-defined list of item ids.
+ *
+ * Items whose [MainNavItem.id] appears in [orderedIds] come first, following the order of
+ * [orderedIds]. Any remaining items follow in [PreferredSlot] order. The item with
+ * [PreferredSlot.Last] is always pinned to the very end, even if its id appears in [orderedIds].
+ *
+ * @param orderedIds the user-defined ordering of item ids; ids not matching any item are ignored
+ */
+fun Iterable<MainNavItem>.orderedByUserPreference(orderedIds: List<String>): List<MainNavItem> {
+    val (lastItems, orderableItems) = partition { it.preferredSlot is PreferredSlot.Last }
+    val (userOrderedItems, remainingItems) = orderableItems.partition { it.id in orderedIds }
+    return userOrderedItems.sortedBy { orderedIds.indexOf(it.id) } +
+            remainingItems.sortedByPreferredSlot() +
+            lastItems
 }

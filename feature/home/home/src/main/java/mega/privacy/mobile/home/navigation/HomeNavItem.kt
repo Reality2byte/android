@@ -19,6 +19,7 @@ import mega.privacy.mobile.home.presentation.home.Home
 import mega.privacy.mobile.home.presentation.home.homeScreen
 
 class HomeNavItem : MainNavItem {
+    override val id: String = "home"
     override val destination: MainNavItemNavKey = Home
     override val screen: EntryProviderScope<NavKey>.(NavigationHandler, NavigationUiController, TransferHandler) -> Unit =
         { navigationHandler, navigationController, transferHandler ->

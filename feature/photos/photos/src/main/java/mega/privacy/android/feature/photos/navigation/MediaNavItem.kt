@@ -18,6 +18,7 @@ import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdenti
 import mega.privacy.mobile.analytics.event.PhotosBottomNavigationItemEvent
 
 class MediaNavItem : MainNavItem {
+    override val id: String = "media"
     override val destination: MainNavItemNavKey = MediaMainNavKey
     override val screen: EntryProviderScope<NavKey>.(NavigationHandler, NavigationUiController, TransferHandler) -> Unit =
         { navigationHandler, navigationController, transferHandler ->
