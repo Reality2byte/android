@@ -211,6 +211,32 @@ interface UIPreferencesGateway {
     fun monitorSerialisedStartScreenPreferenceDestination(): Flow<String?>
 
     /**
+     * Set serialised navigation items preference
+     *
+     * @param preference serialised string representing the navigation items preference
+     */
+    suspend fun setSerialisedNavigationItemsPreference(preference: String)
+
+    /**
+     * Monitor serialised navigation items preference
+     *
+     * @return serialised string representing the navigation items preference
+     */
+    fun monitorSerialisedNavigationItemsPreference(): Flow<String?>
+
+    /**
+     * Set the customise navigation tooltip as shown
+     */
+    suspend fun setCustomiseNavigationTooltipShown()
+
+    /**
+     * Monitor whether the customise navigation tooltip has been shown
+     *
+     * @return true if the tooltip has been shown, null if not set
+     */
+    fun monitorCustomiseNavigationTooltipShown(): Flow<Boolean?>
+
+    /**
      * Monitor the last version that a new feature was shown
      *
      * @return ve

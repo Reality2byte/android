@@ -29,6 +29,7 @@ import mega.privacy.android.domain.entity.home.PinnedHomeItem
 import mega.privacy.android.domain.entity.home.PinnedHomeItemsSortField
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.SortDirection
+import mega.privacy.android.domain.entity.preference.NavigationItemsPreference
 import mega.privacy.android.domain.entity.preference.SortingPreference
 import mega.privacy.android.domain.entity.preference.StartScreenDestinationPreference
 import mega.privacy.android.domain.entity.preference.ViewModePreference
@@ -601,6 +602,93 @@ internal class DefaultSettingsRepositoryTest {
 
             underTest.monitorStartScreenPreferenceDestination().test {
                 assertThat(awaitItem()).isEqualTo(expected)
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `test that setNavigationItemsPreference calls the gateway with the serialised item ids`() =
+        runTest {
+            underTest.setNavigationItemsPreference(
+                NavigationItemsPreference(
+                    orderedVisibleItemIds = listOf("home", "photos", "chat"),
+                )
+            )
+
+            verify(uiPreferencesGateway).setSerialisedNavigationItemsPreference(
+                """["home","photos","chat"]"""
+            )
+        }
+
+    @Test
+    fun `test that monitorNavigationItemsPreference returns the deserialised preference from the gateway`() =
+        runTest {
+            whenever(uiPreferencesGateway.monitorSerialisedNavigationItemsPreference())
+                .thenReturn(flowOf("""["home","photos","chat"]"""))
+
+            underTest.monitorNavigationItemsPreference().test {
+                assertThat(awaitItem()).isEqualTo(
+                    NavigationItemsPreference(
+                        orderedVisibleItemIds = listOf("home", "photos", "chat"),
+                    )
+                )
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `test that monitorNavigationItemsPreference returns null when the preference is not set`() =
+        runTest {
+            whenever(uiPreferencesGateway.monitorSerialisedNavigationItemsPreference())
+                .thenReturn(flowOf(null))
+
+            underTest.monitorNavigationItemsPreference().test {
+                assertThat(awaitItem()).isNull()
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `test that monitorNavigationItemsPreference returns null when deserialisation fails`() =
+        runTest {
+            whenever(uiPreferencesGateway.monitorSerialisedNavigationItemsPreference())
+                .thenReturn(flowOf("not valid json"))
+
+            underTest.monitorNavigationItemsPreference().test {
+                assertThat(awaitItem()).isNull()
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `test that setCustomiseNavigationTooltipShown calls the gateway`() = runTest {
+        underTest.setCustomiseNavigationTooltipShown()
+
+        verify(uiPreferencesGateway).setCustomiseNavigationTooltipShown()
+    }
+
+    @ParameterizedTest(name = "gateway value: {0}")
+    @ValueSource(booleans = [true, false])
+    fun `test that monitorCustomiseNavigationTooltipShown returns the value from the gateway`(
+        shown: Boolean,
+    ) = runTest {
+        whenever(uiPreferencesGateway.monitorCustomiseNavigationTooltipShown())
+            .thenReturn(flowOf(shown))
+
+        underTest.monitorCustomiseNavigationTooltipShown().test {
+            assertThat(awaitItem()).isEqualTo(shown)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `test that monitorCustomiseNavigationTooltipShown returns false when the preference is not set`() =
+        runTest {
+            whenever(uiPreferencesGateway.monitorCustomiseNavigationTooltipShown())
+                .thenReturn(flowOf(null))
+
+            underTest.monitorCustomiseNavigationTooltipShown().test {
+                assertThat(awaitItem()).isFalse()
                 awaitComplete()
             }
         }

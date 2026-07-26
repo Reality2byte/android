@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import mega.privacy.android.data.cache.Cache
 import mega.privacy.android.data.extensions.decodeBase64
 import mega.privacy.android.data.extensions.encodeBase64
@@ -54,6 +55,7 @@ import mega.privacy.android.domain.entity.photos.TimelinePreferencesJSON.JSON_KE
 import mega.privacy.android.domain.entity.photos.TimelinePreferencesJSON.JSON_KEY_CONTENT_CONSUMPTION
 import mega.privacy.android.domain.entity.photos.TimelinePreferencesJSON.JSON_SENSITIVES
 import mega.privacy.android.domain.entity.photos.TimelinePreferencesJSON.JSON_VAL_SHOW_HIDDEN_NODES
+import mega.privacy.android.domain.entity.preference.NavigationItemsPreference
 import mega.privacy.android.domain.entity.preference.SortingPreference
 import mega.privacy.android.domain.entity.preference.StartScreen
 import mega.privacy.android.domain.entity.preference.StartScreenDestinationPreference
@@ -682,6 +684,36 @@ internal class DefaultSettingsRepository @Inject constructor(
         uiPreferencesGateway.monitorSerialisedStartScreenPreferenceDestination()
             .map { it?.let { StartScreenDestinationPreference(it) } }
             .flowOn(ioDispatcher)
+
+    override fun monitorNavigationItemsPreference(): Flow<NavigationItemsPreference?> =
+        uiPreferencesGateway.monitorSerialisedNavigationItemsPreference()
+            .map { serialised ->
+                serialised?.let {
+                    runCatching {
+                        NavigationItemsPreference(Json.decodeFromString<List<String>>(it))
+                    }.getOrNull()
+                }
+            }
+            .flowOn(ioDispatcher)
+
+    override suspend fun setNavigationItemsPreference(preference: NavigationItemsPreference) {
+        withContext(ioDispatcher) {
+            uiPreferencesGateway.setSerialisedNavigationItemsPreference(
+                Json.encodeToString(preference.orderedVisibleItemIds)
+            )
+        }
+    }
+
+    override fun monitorCustomiseNavigationTooltipShown(): Flow<Boolean> =
+        uiPreferencesGateway.monitorCustomiseNavigationTooltipShown()
+            .map { it == true }
+            .flowOn(ioDispatcher)
+
+    override suspend fun setCustomiseNavigationTooltipShown() {
+        withContext(ioDispatcher) {
+            uiPreferencesGateway.setCustomiseNavigationTooltipShown()
+        }
+    }
 
     override fun monitorColoredFoldersOnboardingShown(): Flow<Boolean> =
         appPreferencesGateway.monitorBoolean(COLORED_FOLDERS_ONBOARDING_SHOWN_KEY, false)

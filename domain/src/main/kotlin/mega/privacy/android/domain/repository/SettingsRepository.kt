@@ -14,6 +14,7 @@ import mega.privacy.android.domain.entity.meeting.UsersCallLimitReminders
 import mega.privacy.android.domain.entity.meeting.WaitingRoomReminders
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.SortDirection
+import mega.privacy.android.domain.entity.preference.NavigationItemsPreference
 import mega.privacy.android.domain.entity.preference.SortingPreference
 import mega.privacy.android.domain.entity.preference.StartScreen
 import mega.privacy.android.domain.entity.preference.StartScreenDestinationPreference
@@ -594,6 +595,32 @@ interface SettingsRepository {
      *
      */
     fun monitorStartScreenPreferenceDestination(): Flow<StartScreenDestinationPreference?>
+
+    /**
+     * Monitor the bottom navigation customisation preference
+     *
+     * @return a flow of the current [NavigationItemsPreference], null if not set
+     */
+    fun monitorNavigationItemsPreference(): Flow<NavigationItemsPreference?>
+
+    /**
+     * Set the bottom navigation customisation preference
+     *
+     * @param preference the [NavigationItemsPreference] to persist
+     */
+    suspend fun setNavigationItemsPreference(preference: NavigationItemsPreference)
+
+    /**
+     * Monitor whether the customise navigation tooltip has been shown
+     *
+     * @return a flow emitting true if the tooltip has been shown, false otherwise
+     */
+    fun monitorCustomiseNavigationTooltipShown(): Flow<Boolean>
+
+    /**
+     * Mark the customise navigation tooltip as shown
+     */
+    suspend fun setCustomiseNavigationTooltipShown()
 
     /**
      * Monitor colored folders onboarding shown preference

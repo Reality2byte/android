@@ -38,6 +38,9 @@ private const val NOTIFICATION_SHOWN_TIMESTAMP = "NOTIFICATION_SHOWN_TIMESTAMP"
 private const val SERIALISED_START_SCREEN_PREFERENCE_DESTINATION =
     "SERIALISED_START_SCREEN_PREFERENCE_DESTINATION"
 private const val LAST_VERSION_NEW_FEATURE_SHOWN = "LAST_VERSION_NEW_FEATURE_SHOWN"
+private const val SERIALISED_NAVIGATION_ITEMS_PREFERENCE =
+    "SERIALISED_NAVIGATION_ITEMS_PREFERENCE"
+private const val CUSTOMISE_NAVIGATION_TOOLTIP_SHOWN = "CUSTOMISE_NAVIGATION_TOOLTIP_SHOWN"
 
 private val Context.uiPreferenceDataStore: DataStore<Preferences> by preferencesDataStore(
     name = USER_INTERFACE_PREFERENCES,
@@ -217,6 +220,28 @@ internal class UIPreferencesDatastore @Inject constructor(
     override fun monitorSerialisedStartScreenPreferenceDestination() =
         context.uiPreferenceDataStore.monitor(
             stringPreferencesKey(SERIALISED_START_SCREEN_PREFERENCE_DESTINATION)
+        )
+
+    override suspend fun setSerialisedNavigationItemsPreference(preference: String) {
+        context.uiPreferenceDataStore.edit {
+            it[stringPreferencesKey(SERIALISED_NAVIGATION_ITEMS_PREFERENCE)] = preference
+        }
+    }
+
+    override fun monitorSerialisedNavigationItemsPreference() =
+        context.uiPreferenceDataStore.monitor(
+            stringPreferencesKey(SERIALISED_NAVIGATION_ITEMS_PREFERENCE)
+        )
+
+    override suspend fun setCustomiseNavigationTooltipShown() {
+        context.uiPreferenceDataStore.edit {
+            it[booleanPreferencesKey(CUSTOMISE_NAVIGATION_TOOLTIP_SHOWN)] = true
+        }
+    }
+
+    override fun monitorCustomiseNavigationTooltipShown() =
+        context.uiPreferenceDataStore.monitor(
+            booleanPreferencesKey(CUSTOMISE_NAVIGATION_TOOLTIP_SHOWN)
         )
 
     override fun monitorLastVersionNewFeatureShownPreference() =
