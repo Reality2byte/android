@@ -334,6 +334,18 @@ enum class ApiFeatures(
         experimentName = "amtp",
         description = "Enable media timeline pagination with fast scroller",
         defaultValue = false,
+    ),
+
+    /**
+     * Customisable bottom navigation.
+     * When enabled, users can choose which sections appear in the bottom navigation bar and in
+     * what order via the Customise Navigation settings screen; the first item is the start screen.
+     */
+    CustomisableBottomNavigation(
+        experimentName = "btnav",
+        description = "Enable customisable bottom navigation",
+        singleCheckPerRun = true,
+        defaultValue = false,
     );
 
     companion object : FeatureFlagValueProvider {
