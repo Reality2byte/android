@@ -25,9 +25,7 @@ import mega.privacy.android.app.presentation.meeting.navigation.MeetingFeatureDe
 import mega.privacy.android.app.presentation.notification.navigation.NotificationsFeatureDestination
 import mega.privacy.android.app.presentation.psa.PsaFeatureDestinations
 import mega.privacy.android.app.presentation.settings.SettingsCameraUploadsFeatureDestination
-import mega.privacy.android.app.mediaplayer.AudioPlayerLaunchSourceHolder
 import mega.privacy.android.app.mediaplayer.Nav3AudioPlayerRouteLauncher
-import mega.privacy.android.app.mediaplayer.navigation.AudioPlayerFeatureDestination
 import mega.privacy.android.app.presentation.videoplayer.VideoPlayerLaunchSourceHolder
 import mega.privacy.android.app.presentation.videoplayer.Nav3VideoPlayerRouteLauncher
 import mega.privacy.android.app.presentation.videoplayer.navigation.VideoPlayerFeatureDestination
@@ -36,6 +34,8 @@ import mega.privacy.android.app.usecase.chat.SetChatVideoInDeviceUseCase
 import mega.privacy.android.core.nodecomponents.mapper.NodeContentUriIntentMapper
 import mega.privacy.android.core.nodecomponents.mapper.ViewTypeToNodeSourceTypeMapper
 import mega.privacy.android.feature.documentscanner.navigation.ContinuousScanDestination
+import mega.privacy.android.feature.mediaplayer.navigation.AudioPlayerFeatureDestination
+import mega.privacy.android.feature.mediaplayer.navigation.AudioPlayerLaunchSourceHolder
 import mega.privacy.android.feature.pdfviewer.navigation.PdfViewerFeatureDestination
 import mega.privacy.android.navigation.contract.FeatureDestination
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue

@@ -47,8 +47,8 @@ import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioB
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioRepeatModeUseCase
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.MonitorAudioShuffleEnabledUseCase
 import mega.privacy.android.domain.usecase.mediaplayer.audioplayer.TrackAudioPlaybackInfoUseCase
-import mega.privacy.android.app.mediaplayer.navigation.AudioPlayerScreenNavKey
 import mega.privacy.android.domain.usecase.setting.MonitorShowHiddenItemsUseCase
+import mega.privacy.android.feature.mediaplayer.navigation.AudioPlayerScreenNavKey
 import mega.privacy.mobile.analytics.event.AudioPlayerIsActivatedEvent
 import timber.log.Timber
 import javax.inject.Inject

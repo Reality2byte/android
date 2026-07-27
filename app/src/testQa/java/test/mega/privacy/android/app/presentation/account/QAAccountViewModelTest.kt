@@ -21,6 +21,7 @@ import mega.privacy.android.domain.entity.user.UserCredentials
 import mega.privacy.android.domain.usecase.login.ChatLogoutUseCase
 import mega.privacy.android.domain.usecase.login.FastLoginUseCase
 import mega.privacy.android.domain.usecase.login.GetAccountCredentialsUseCase
+import mega.privacy.android.domain.usecase.login.LocalLogoutChatAppUseCase
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -43,7 +44,7 @@ class QAAccountViewModelTest {
     private val qaAccountCacheGateway = mock<QAAccountCacheGateway>()
     private val getAccountCredentialsUseCase = mock<GetAccountCredentialsUseCase>()
     private val fastLoginUseCase = mock<FastLoginUseCase>()
-    private val chatLogoutUseCase = mock<ChatLogoutUseCase>()
+    private val localLogoutChatAppUseCase = mock<LocalLogoutChatAppUseCase>()
     private val simulateUserLastActiveDateUseCase = mock<SimulateUserLastActiveDateUseCase>()
     private val getPreviousSimulatedLastActiveDateUseCase =
         mock<GetPreviousSimulatedLastActiveDateUseCase>()
@@ -84,7 +85,7 @@ class QAAccountViewModelTest {
             qaAccountCacheGateway = qaAccountCacheGateway,
             getAccountCredentialsUseCase = getAccountCredentialsUseCase,
             fastLoginUseCase = fastLoginUseCase,
-            chatLogoutUseCase = chatLogoutUseCase,
+            localLogoutChatAppUseCase = localLogoutChatAppUseCase,
             simulateUserLastActiveDateUseCase = simulateUserLastActiveDateUseCase,
             getPreviousSimulatedLastActiveDateUseCase = getPreviousSimulatedLastActiveDateUseCase,
         )
@@ -206,7 +207,7 @@ class QAAccountViewModelTest {
         underTest.switchToAccount(credentials)
         scheduler.advanceUntilIdle()
 
-        verify(chatLogoutUseCase, times(0)).invoke(any())
+        verify(localLogoutChatAppUseCase, times(0)).invoke(any())
         verify(fastLoginUseCase, times(0)).invoke(any(), any(), any())
     }
 
@@ -217,14 +218,14 @@ class QAAccountViewModelTest {
         underTest.switchToAccount(credentials)
         scheduler.advanceUntilIdle()
 
-        verify(chatLogoutUseCase, times(0)).invoke(any())
+        verify(localLogoutChatAppUseCase, times(0)).invoke(any())
         verify(fastLoginUseCase, times(0)).invoke(any(), any(), any())
     }
 
     @Test
     fun `test switchToAccount sets switching state and calls logout and login`() = runTest {
         val credentials = createTestCredentials()
-        whenever(chatLogoutUseCase.invoke(any())).then { }
+        whenever(localLogoutChatAppUseCase.invoke(any())).then { }
         whenever(fastLoginUseCase.invoke(any(), any(), any())).thenReturn(
             flowOf(LoginStatus.LoginSucceed)
         )
@@ -240,7 +241,7 @@ class QAAccountViewModelTest {
         }
 
         // Verify use cases were called
-        verify(chatLogoutUseCase).invoke(any())
+        verify(localLogoutChatAppUseCase).invoke(any())
         verify(fastLoginUseCase).invoke(any(), any(), any())
         verify(qaAccountCacheGateway).updateLastLoginTime(any(), any())
     }
@@ -248,7 +249,7 @@ class QAAccountViewModelTest {
     @Test
     fun `test switchToAccount sets success event when login succeeds`() = runTest {
         val credentials = createTestCredentials()
-        whenever(chatLogoutUseCase.invoke(any())).then { }
+        whenever(localLogoutChatAppUseCase.invoke(any())).then { }
         whenever(fastLoginUseCase.invoke(any(), any(), any())).thenReturn(
             flowOf(LoginStatus.LoginSucceed)
         )
@@ -269,7 +270,7 @@ class QAAccountViewModelTest {
     @Test
     fun `test switchToAccount handles login started status`() = runTest {
         val credentials = createTestCredentials()
-        whenever(chatLogoutUseCase.invoke(any())).then { }
+        whenever(localLogoutChatAppUseCase.invoke(any())).then { }
         whenever(fastLoginUseCase.invoke(any(), any(), any())).thenReturn(
             flowOf(LoginStatus.LoginStarted, LoginStatus.LoginSucceed)
         )
@@ -309,7 +310,7 @@ class QAAccountViewModelTest {
     @Test
     fun `test consumeAccountSwitchEvent resets event to consumed`() = runTest {
         val credentials = createTestCredentials()
-        whenever(chatLogoutUseCase.invoke(any())).then { }
+        whenever(localLogoutChatAppUseCase.invoke(any())).then { }
         whenever(fastLoginUseCase.invoke(any(), any(), any())).thenReturn(
             flowOf(LoginStatus.LoginSucceed)
         )
@@ -405,7 +406,7 @@ class QAAccountViewModelTest {
             qaAccountCacheGateway = qaAccountCacheGateway,
             getAccountCredentialsUseCase = getAccountCredentialsUseCase,
             fastLoginUseCase = fastLoginUseCase,
-            chatLogoutUseCase = chatLogoutUseCase,
+            localLogoutChatAppUseCase = localLogoutChatAppUseCase,
             simulateUserLastActiveDateUseCase = simulateUserLastActiveDateUseCase,
             getPreviousSimulatedLastActiveDateUseCase = getPreviousSimulatedLastActiveDateUseCase,
         )
@@ -422,7 +423,7 @@ class QAAccountViewModelTest {
     fun `test switchToAccount triggers failure event when login fails`() = runTest {
         val credentials = createTestCredentials()
         val exception = RuntimeException("Login failed")
-        whenever(chatLogoutUseCase.invoke(any())).then { }
+        whenever(localLogoutChatAppUseCase.invoke(any())).then { }
         whenever(fastLoginUseCase.invoke(any(), any(), any())).thenReturn(
             flowOf(LoginStatus.LoginStarted)
         )

@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer
+package mega.privacy.android.feature.mediaplayer.navigation
 
 import android.content.Intent
 import java.util.concurrent.ConcurrentHashMap

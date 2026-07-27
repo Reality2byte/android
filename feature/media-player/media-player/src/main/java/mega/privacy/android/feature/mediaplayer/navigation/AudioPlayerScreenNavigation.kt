@@ -1,4 +1,4 @@
-package mega.privacy.android.app.mediaplayer.navigation
+package mega.privacy.android.feature.mediaplayer.navigation
 
 import android.os.Parcelable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,7 +12,6 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
-import mega.privacy.android.app.mediaplayer.AudioPlayerLaunchSourceHolder
 import mega.privacy.android.core.nodecomponents.action.NodeOptionsActionViewModel
 import mega.privacy.android.core.nodecomponents.action.rememberSingleNodeActionHandler
 import mega.privacy.android.core.nodecomponents.sheet.options.DarkNodeOptionsBottomSheetNavKey

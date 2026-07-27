@@ -183,7 +183,12 @@ class AudioPlayerViewModel @Inject constructor(
         prefetchJob = viewModelScope.launch {
             if (userOverriddenMode != null) return@launch
             val node = runCatching { getNodeByHandleUseCase(handle) }
-                .onFailure { Timber.w(it, "Failed to prefetch node for player mode detection, handle=$handle") }
+                .onFailure {
+                    Timber.w(
+                        it,
+                        "Failed to prefetch node for player mode detection, handle=$handle"
+                    )
+                }
                 .getOrNull() as? TypedAudioNode ?: return@launch
             if (userOverriddenMode != null) return@launch
             _isPodcastMode.value = node.duration.inWholeMilliseconds > PODCAST_MODE_DURATION_MS

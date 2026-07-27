@@ -394,7 +394,7 @@ class QALoginViewModelTest {
         verify(loginUseCase).invoke(
             email = eq(TEST_EMAIL),
             password = eq(TEST_PASSWORD),
-            disableChatApiUseCase = any()
+            disableChatApi = any()
         )
     }
 

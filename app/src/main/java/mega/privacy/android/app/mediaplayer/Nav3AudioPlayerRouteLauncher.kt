@@ -5,9 +5,10 @@ import androidx.navigation3.runtime.NavKey
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-import mega.privacy.android.app.mediaplayer.navigation.AudioPlayerScreenNavKey
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
+import mega.privacy.android.feature.mediaplayer.navigation.AudioPlayerLaunchSourceHolder
+import mega.privacy.android.feature.mediaplayer.navigation.AudioPlayerScreenNavKey
 
 /**
  * Decides, for a built media-player [Intent] targeting the audio player, whether it should open as
