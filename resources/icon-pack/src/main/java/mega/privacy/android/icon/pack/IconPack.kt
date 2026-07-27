@@ -164,6 +164,10 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVPNImageVec
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVideoImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVideoJoinImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVideoPlusImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVolumeImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVolumeMaxImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVolumeMinImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineVolumeOffImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineWaveformImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineXCircleImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineXImageVector
@@ -673,6 +677,18 @@ public object IconPack : IconPackInterface {
 
                 override val VideoPlus: ImageVector by
                         lazy { createMediumThinOutlineVideoPlusImageVector() }
+
+                override val Volume: ImageVector by
+                        lazy { createMediumThinOutlineVolumeImageVector() }
+
+                override val VolumeMax: ImageVector by
+                        lazy { createMediumThinOutlineVolumeMaxImageVector() }
+
+                override val VolumeMin: ImageVector by
+                        lazy { createMediumThinOutlineVolumeMinImageVector() }
+
+                override val VolumeOff: ImageVector by
+                        lazy { createMediumThinOutlineVolumeOffImageVector() }
 
                 override val Waveform: ImageVector by
                         lazy { createMediumThinOutlineWaveformImageVector() }

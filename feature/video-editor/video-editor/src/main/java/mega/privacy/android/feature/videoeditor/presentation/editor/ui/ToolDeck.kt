@@ -4,14 +4,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import mega.android.core.ui.components.surface.ColumnSurface
-import mega.android.core.ui.components.surface.SurfaceColor
+import mega.privacy.android.feature.videoeditor.components.ToolDeckSurface
 
 /**
  * Styled container for the active tool's panel. The panel itself is supplied by
@@ -27,11 +24,9 @@ fun ToolDeck(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    ColumnSurface(
-        surfaceColor = SurfaceColor.Surface1,
+    ToolDeckSurface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .systemGestureExclusion(),
     ) {
         Column(modifier = Modifier.padding(vertical = 20.dp), content = content)

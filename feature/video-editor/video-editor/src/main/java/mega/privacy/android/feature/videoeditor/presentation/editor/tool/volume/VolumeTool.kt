@@ -1,22 +1,16 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.volume
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,11 +19,10 @@ import androidx.media3.common.audio.ChannelMixingAudioProcessor
 import androidx.media3.common.audio.ChannelMixingMatrix
 import androidx.media3.common.util.UnstableApi
 import mega.android.core.ui.components.MegaText
-import mega.android.core.ui.components.image.MegaIcon
 import mega.android.core.ui.theme.AppTheme
-import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.feature.videoeditor.components.MAX_VOLUME
+import mega.privacy.android.feature.videoeditor.components.MuteButton
 import mega.privacy.android.feature.videoeditor.components.VolumeSlider
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
@@ -90,57 +83,39 @@ object VolumeTool : EditorTool {
         onAction: (ToolAction) -> Unit,
         modifier: Modifier,
     ) {
-        val percent = (state.volume.volume * 100).toInt()
-        val label = if (percent == 0) "Mute" else "$percent%"
+        val muted = state.volume.volume == 0f
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        // From mute → 100% (restore passthrough); from any other
-                        // volume → mute. A two-step toggle.
-                        .clickable { onAction(VolumeAction.SetVolume(if (percent == 0) 1f else 0f)) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MegaIcon(
-                        imageVector = if (percent == 0) {
-                            Icons.AutoMirrored.Filled.VolumeOff
-                        } else {
-                            Icons.AutoMirrored.Filled.VolumeUp
-                        },
-                        tint = IconColor.Primary,
-                        contentDescription = if (percent == 0) "Unmute" else "Mute",
-                    )
-                }
                 VolumeSlider(
                     value = state.volume.volume,
                     onValueChange = { onAction(VolumeAction.SetVolume(it)) },
                     modifier = Modifier.weight(1f),
                 )
-                MegaText(
-                    text = label,
-                    style = AppTheme.typography.titleSmall,
-                    textColor = TextColor.Primary,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.width(48.dp),
+                MuteButton(
+                    muted = muted,
+                    // From mute → 100% (restore passthrough); from any other
+                    // volume → mute. A two-step toggle.
+                    onClick = { onAction(VolumeAction.SetVolume(if (muted) 1f else 0f)) },
                 )
             }
-            // Soft caveat, only when the user pushes past unity gain.
-            if (state.volume.volume > 1f) {
+            // Soft caveat, only when the user pushes past unity gain. 0.05 extra as debounce to prevent text jumping
+            AnimatedVisibility(
+                visible = state.volume.volume > 1.05f,
+            ) {
                 MegaText(
                     text = "Boost above 100% applies on export only.",
                     style = AppTheme.typography.bodySmall,
                     textColor = TextColor.Secondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp),
                 )
             }
         }

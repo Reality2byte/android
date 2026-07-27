@@ -264,6 +264,10 @@ interface IconPackInterface {
                 val UserRight: ImageVector
                 val Users: ImageVector
                 val UserSquare: ImageVector
+                val Volume: ImageVector
+                val VolumeMax: ImageVector
+                val VolumeMin: ImageVector
+                val VolumeOff: ImageVector
                 val Waveform: ImageVector
                 val Video: ImageVector
                 val VideoJoin: ImageVector
