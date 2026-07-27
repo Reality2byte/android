@@ -28,6 +28,7 @@ import mega.privacy.android.app.appstate.global.initialisation.postlogin.ReloadC
 import mega.privacy.android.app.appstate.global.initialisation.postlogin.SecurityUpgradeInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.postlogin.StartCameraUploadsAfterStorageStateEventInitializer
 import mega.privacy.android.app.appstate.global.initialisation.postlogin.StartTransferWorkerInitializer
+import mega.privacy.android.app.appstate.global.initialisation.postlogin.SubscriptionOfferInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.postlogin.UpdateActiveTransfersInitializer
 import mega.privacy.android.app.appstate.global.initialisation.postlogin.WhatsNewInitializer
 import mega.privacy.android.app.consent.initialiser.ConsentInitialiser
@@ -130,6 +131,11 @@ class InitialisersModule {
     @Provides
     @IntoSet
     fun provideOnboardingPaymentInitialiser(initialiser: OnboardingPaymentInitialiser): PostLoginInitialiser =
+        initialiser
+
+    @Provides
+    @IntoSet
+    fun provideSubscriptionOfferInitialiser(initialiser: SubscriptionOfferInitialiser): PostLoginInitialiser =
         initialiser
 
     @Provides

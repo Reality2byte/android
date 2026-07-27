@@ -35,6 +35,8 @@ internal class SubscriptionOptionListMapper @Inject constructor(
                 .takeIf { expiry -> expiry > 0 },
             offerFlags = request.pricing.getMobileOfferFlags(it)
                 .takeIf { flags -> flags > 0 },
+            offerReshowInterval = request.pricing.getMobileOfferReshowInterval(it)
+                .takeIf { interval -> interval > 0 },
         )
     }
 }

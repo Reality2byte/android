@@ -30,6 +30,7 @@ internal class SubscriptionOptionListMapperTest {
         on { getMobileOfferLabel(0) }.thenReturn("World Backup Day Sale")
         on { getMobileOfferExpiryTimestamp(0) }.thenReturn(1787464050)
         on { getMobileOfferFlags(0) }.thenReturn(5)
+        on { getMobileOfferReshowInterval(0) }.thenReturn(86400)
     }
 
     private val currency = mock<MegaCurrency> {
@@ -55,6 +56,7 @@ internal class SubscriptionOptionListMapperTest {
         discountName = "World Backup Day Sale",
         offerValidUntil = 1787464050,
         offerFlags = 5,
+        offerReshowInterval = 86400,
     )
 
     private val underTest = SubscriptionOptionListMapper(
@@ -86,5 +88,21 @@ internal class SubscriptionOptionListMapperTest {
         whenever(pricing.getMobileOfferFlags(0)).thenReturn(0)
         val actual = underTest(request)
         assertThat(actual.single().offerFlags).isNull()
+    }
+
+    @Test
+    fun `test that offerReshowInterval is mapped when the mobile offer has a reshow interval`() {
+        whenever(accountTypeMapper(1)).thenReturn(subscriptionOption.accountType)
+        whenever(pricing.getMobileOfferReshowInterval(0)).thenReturn(86400)
+        val actual = underTest(request)
+        assertThat(actual.single().offerReshowInterval).isEqualTo(86400)
+    }
+
+    @Test
+    fun `test that offerReshowInterval is null when the mobile offer has no reshow interval`() {
+        whenever(accountTypeMapper(1)).thenReturn(subscriptionOption.accountType)
+        whenever(pricing.getMobileOfferReshowInterval(0)).thenReturn(0)
+        val actual = underTest(request)
+        assertThat(actual.single().offerReshowInterval).isNull()
     }
 }

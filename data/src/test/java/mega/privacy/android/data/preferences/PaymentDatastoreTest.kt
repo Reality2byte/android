@@ -131,8 +131,35 @@ class PaymentDatastoreTest {
             }
         }
 
+    @Test
+    fun `test that the subscription offer last shown time is null by default`() = runTest {
+        assertThat(underTest.getSubscriptionOfferLastShownTime(userHandle)).isNull()
+    }
+
+    @Test
+    fun `test that the subscription offer last shown time is returned after it is set`() = runTest {
+        underTest.setSubscriptionOfferLastShownTime(
+            userHandle = userHandle,
+            timeInMillis = lastShownTime,
+        )
+
+        assertThat(underTest.getSubscriptionOfferLastShownTime(userHandle)).isEqualTo(lastShownTime)
+    }
+
+    @Test
+    fun `test that setting the subscription offer last shown time does not set it for another user`() =
+        runTest {
+            underTest.setSubscriptionOfferLastShownTime(
+                userHandle = userHandle,
+                timeInMillis = lastShownTime,
+            )
+
+            assertThat(underTest.getSubscriptionOfferLastShownTime(otherUserHandle)).isNull()
+        }
+
     private companion object {
         const val userHandle = 123L
         const val otherUserHandle = 456L
+        const val lastShownTime = 1_700_000_000_000L
     }
 }

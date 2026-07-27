@@ -133,5 +133,21 @@ interface BillingRepository {
      */
     suspend fun setSubscriptionOfferMenuBannerClosed()
 
+    /**
+     * Get when the subscription offer screen was last shown to the current user. The preference is
+     * stored per account.
+     *
+     * @return the time in milliseconds, or null when the screen has never been shown
+     */
+    suspend fun getSubscriptionOfferLastShownTime(): Long?
+
+    /**
+     * Persist when the subscription offer screen was last shown to the current user, so it is not
+     * shown again until the offer reshow interval has passed.
+     *
+     * @param timeInMillis the time the screen was shown
+     */
+    suspend fun setSubscriptionOfferLastShownTime(timeInMillis: Long)
+
 }
 

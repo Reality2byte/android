@@ -500,4 +500,34 @@ class DefaultBillingRepositoryTest {
                 closed = true
             )
         }
+
+    @Test
+    fun `test that getSubscriptionOfferLastShownTime returns the preference of the current user`() =
+        runTest {
+            val userHandle = 123L
+            val lastShownTime = 1_700_000_000_000L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+            whenever(paymentPreferencesGateway.getSubscriptionOfferLastShownTime(userHandle))
+                .thenReturn(lastShownTime)
+
+            val actual = underTest.getSubscriptionOfferLastShownTime()
+
+            assertThat(actual).isEqualTo(lastShownTime)
+            verify(paymentPreferencesGateway).getSubscriptionOfferLastShownTime(userHandle)
+        }
+
+    @Test
+    fun `test that setSubscriptionOfferLastShownTime saves the preference for the current user`() =
+        runTest {
+            val userHandle = 123L
+            val lastShownTime = 1_700_000_000_000L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+
+            underTest.setSubscriptionOfferLastShownTime(lastShownTime)
+
+            verify(paymentPreferencesGateway).setSubscriptionOfferLastShownTime(
+                userHandle = userHandle,
+                timeInMillis = lastShownTime
+            )
+        }
 }

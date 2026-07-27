@@ -16,6 +16,8 @@ import mega.privacy.android.domain.entity.account.CurrencyPoint
  * @property discountName    Localised campaign name for an active discount, or null/empty when none
  * @property offerValidUntil Mobile offer expiry timestamp in seconds (utqa "mo.e"), or null when the offer has no expiry
  * @property offerFlags      Mobile offer flags bitmask from the SDK, or null when the offer carries no flags
+ * @property offerReshowInterval Time in seconds that must pass before the mobile offer may be shown
+ * again (utqa "mo.r"), or null when the offer must not be shown again
  */
 data class SubscriptionOption(
     val sku: String,
@@ -30,4 +32,5 @@ data class SubscriptionOption(
     val discountName: String? = null,
     val offerValidUntil: Long? = null,
     val offerFlags: Long? = null,
+    val offerReshowInterval: Long? = null,
 )

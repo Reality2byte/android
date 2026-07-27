@@ -193,4 +193,16 @@ internal class DefaultBillingRepository @Inject constructor(
         )
     }
 
+    override suspend fun getSubscriptionOfferLastShownTime(): Long? = withContext(ioDispatcher) {
+        paymentPreferencesGateway.getSubscriptionOfferLastShownTime(megaApiGateway.myUserHandle)
+    }
+
+    override suspend fun setSubscriptionOfferLastShownTime(timeInMillis: Long) =
+        withContext(ioDispatcher) {
+            paymentPreferencesGateway.setSubscriptionOfferLastShownTime(
+                userHandle = megaApiGateway.myUserHandle,
+                timeInMillis = timeInMillis,
+            )
+        }
+
 }
