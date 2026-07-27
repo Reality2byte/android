@@ -54,7 +54,7 @@ fun RotateTile(
     ) {
         MegaIcon(
             imageVector = icon,
-            tint = if (selected) IconColor.OnColor else IconColor.Secondary,
+            tint = if (selected) IconColor.Primary else IconColor.Secondary,
             contentDescription = label,
             modifier = Modifier.size(24.dp),
         )
@@ -65,7 +65,7 @@ fun RotateTile(
             } else {
                 AppTheme.typography.labelMedium
             },
-            textColor = if (selected) TextColor.OnColor else TextColor.Secondary,
+            textColor = if (selected) TextColor.Primary else TextColor.Secondary,
         )
     }
 }

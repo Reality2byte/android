@@ -1,11 +1,7 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.speed
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
@@ -17,7 +13,7 @@ import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.SpeedChangeEffect
-import mega.privacy.android.feature.videoeditor.components.SpeedChip
+import mega.privacy.android.feature.videoeditor.components.SpeedSelector
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
@@ -83,23 +79,17 @@ object SpeedTool : EditorTool {
         onAction: (ToolAction) -> Unit,
         modifier: Modifier,
     ) {
-        // Just the chip row — the selected chip reads the speed; the new clip
-        // duration can be verified by playing the preview.
-        Row(
+        // Single-choice segmented row — the selected segment reads the speed;
+        // the new clip duration can be verified by playing the preview.
+        SpeedSelector(
+            options = SpeedOptions.map { speed ->
+                "${if (speed % 1f == 0f) speed.toInt() else speed}x"
+            },
+            selectedIndex = SpeedOptions.indexOf(state.speed.speed),
+            onSelect = { index -> onAction(SpeedAction.SetSpeed(SpeedOptions[index])) },
             modifier = modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            SpeedOptions.forEach { speed ->
-                SpeedChip(
-                    label = "${if (speed % 1f == 0f) speed.toInt() else speed}x",
-                    selected = state.speed.speed == speed,
-                    onClick = { onAction(SpeedAction.SetSpeed(speed)) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+                .padding(horizontal = 16.dp),
+        )
     }
 }
