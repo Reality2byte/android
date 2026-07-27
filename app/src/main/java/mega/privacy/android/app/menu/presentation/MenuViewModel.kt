@@ -6,14 +6,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
@@ -28,6 +29,7 @@ import mega.privacy.android.app.menu.navigation.StorageItem
 import mega.privacy.android.app.presentation.mapper.AccountTypeIconMapper
 import mega.privacy.android.app.presentation.mapper.GetStringFromStringResMapper
 import mega.privacy.android.app.presentation.mapper.file.FileSizeStringMapper
+import mega.privacy.android.core.formatter.stripLinkAnnotations
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.user.UserChanges
 import mega.privacy.android.domain.qualifier.IoDispatcher
@@ -40,6 +42,9 @@ import mega.privacy.android.domain.usecase.account.GetSpecificAccountDetailUseCa
 import mega.privacy.android.domain.usecase.account.IsAchievementsEnabledUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.avatar.GetMyAvatarFileUseCase
+import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
+import mega.privacy.android.domain.usecase.billing.MonitorSubscriptionOfferMenuBannerClosedUseCase
+import mega.privacy.android.domain.usecase.billing.SetSubscriptionOfferMenuBannerClosedUseCase
 import mega.privacy.android.domain.usecase.contact.GetCurrentUserEmail
 import mega.privacy.android.domain.usecase.login.CheckPasswordReminderUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
@@ -48,9 +53,11 @@ import mega.privacy.android.domain.usecase.notifications.MonitorNotSeenUserAlert
 import mega.privacy.android.feature.myaccount.presentation.mapper.AccountTypeNameMapper
 import mega.privacy.android.feature.myaccount.presentation.mapper.AvatarContentMapper
 import mega.privacy.android.navigation.contract.NavDrawerItem
-import mega.privacy.android.core.formatter.stripLinkAnnotations
 import mega.privacy.android.shared.resources.R as SharedR
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -75,6 +82,10 @@ class MenuViewModel @Inject constructor(
     private val getRubbishNodeUseCase: GetRubbishNodeUseCase,
     private val getSpecificAccountDetailUseCase: GetSpecificAccountDetailUseCase,
     private val avatarContentMapper: AvatarContentMapper,
+    private val getRecommendedSubscriptionWithOfferUseCase: GetRecommendedSubscriptionWithOfferUseCase,
+    private val monitorSubscriptionOfferMenuBannerClosedUseCase: MonitorSubscriptionOfferMenuBannerClosedUseCase,
+    private val setSubscriptionOfferMenuBannerClosedUseCase: SetSubscriptionOfferMenuBannerClosedUseCase,
+    private val subscriptionOfferBannerMapper: SubscriptionOfferBannerMapper,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     // Flows for items that need dynamic subtitles
@@ -100,6 +111,43 @@ class MenuViewModel @Inject constructor(
         monitorUserChanges()
         monitorUnreadNotificationsCount()
         monitorNodeUpdatesForRubbishBin()
+        loadSubscriptionOfferBanner()
+    }
+
+    /**
+     * Load the subscription offer banner. The offer is not delivered by the banners API, so it is
+     * built locally from the recommended subscription that currently carries an offer.
+     */
+    private fun loadSubscriptionOfferBanner() {
+        viewModelScope.launch {
+            val offerBanner = runCatching { getSubscriptionOfferBanner() }
+                .onFailure { Timber.e(it, "Failed to load subscription offer banner") }
+                .getOrNull()
+            _uiState.update { it.copy(offerBanner = offerBanner) }
+        }
+    }
+
+    private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? {
+        if (monitorSubscriptionOfferMenuBannerClosedUseCase().first()) return null
+        return getRecommendedSubscriptionWithOfferUseCase()
+            ?.let { subscriptionOfferBannerMapper(it, Locale.getDefault()) }
+    }
+
+    /**
+     * Dismiss the subscription offer banner. The banner only exists locally, so instead of calling
+     * the banners API its dismissal is persisted per account, keeping it hidden on the next app
+     * launch. The Menu banner is tracked separately from the Home carousel one, so dismissing it
+     * here leaves the Home banner visible.
+     */
+    fun dismissOfferBanner() {
+        viewModelScope.launch {
+            runCatching {
+                setSubscriptionOfferMenuBannerClosedUseCase()
+            }.onFailure { exception ->
+                Timber.e(exception, "Failed to persist subscription offer banner dismissal")
+            }
+            _uiState.update { it.copy(offerBanner = null) }
+        }
     }
 
     private fun setMenuItems() {

@@ -5,6 +5,7 @@ import de.palm.composestateevents.consumed
 import mega.privacy.android.feature.myaccount.presentation.model.AvatarContent
 import mega.privacy.android.navigation.contract.NavDrawerItem
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 
 data class MenuUiState(
     val myAccountItems: Map<Int, NavDrawerItem.Account> = emptyMap(),
@@ -19,4 +20,5 @@ data class MenuUiState(
     val isLoggingOut: Boolean = false,
     val unreadNotificationsCount: Int = 0,
     val analyticsEventIdentifier: NavigationEventIdentifier? = null,
+    val offerBanner: SubscriptionOfferBannerUiModel? = null,
 )

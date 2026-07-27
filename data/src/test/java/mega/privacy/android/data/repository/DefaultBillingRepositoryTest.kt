@@ -472,4 +472,32 @@ class DefaultBillingRepositoryTest {
                 closed = true
             )
         }
+
+    @Test
+    fun `test that monitorSubscriptionOfferMenuBannerClosed monitors the preference of the current user`() =
+        runTest {
+            val userHandle = 123L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+            whenever(paymentPreferencesGateway.monitorSubscriptionOfferMenuBannerClosed(userHandle))
+                .thenReturn(flowOf(true))
+
+            val actual = underTest.monitorSubscriptionOfferMenuBannerClosed().first()
+
+            assertThat(actual).isTrue()
+            verify(paymentPreferencesGateway).monitorSubscriptionOfferMenuBannerClosed(userHandle)
+        }
+
+    @Test
+    fun `test that setSubscriptionOfferMenuBannerClosed saves the preference for the current user`() =
+        runTest {
+            val userHandle = 123L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+
+            underTest.setSubscriptionOfferMenuBannerClosed()
+
+            verify(paymentPreferencesGateway).setSubscriptionOfferMenuBannerClosed(
+                userHandle = userHandle,
+                closed = true
+            )
+        }
 }

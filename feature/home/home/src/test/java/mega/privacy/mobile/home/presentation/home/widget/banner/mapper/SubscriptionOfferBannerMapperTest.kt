@@ -24,6 +24,7 @@ class SubscriptionOfferBannerMapperTest {
         discountedAmountMonthly = CurrencyAmount(4.99f, Currency("EUR")),
         discountedPercentage = 50,
         discountName = "Black Friday",
+        offerValidUntil = 1_785_000_000L,
     )
 
     @Test
@@ -35,6 +36,14 @@ class SubscriptionOfferBannerMapperTest {
         assertThat(result?.discountPercentage).isEqualTo(50)
         assertThat(result?.formattedPrice).isEqualTo("€4.99")
         assertThat(result?.planNameRes).isEqualTo(sharedR.string.pro1_account)
+        assertThat(result?.validUntil).isEqualTo(1_785_000_000L)
+    }
+
+    @Test
+    fun `test that invoke maps a missing expiry to zero`() {
+        val result = underTest(subscription.copy(offerValidUntil = null), Locale.US)
+
+        assertThat(result?.validUntil).isEqualTo(0L)
     }
 
     @Test

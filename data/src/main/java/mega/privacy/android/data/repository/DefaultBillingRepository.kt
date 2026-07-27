@@ -183,4 +183,14 @@ internal class DefaultBillingRepository @Inject constructor(
         )
     }
 
+    override fun monitorSubscriptionOfferMenuBannerClosed(): Flow<Boolean> =
+        paymentPreferencesGateway.monitorSubscriptionOfferMenuBannerClosed(megaApiGateway.myUserHandle)
+
+    override suspend fun setSubscriptionOfferMenuBannerClosed() = withContext(ioDispatcher) {
+        paymentPreferencesGateway.setSubscriptionOfferMenuBannerClosed(
+            userHandle = megaApiGateway.myUserHandle,
+            closed = true,
+        )
+    }
+
 }

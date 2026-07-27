@@ -23,6 +23,7 @@ import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.parcelize.Parcelize
+import mega.android.core.ui.model.LocalizedText
 import mega.privacy.android.analytics.test.AnalyticsTestRule
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.ACCOUNT_ITEM
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.AVATAR
@@ -31,13 +32,19 @@ import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.LOGOU
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.MY_ACCOUNT_ITEM
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.NOTIFICATION_BADGE
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.NOTIFICATION_ICON
+import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.OFFER_BANNER
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.PRIVACY_SUITE_HEADER
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.PRIVACY_SUITE_ITEM
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.TOOLBAR
 import mega.privacy.android.feature.myaccount.presentation.model.TextAvatarContent
+import mega.privacy.android.feature.payment.components.TEST_TAG_OFFER_BANNER_BUTTON
+import mega.privacy.android.feature.payment.components.TEST_TAG_OFFER_BANNER_DISMISS
 import mega.privacy.android.navigation.contract.DefaultNumberBadge
 import mega.privacy.android.navigation.contract.MainNavItemBadge
 import mega.privacy.android.navigation.contract.NavDrawerItem
+import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
+import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import mega.privacy.mobile.analytics.event.LogoutButtonPressedEvent
 import org.junit.Rule
 import org.junit.Test
@@ -98,6 +105,7 @@ class MenuHomeScreeUiTest {
         onLogoutClicked: () -> Unit = {},
         onResetTestPasswordScreenEvent: () -> Unit = {},
         onResetLogoutConfirmationEvent: () -> Unit = {},
+        onOfferBannerDismissed: () -> Unit = {},
     ) {
         composeRule.setContent {
             MenuHomeScreenUi(
@@ -106,6 +114,7 @@ class MenuHomeScreeUiTest {
                 onLogoutClicked = onLogoutClicked,
                 onResetTestPasswordScreenEvent = onResetTestPasswordScreenEvent,
                 onResetLogoutConfirmationEvent = onResetLogoutConfirmationEvent,
+                onOfferBannerDismissed = onOfferBannerDismissed,
             )
         }
     }
@@ -124,10 +133,59 @@ class MenuHomeScreeUiTest {
         unreadNotificationsCount = notificationCount,
     )
 
+    private val offerBanner = SubscriptionOfferBannerUiModel(
+        campaignName = LocalizedText.Literal("Black Friday"),
+        discountPercentage = 50,
+        formattedPrice = "€4.99",
+        planNameRes = sharedR.string.pro1_account,
+        validUntil = System.currentTimeMillis() / 1000L + 28L * 24L * 3600L,
+    )
+
     @Test
     fun `test that toolbar is displayed`() {
         setupRule()
         composeRule.onNodeWithTag(TOOLBAR).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that offer banner is not displayed when there is no offer`() {
+        setupRule()
+        composeRule.onNodeWithTag(OFFER_BANNER).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that offer banner is displayed when an offer exists`() {
+        setupRule(uiState = createDefaultMenuUiState().copy(offerBanner = offerBanner))
+
+        composeRule.onNodeWithTag(OFFER_BANNER).assertIsDisplayed()
+        composeRule.onNodeWithText("Black Friday · Get 50% off").assertIsDisplayed()
+        composeRule.onNodeWithText("€4.99/month for Pro I").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that offer banner button navigates to the subscription offer screen`() {
+        val navigateToFeature = mock<(NavKey) -> Unit>()
+        setupRule(
+            uiState = createDefaultMenuUiState().copy(offerBanner = offerBanner),
+            navigateToFeature = navigateToFeature,
+        )
+
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_BANNER_BUTTON).performClick()
+
+        verify(navigateToFeature).invoke(SubscriptionOfferNavKey)
+    }
+
+    @Test
+    fun `test that offer banner dismiss icon invokes the dismiss callback`() {
+        val onOfferBannerDismissed = mock<() -> Unit>()
+        setupRule(
+            uiState = createDefaultMenuUiState().copy(offerBanner = offerBanner),
+            onOfferBannerDismissed = onOfferBannerDismissed,
+        )
+
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_BANNER_DISMISS).performClick()
+
+        verify(onOfferBannerDismissed).invoke()
     }
 
     @Test

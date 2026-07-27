@@ -76,6 +76,61 @@ class PaymentDatastoreTest {
             }
         }
 
+    @Test
+    fun `test that the subscription offer menu banner is not closed by default`() = runTest {
+        underTest.monitorSubscriptionOfferMenuBannerClosed(userHandle).test {
+            assertThat(expectMostRecentItem()).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that the subscription offer menu banner is closed after it is set`() = runTest {
+        underTest.setSubscriptionOfferMenuBannerClosed(userHandle = userHandle, closed = true)
+
+        underTest.monitorSubscriptionOfferMenuBannerClosed(userHandle).test {
+            assertThat(expectMostRecentItem()).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that closing the subscription offer menu banner does not close the home banner`() =
+        runTest {
+            underTest.setSubscriptionOfferMenuBannerClosed(userHandle = userHandle, closed = true)
+
+            underTest.monitorSubscriptionOfferBannerClosed(userHandle).test {
+                assertThat(expectMostRecentItem()).isFalse()
+            }
+            underTest.monitorSubscriptionOfferMenuBannerClosed(userHandle).test {
+                assertThat(expectMostRecentItem()).isTrue()
+            }
+        }
+
+    @Test
+    fun `test that closing the subscription offer home banner does not close the menu banner`() =
+        runTest {
+            underTest.setSubscriptionOfferBannerClosed(userHandle = userHandle, closed = true)
+
+            underTest.monitorSubscriptionOfferMenuBannerClosed(userHandle).test {
+                assertThat(expectMostRecentItem()).isFalse()
+            }
+            underTest.monitorSubscriptionOfferBannerClosed(userHandle).test {
+                assertThat(expectMostRecentItem()).isTrue()
+            }
+        }
+
+    @Test
+    fun `test that closing the subscription offer menu banner does not close it for another user`() =
+        runTest {
+            underTest.setSubscriptionOfferMenuBannerClosed(userHandle = userHandle, closed = true)
+
+            underTest.monitorSubscriptionOfferMenuBannerClosed(otherUserHandle).test {
+                assertThat(expectMostRecentItem()).isFalse()
+            }
+            underTest.monitorSubscriptionOfferMenuBannerClosed(userHandle).test {
+                assertThat(expectMostRecentItem()).isTrue()
+            }
+        }
+
     private companion object {
         const val userHandle = 123L
         const val otherUserHandle = 456L

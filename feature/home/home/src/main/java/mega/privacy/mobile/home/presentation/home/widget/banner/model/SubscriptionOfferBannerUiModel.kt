@@ -15,6 +15,8 @@ import mega.android.core.ui.model.LocalizedText
  * @property discountPercentage Discount percentage shown in the headline (e.g. 50 for "50% off").
  * @property formattedPrice Locale-formatted discounted monthly price (e.g. "€4.99").
  * @property planNameRes Plan name string resource (e.g. "Pro I").
+ * @property validUntil Offer expiry as epoch seconds, driving the countdown on banners that show
+ * one; 0 when the offer carries no expiry, which hides the countdown.
  */
 @Immutable
 data class SubscriptionOfferBannerUiModel(
@@ -22,4 +24,5 @@ data class SubscriptionOfferBannerUiModel(
     val discountPercentage: Int,
     val formattedPrice: String,
     @StringRes val planNameRes: Int,
+    val validUntil: Long,
 )

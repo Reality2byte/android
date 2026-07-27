@@ -67,17 +67,20 @@ import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.LOGOU
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.MY_ACCOUNT_ITEM
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.NOTIFICATION_BADGE
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.NOTIFICATION_ICON
+import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.OFFER_BANNER
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.PRIVACY_SUITE_HEADER
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.PRIVACY_SUITE_ITEM
 import mega.privacy.android.app.menu.presentation.MenuHomeScreenUiTestTags.TOOLBAR
 import mega.privacy.android.app.presentation.logout.LogoutConfirmationDialogM3NavKey
 import mega.privacy.android.feature.myaccount.presentation.model.TextAvatarContent
+import mega.privacy.android.feature.payment.components.OfferBanner
 import mega.privacy.android.feature.myaccount.presentation.widget.view.Avatar
 import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.icon.pack.R as IconPackR
 import mega.privacy.android.navigation.contract.NavDrawerItem
 import mega.privacy.android.navigation.destination.MyAccountNavKey
 import mega.privacy.android.navigation.destination.NotificationsNavKey
+import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
 import mega.privacy.android.navigation.destination.TestPasswordNavKey
 import mega.privacy.android.shared.original.core.ui.utils.composeLet
 import mega.privacy.android.shared.resources.R as sharedR
@@ -100,7 +103,8 @@ fun MenuHomeScreen(
         navigateToFeature = navigateToFeature,
         onLogoutClicked = viewModel::logout,
         onResetTestPasswordScreenEvent = viewModel::resetTestPasswordScreenEvent,
-        onResetLogoutConfirmationEvent = viewModel::resetLogoutConfirmationEvent
+        onResetLogoutConfirmationEvent = viewModel::resetLogoutConfirmationEvent,
+        onOfferBannerDismissed = viewModel::dismissOfferBanner
     )
 }
 
@@ -111,6 +115,7 @@ fun MenuHomeScreenUi(
     onLogoutClicked: () -> Unit,
     onResetTestPasswordScreenEvent: () -> Unit,
     onResetLogoutConfirmationEvent: () -> Unit,
+    onOfferBannerDismissed: () -> Unit = {},
 ) {
     var isPrivacySuiteExpanded by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
@@ -216,6 +221,30 @@ fun MenuHomeScreenUi(
                         Analytics.tracker.trackEvent(MyAccountProfileNavigationItemEvent)
                     }
                 )
+            }
+
+            uiState.offerBanner?.let { offerBanner ->
+                item(key = OFFER_BANNER) {
+                    OfferBanner(
+                        title = stringResource(
+                            sharedR.string.home_offer_banner_title,
+                            offerBanner.campaignName.text,
+                            offerBanner.discountPercentage,
+                        ),
+                        subtitle = stringResource(
+                            sharedR.string.home_offer_banner_subtitle,
+                            offerBanner.formattedPrice,
+                            stringResource(offerBanner.planNameRes),
+                        ),
+                        validUntil = offerBanner.validUntil,
+                        actionButtonText = stringResource(sharedR.string.home_offer_banner_button),
+                        onActionClick = { navigateToFeature(SubscriptionOfferNavKey) },
+                        onDismissClick = onOfferBannerDismissed,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .testTag(OFFER_BANNER),
+                    )
+                }
             }
 
             items(
@@ -472,4 +501,5 @@ internal object MenuHomeScreenUiTestTags {
     const val LOGOUT_BUTTON = "$MENU_HOME_SCREEN:logout_button"
     const val BADGE = "$MENU_HOME_SCREEN:badge"
     const val AVATAR = "$MENU_HOME_SCREEN:avatar"
+    const val OFFER_BANNER = "$MENU_HOME_SCREEN:offer_banner"
 }

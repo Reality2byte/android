@@ -30,10 +30,26 @@ internal class PaymentDatastore @Inject constructor(
         }
     }
 
+    override fun monitorSubscriptionOfferMenuBannerClosed(userHandle: Long): Flow<Boolean> =
+        paymentPreferenceDataStore.data.map {
+            it[subscriptionOfferMenuBannerClosedKey(userHandle)] == true
+        }
+
+    override suspend fun setSubscriptionOfferMenuBannerClosed(userHandle: Long, closed: Boolean) {
+        paymentPreferenceDataStore.edit {
+            it[subscriptionOfferMenuBannerClosedKey(userHandle)] = closed
+        }
+    }
+
     private fun subscriptionOfferBannerClosedKey(userHandle: Long) =
         booleanPreferencesKey("${userHandle}_$SUBSCRIPTION_OFFER_BANNER_CLOSED")
 
+    private fun subscriptionOfferMenuBannerClosedKey(userHandle: Long) =
+        booleanPreferencesKey("${userHandle}_$SUBSCRIPTION_OFFER_MENU_BANNER_CLOSED")
+
     companion object {
         private const val SUBSCRIPTION_OFFER_BANNER_CLOSED = "SUBSCRIPTION_OFFER_BANNER_CLOSED"
+        private const val SUBSCRIPTION_OFFER_MENU_BANNER_CLOSED =
+            "SUBSCRIPTION_OFFER_MENU_BANNER_CLOSED"
     }
 }

@@ -29,6 +29,7 @@ import mega.privacy.android.app.presentation.mapper.GetStringFromStringResMapper
 import mega.privacy.android.app.presentation.mapper.file.FileSizeStringMapper
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.AccountType
+import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.account.AccountDetail
 import mega.privacy.android.domain.entity.account.AccountLevelDetail
 import mega.privacy.android.domain.entity.account.AccountStorageDetail
@@ -46,6 +47,9 @@ import mega.privacy.android.domain.usecase.account.GetSpecificAccountDetailUseCa
 import mega.privacy.android.domain.usecase.account.IsAchievementsEnabledUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.avatar.GetMyAvatarFileUseCase
+import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
+import mega.privacy.android.domain.usecase.billing.MonitorSubscriptionOfferMenuBannerClosedUseCase
+import mega.privacy.android.domain.usecase.billing.SetSubscriptionOfferMenuBannerClosedUseCase
 import mega.privacy.android.domain.usecase.contact.GetCurrentUserEmail
 import mega.privacy.android.domain.usecase.login.CheckPasswordReminderUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
@@ -58,6 +62,8 @@ import mega.privacy.android.feature.myaccount.presentation.model.TextAvatarConte
 import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.navigation.contract.NavDrawerItem
 import mega.privacy.android.shared.resources.R as SharedR
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -67,11 +73,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.stub
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import java.io.File
 
@@ -99,6 +107,13 @@ class MenuViewModelTest {
     private val getRubbishNodeUseCase = mock<GetRubbishNodeUseCase>()
     private val getSpecificAccountDetailUseCase = mock<GetSpecificAccountDetailUseCase>()
     private val avatarContentMapper = mock<AvatarContentMapper>()
+    private val getRecommendedSubscriptionWithOfferUseCase =
+        mock<GetRecommendedSubscriptionWithOfferUseCase>()
+    private val monitorSubscriptionOfferMenuBannerClosedUseCase =
+        mock<MonitorSubscriptionOfferMenuBannerClosedUseCase>()
+    private val setSubscriptionOfferMenuBannerClosedUseCase =
+        mock<SetSubscriptionOfferMenuBannerClosedUseCase>()
+    private val subscriptionOfferBannerMapper = mock<SubscriptionOfferBannerMapper>()
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private object TestDestination : NavKey
@@ -134,7 +149,20 @@ class MenuViewModelTest {
             getRubbishNodeUseCase,
             getSpecificAccountDetailUseCase,
             avatarContentMapper,
+            getRecommendedSubscriptionWithOfferUseCase,
+            monitorSubscriptionOfferMenuBannerClosedUseCase,
+            setSubscriptionOfferMenuBannerClosedUseCase,
+            subscriptionOfferBannerMapper,
         )
+        stubOfferBannerNotClosed()
+    }
+
+    private fun stubOfferBannerNotClosed() {
+        whenever(monitorSubscriptionOfferMenuBannerClosedUseCase()).thenReturn(flowOf(false))
+    }
+
+    private fun stubOfferBannerClosed() {
+        whenever(monitorSubscriptionOfferMenuBannerClosedUseCase()).thenReturn(flowOf(true))
     }
 
     @Test
@@ -889,6 +917,118 @@ class MenuViewModelTest {
         }
     }
 
+    @Test
+    fun `test that init emits the offer banner when a subscription with an offer exists`() =
+        runTest {
+            stubDefaultDependencies()
+            val subscription = mock<Subscription>()
+            val offerBanner = mock<SubscriptionOfferBannerUiModel>()
+            whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(subscription)
+            whenever(subscriptionOfferBannerMapper(eq(subscription), any()))
+                .thenReturn(offerBanner)
+
+            initUnderTest()
+
+            underTest.uiState.test {
+                assertThat(awaitItem().offerBanner).isEqualTo(offerBanner)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that init emits no offer banner when no subscription carries an offer`() = runTest {
+        stubDefaultDependencies()
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(null)
+
+        initUnderTest()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().offerBanner).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that init emits no offer banner when the offer lookup fails`() = runTest {
+        stubDefaultDependencies()
+        whenever(getRecommendedSubscriptionWithOfferUseCase())
+            .thenAnswer { throw RuntimeException("Billing unavailable") }
+
+        initUnderTest()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().offerBanner).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that init emits no offer banner when the menu banner was already dismissed`() =
+        runTest {
+            stubDefaultDependencies()
+            stubOfferBannerClosed()
+
+            initUnderTest()
+
+            underTest.uiState.test {
+                assertThat(awaitItem().offerBanner).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+            verifyNoInteractions(getRecommendedSubscriptionWithOfferUseCase)
+        }
+
+    @Test
+    fun `test that dismissOfferBanner removes the offer banner from the state`() = runTest {
+        stubDefaultDependencies()
+        val subscription = mock<Subscription>()
+        val offerBanner = mock<SubscriptionOfferBannerUiModel>()
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(subscription)
+        whenever(subscriptionOfferBannerMapper(eq(subscription), any())).thenReturn(offerBanner)
+
+        initUnderTest()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().offerBanner).isEqualTo(offerBanner)
+            underTest.dismissOfferBanner()
+            assertThat(awaitItem().offerBanner).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that dismissOfferBanner persists the dismissal`() = runTest {
+        stubDefaultDependencies()
+        val subscription = mock<Subscription>()
+        val offerBanner = mock<SubscriptionOfferBannerUiModel>()
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(subscription)
+        whenever(subscriptionOfferBannerMapper(eq(subscription), any())).thenReturn(offerBanner)
+
+        initUnderTest()
+        underTest.dismissOfferBanner()
+
+        verify(setSubscriptionOfferMenuBannerClosedUseCase).invoke()
+    }
+
+    @Test
+    fun `test that dismissOfferBanner hides the banner when persisting fails`() = runTest {
+        stubDefaultDependencies()
+        val subscription = mock<Subscription>()
+        val offerBanner = mock<SubscriptionOfferBannerUiModel>()
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(subscription)
+        whenever(subscriptionOfferBannerMapper(eq(subscription), any())).thenReturn(offerBanner)
+        whenever(setSubscriptionOfferMenuBannerClosedUseCase())
+            .thenAnswer { throw RuntimeException("Datastore unavailable") }
+
+        initUnderTest()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().offerBanner).isEqualTo(offerBanner)
+            underTest.dismissOfferBanner()
+            assertThat(awaitItem().offerBanner).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun initUnderTest(
         menuItems: Map<Int, NavDrawerItem> = emptyMap(),
     ) {
@@ -913,6 +1053,10 @@ class MenuViewModelTest {
             getRubbishNodeUseCase = getRubbishNodeUseCase,
             getSpecificAccountDetailUseCase = getSpecificAccountDetailUseCase,
             avatarContentMapper = avatarContentMapper,
+            getRecommendedSubscriptionWithOfferUseCase = getRecommendedSubscriptionWithOfferUseCase,
+            monitorSubscriptionOfferMenuBannerClosedUseCase = monitorSubscriptionOfferMenuBannerClosedUseCase,
+            setSubscriptionOfferMenuBannerClosedUseCase = setSubscriptionOfferMenuBannerClosedUseCase,
+            subscriptionOfferBannerMapper = subscriptionOfferBannerMapper,
             ioDispatcher = testDispatcher,
         )
     }

@@ -120,5 +120,18 @@ interface BillingRepository {
      */
     suspend fun setSubscriptionOfferBannerClosed()
 
+    /**
+     * Monitor whether the current user has closed the subscription offer banner on the Menu screen.
+     * Tracked separately from [monitorSubscriptionOfferBannerClosed], so dismissing the banner on
+     * one surface leaves it visible on the other.
+     */
+    fun monitorSubscriptionOfferMenuBannerClosed(): Flow<Boolean>
+
+    /**
+     * Persist that the current user has closed the subscription offer banner on the Menu screen, so
+     * it stays hidden on the next app launch.
+     */
+    suspend fun setSubscriptionOfferMenuBannerClosed()
+
 }
 
