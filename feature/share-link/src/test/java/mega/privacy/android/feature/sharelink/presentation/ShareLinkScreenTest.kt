@@ -173,6 +173,43 @@ class ShareLinkScreenTest {
     }
 
     @Test
+    fun `test that the copyright consent screen is displayed in the CopyrightConsent state`() {
+        setContent(uiState = ShareLinkUiState.CopyrightConsent)
+
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(sharedR.string.copyright_screen_title))
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_AGREE_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_DISAGREE_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that tapping Agree invokes onCopyrightAgreed`() {
+        var agreed = false
+        setContent(
+            uiState = ShareLinkUiState.CopyrightConsent,
+            onCopyrightAgreed = { agreed = true },
+        )
+
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_AGREE_TAG).performClick()
+
+        assertThat(agreed).isTrue()
+    }
+
+    @Test
+    fun `test that tapping Disagree invokes onCopyrightDisagreed`() {
+        var disagreed = false
+        setContent(
+            uiState = ShareLinkUiState.CopyrightConsent,
+            onCopyrightDisagreed = { disagreed = true },
+        )
+
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_DISAGREE_TAG).performClick()
+
+        assertThat(disagreed).isTrue()
+    }
+
+    @Test
     fun `test that the loading placeholder is displayed in the Loading state`() {
         setContent(uiState = ShareLinkUiState.Loading)
 
@@ -461,6 +498,8 @@ class ShareLinkScreenTest {
         onLinksCopied: () -> Unit = {},
         onSensitiveWarningConfirmed: () -> Unit = {},
         onSensitiveWarningDismissed: () -> Unit = {},
+        onCopyrightAgreed: () -> Unit = {},
+        onCopyrightDisagreed: () -> Unit = {},
         clipboard: Clipboard = FakeClipboard(),
     ) {
         composeRule.setContent {
@@ -476,6 +515,8 @@ class ShareLinkScreenTest {
                     onLinksCopied = onLinksCopied,
                     onSensitiveWarningConfirmed = onSensitiveWarningConfirmed,
                     onSensitiveWarningDismissed = onSensitiveWarningDismissed,
+                    onCopyrightAgreed = onCopyrightAgreed,
+                    onCopyrightDisagreed = onCopyrightDisagreed,
                 )
             }
         }

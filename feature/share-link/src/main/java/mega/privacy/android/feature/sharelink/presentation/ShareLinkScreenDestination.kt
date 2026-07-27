@@ -108,6 +108,11 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
                         )
                     }
                 },
+                onCopyrightAgreed = viewModel::onCopyrightAgreed,
+                onCopyrightDisagreed = {
+                    viewModel.onCopyrightDisagreed()
+                    navigationHandler.back()
+                },
             )
         }
     }

@@ -20,6 +20,8 @@ import mega.privacy.android.domain.entity.node.TypedFolderNode
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveDescendantUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveInheritedUseCase
+import mega.privacy.android.domain.usecase.SetShowCopyrightUseCase
+import mega.privacy.android.domain.usecase.ShouldShowCopyrightUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.link.SplitLinkAndKeyUseCase
 import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
@@ -53,6 +55,8 @@ class ShareLinkViewModelTest {
     private val fileTypeIconMapper = mock<FileTypeIconMapper>()
     private val hasSensitiveInheritedUseCase = mock<HasSensitiveInheritedUseCase>()
     private val hasSensitiveDescendantUseCase = mock<HasSensitiveDescendantUseCase>()
+    private val shouldShowCopyrightUseCase = mock<ShouldShowCopyrightUseCase>()
+    private val setShowCopyrightUseCase = mock<SetShowCopyrightUseCase>()
     private val passwordCache = mock<ShareLinkPasswordCache>()
     private val separateKeyCache = mock<ShareLinkSeparateKeyCache>()
 
@@ -65,6 +69,7 @@ class ShareLinkViewModelTest {
         whenever(separateKeyCache.monitor(any())).thenReturn(flowOf(false))
         whenever { hasSensitiveInheritedUseCase(any()) }.thenReturn(false)
         whenever { hasSensitiveDescendantUseCase(any()) }.thenReturn(false)
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(false)
         underTest = buildViewModel(listOf(NODE_HANDLE))
     }
 
@@ -77,6 +82,8 @@ class ShareLinkViewModelTest {
         fileTypeIconMapper = fileTypeIconMapper,
         hasSensitiveInheritedUseCase = hasSensitiveInheritedUseCase,
         hasSensitiveDescendantUseCase = hasSensitiveDescendantUseCase,
+        shouldShowCopyrightUseCase = shouldShowCopyrightUseCase,
+        setShowCopyrightUseCase = setShowCopyrightUseCase,
         passwordCache = passwordCache,
         separateKeyCache = separateKeyCache,
     )
@@ -91,6 +98,8 @@ class ShareLinkViewModelTest {
             fileTypeIconMapper,
             hasSensitiveInheritedUseCase,
             hasSensitiveDescendantUseCase,
+            shouldShowCopyrightUseCase,
+            setShowCopyrightUseCase,
             passwordCache,
             separateKeyCache,
         )
@@ -515,6 +524,97 @@ class ShareLinkViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         verify(exportNodesUseCase, never()).invoke(any(), any())
+    }
+
+    @Test
+    fun `test that copyright consent is shown before any export when consent is due`() = runTest {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "new.pdf"
+            on { exportedData } doReturn null
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(true)
+
+        underTest.uiState.test {
+            assertThat(awaitCopyright()).isEqualTo(ShareLinkUiState.CopyrightConsent)
+            verify(exportNodesUseCase, never()).invoke(any(), any())
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(setShowCopyrightUseCase, never()).invoke(any())
+    }
+
+    @Test
+    fun `test that agreeing to copyright persists acceptance and proceeds to Data`() = runTest {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "new.pdf"
+            on { exportedData } doReturn null
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(true)
+        whenever(exportNodesUseCase(listOf(NODE_HANDLE), CALLER_NAME))
+            .thenReturn(mapOf(NODE_HANDLE to "https://mega.nz/file/new#k"))
+
+        underTest.uiState.test {
+            awaitCopyright()
+
+            underTest.onCopyrightAgreed()
+
+            assertThat(awaitData()).isInstanceOf(ShareLinkUiState.Data::class.java)
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(setShowCopyrightUseCase).invoke(false)
+        verify(exportNodesUseCase).invoke(listOf(NODE_HANDLE), CALLER_NAME)
+    }
+
+    @Test
+    fun `test that declining copyright abandons the load and does not export`() = runTest {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "new.pdf"
+            on { exportedData } doReturn null
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(true)
+
+        underTest.uiState.test {
+            awaitCopyright()
+
+            underTest.onCopyrightDisagreed()
+
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(exportNodesUseCase, never()).invoke(any(), any())
+        verify(setShowCopyrightUseCase, never()).invoke(any())
+    }
+
+    @Test
+    fun `test that copyright consent is not shown when consent is not due`() = runTest {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "report.pdf"
+            on { exportedData } doReturn ExportedData("https://mega.nz/file/abc#key123", 0L)
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+
+        underTest.uiState.test {
+            awaitData()
+            cancelAndIgnoreRemainingEvents()
+        }
+        verify(setShowCopyrightUseCase, never()).invoke(any())
+    }
+
+    private suspend fun ReceiveTurbine<ShareLinkUiState>.awaitCopyright(): ShareLinkUiState {
+        while (true) {
+            val item = awaitItem()
+            if (item is ShareLinkUiState.CopyrightConsent) return item
+        }
     }
 
     private suspend fun ReceiveTurbine<ShareLinkUiState>.awaitWarning(): ShareLinkUiState.SensitiveWarning {

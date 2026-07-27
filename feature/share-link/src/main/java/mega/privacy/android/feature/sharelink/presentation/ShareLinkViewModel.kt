@@ -26,6 +26,8 @@ import mega.privacy.android.domain.entity.node.TypedNode
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveDescendantUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveInheritedUseCase
+import mega.privacy.android.domain.usecase.SetShowCopyrightUseCase
+import mega.privacy.android.domain.usecase.ShouldShowCopyrightUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.link.SplitLinkAndKeyUseCase
 import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
@@ -53,6 +55,8 @@ class ShareLinkViewModel @AssistedInject constructor(
     private val fileTypeIconMapper: FileTypeIconMapper,
     private val hasSensitiveInheritedUseCase: HasSensitiveInheritedUseCase,
     private val hasSensitiveDescendantUseCase: HasSensitiveDescendantUseCase,
+    private val shouldShowCopyrightUseCase: ShouldShowCopyrightUseCase,
+    private val setShowCopyrightUseCase: SetShowCopyrightUseCase,
     private val passwordCache: ShareLinkPasswordCache,
     private val separateKeyCache: ShareLinkSeparateKeyCache,
 ) : ViewModel() {
@@ -63,6 +67,13 @@ class ShareLinkViewModel @AssistedInject constructor(
      * (false). Internal plumbing, not UI state.
      */
     private val exportApproval = MutableStateFlow<Boolean?>(null)
+
+    /**
+     * Resume latch for the first-time copyright consent: the load suspends here after emitting
+     * [ShareLinkUiState.CopyrightConsent] and resumes when the user agrees (true) or declines
+     * (false). Internal plumbing, not UI state.
+     */
+    private val copyrightApproval = MutableStateFlow<Boolean?>(null)
 
     /**
      * Share link UI state.
@@ -114,6 +125,13 @@ class ShareLinkViewModel @AssistedInject constructor(
         runCatching {
             val nodes = args.handles.mapNotNull { handle -> getNodeByIdUseCase(NodeId(handle)) }
             if (nodes.isEmpty()) error("No nodes found for ${args.handles}")
+
+            if (shouldShowCopyrightUseCase()) {
+                emit(ShareLinkUiState.CopyrightConsent)
+                val agreed = copyrightApproval.filterNotNull().first()
+                if (!agreed) return@runCatching null
+                setShowCopyrightUseCase(false)
+            }
 
             sensitiveWarningFor(nodes)?.let { warning ->
                 emit(ShareLinkUiState.SensitiveWarning(warning, args.handles.size))
@@ -194,6 +212,22 @@ class ShareLinkViewModel @AssistedInject constructor(
      */
     fun onSensitiveWarningDismissed() {
         exportApproval.value = false
+    }
+
+    /**
+     * Agrees to the first-time copyright consent; the held load proceeds and acceptance is
+     * persisted so the prompt is not shown again.
+     */
+    fun onCopyrightAgreed() {
+        copyrightApproval.value = true
+    }
+
+    /**
+     * Declines the first-time copyright consent; the load is abandoned and the screen navigates
+     * back.
+     */
+    fun onCopyrightDisagreed() {
+        copyrightApproval.value = false
     }
 
     /**
