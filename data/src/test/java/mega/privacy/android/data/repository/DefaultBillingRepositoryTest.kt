@@ -1,12 +1,14 @@
 package mega.privacy.android.data.repository
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.data.cache.Cache
 import mega.privacy.android.data.gateway.BillingGateway
 import mega.privacy.android.data.gateway.api.MegaApiGateway
+import mega.privacy.android.data.gateway.preferences.PaymentPreferencesGateway
 import mega.privacy.android.data.listener.OptionalMegaRequestListenerInterface
 import mega.privacy.android.data.mapper.LocalPricingMapper
 import mega.privacy.android.data.mapper.PricingMapper
@@ -71,6 +73,7 @@ class DefaultBillingRepositoryTest {
     private val billingGateway = mock<BillingGateway>()
     private val paymentMethodTypeMapper = ::toPaymentMethodType
     private val sourceCache = mock<Cache<UpgradeSource>>()
+    private val paymentPreferencesGateway = mock<PaymentPreferencesGateway>()
 
     @Before
     fun setUp() {
@@ -87,7 +90,8 @@ class DefaultBillingRepositoryTest {
             paymentMethodTypeMapper = paymentMethodTypeMapper,
             skusCache = skusCache,
             activeSubscriptionCache = activeSubscriptionCache,
-            sourceCache = sourceCache
+            sourceCache = sourceCache,
+            paymentPreferencesGateway = paymentPreferencesGateway
         )
     }
 
@@ -439,5 +443,33 @@ class DefaultBillingRepositoryTest {
 
             assertThat(actual).isNull()
             verify(billingGateway).getCountryCode()
+        }
+
+    @Test
+    fun `test that monitorSubscriptionOfferBannerClosed monitors the preference of the current user`() =
+        runTest {
+            val userHandle = 123L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+            whenever(paymentPreferencesGateway.monitorSubscriptionOfferBannerClosed(userHandle))
+                .thenReturn(flowOf(true))
+
+            val actual = underTest.monitorSubscriptionOfferBannerClosed().first()
+
+            assertThat(actual).isTrue()
+            verify(paymentPreferencesGateway).monitorSubscriptionOfferBannerClosed(userHandle)
+        }
+
+    @Test
+    fun `test that setSubscriptionOfferBannerClosed saves the preference for the current user`() =
+        runTest {
+            val userHandle = 123L
+            whenever(megaApiGateway.myUserHandle).thenReturn(userHandle)
+
+            underTest.setSubscriptionOfferBannerClosed()
+
+            verify(paymentPreferencesGateway).setSubscriptionOfferBannerClosed(
+                userHandle = userHandle,
+                closed = true
+            )
         }
 }

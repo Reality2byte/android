@@ -11,6 +11,7 @@ import mega.privacy.android.data.extensions.failWithError
 import mega.privacy.android.data.extensions.getRequestListener
 import mega.privacy.android.data.gateway.BillingGateway
 import mega.privacy.android.data.gateway.api.MegaApiGateway
+import mega.privacy.android.data.gateway.preferences.PaymentPreferencesGateway
 import mega.privacy.android.data.listener.OptionalMegaRequestListenerInterface
 import mega.privacy.android.data.mapper.LocalPricingMapper
 import mega.privacy.android.data.mapper.PaymentMethodTypeMapper
@@ -52,6 +53,7 @@ internal class DefaultBillingRepository @Inject constructor(
     private val localPricingMapper: LocalPricingMapper,
     private val billingGateway: BillingGateway,
     private val paymentMethodTypeMapper: PaymentMethodTypeMapper,
+    private val paymentPreferencesGateway: PaymentPreferencesGateway,
 ) : BillingRepository, AndroidBillingRepository {
 
     override fun getLocalPricing(sku: String) =
@@ -169,6 +171,16 @@ internal class DefaultBillingRepository @Inject constructor(
                 listener
             )
         }
+    }
+
+    override fun monitorSubscriptionOfferBannerClosed(): Flow<Boolean> =
+        paymentPreferencesGateway.monitorSubscriptionOfferBannerClosed(megaApiGateway.myUserHandle)
+
+    override suspend fun setSubscriptionOfferBannerClosed() = withContext(ioDispatcher) {
+        paymentPreferencesGateway.setSubscriptionOfferBannerClosed(
+            userHandle = megaApiGateway.myUserHandle,
+            closed = true,
+        )
     }
 
 }

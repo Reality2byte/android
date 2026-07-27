@@ -81,6 +81,7 @@ import mega.privacy.android.data.gateway.preferences.FileManagementPreferencesGa
 import mega.privacy.android.data.gateway.preferences.InAppUpdatePreferencesGateway
 import mega.privacy.android.data.gateway.preferences.MediaPlayerPreferencesGateway
 import mega.privacy.android.data.gateway.preferences.MediaTimelinePreferencesGateway
+import mega.privacy.android.data.gateway.preferences.PaymentPreferencesGateway
 import mega.privacy.android.data.gateway.preferences.RequestPhoneNumberPreferencesGateway
 import mega.privacy.android.data.gateway.preferences.SlideshowPreferencesGateway
 import mega.privacy.android.data.gateway.preferences.StatisticsPreferencesGateway
@@ -98,6 +99,7 @@ import mega.privacy.android.data.preferences.EphemeralCredentialsDataStore
 import mega.privacy.android.data.preferences.InAppUpdatePreferencesDatastore
 import mega.privacy.android.data.preferences.MediaPlayerPreferencesDatastore
 import mega.privacy.android.data.preferences.MediaTimelinePreferencesDataStore
+import mega.privacy.android.data.preferences.PaymentDatastore
 import mega.privacy.android.data.preferences.QAAccountCacheDataStore
 import mega.privacy.android.data.preferences.RequestPhoneNumberPreferencesDataStore
 import mega.privacy.android.data.preferences.SlideshowPreferencesDataStore
@@ -121,6 +123,10 @@ internal abstract class GatewayModule {
     @Binds
     @Singleton
     abstract fun bindAdPreferencesGateway(implementation: AdPreferencesDataStore): AdPreferencesGateway
+
+    @Binds
+    @Singleton
+    abstract fun bindPaymentPreferencesGateway(implementation: PaymentDatastore): PaymentPreferencesGateway
 
     @Binds
     @Singleton

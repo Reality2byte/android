@@ -108,5 +108,17 @@ interface BillingRepository {
         canContact: Int,
     )
 
+    /**
+     * Monitor whether the current user has closed the subscription offer banner. The preference is
+     * stored per account, so closing the banner does not hide it for other logged in users.
+     */
+    fun monitorSubscriptionOfferBannerClosed(): Flow<Boolean>
+
+    /**
+     * Persist that the current user has closed the subscription offer banner, so it stays hidden on
+     * the next app launch.
+     */
+    suspend fun setSubscriptionOfferBannerClosed()
+
 }
 

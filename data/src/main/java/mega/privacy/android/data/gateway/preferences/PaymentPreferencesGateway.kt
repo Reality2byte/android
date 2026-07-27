@@ -1,0 +1,26 @@
+package mega.privacy.android.data.gateway.preferences
+
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Gateway for payment related preferences persistence.
+ *
+ * Preferences are scoped per account, so every entry point takes the handle of the logged in user.
+ */
+interface PaymentPreferencesGateway {
+
+    /**
+     * Monitor whether the given user has closed the subscription offer banner.
+     *
+     * @param userHandle the handle of the logged in user
+     */
+    fun monitorSubscriptionOfferBannerClosed(userHandle: Long): Flow<Boolean>
+
+    /**
+     * Set whether the given user has closed the subscription offer banner.
+     *
+     * @param userHandle the handle of the logged in user
+     * @param closed true when the banner should stay hidden for this user
+     */
+    suspend fun setSubscriptionOfferBannerClosed(userHandle: Long, closed: Boolean)
+}

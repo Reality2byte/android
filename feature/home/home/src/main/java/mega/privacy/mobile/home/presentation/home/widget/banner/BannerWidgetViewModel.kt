@@ -8,11 +8,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.usecase.banner.DismissBannerUseCase
 import mega.privacy.android.domain.usecase.banner.GetPromoBannersUseCase
 import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
+import mega.privacy.android.domain.usecase.billing.MonitorSubscriptionOfferBannerClosedUseCase
+import mega.privacy.android.domain.usecase.billing.SetSubscriptionOfferBannerClosedUseCase
 import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
 import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_ID
 import mega.privacy.mobile.home.presentation.home.widget.banner.model.BannerUiState
@@ -29,6 +32,8 @@ class BannerWidgetViewModel @Inject constructor(
     private val getPromoBannersUseCase: GetPromoBannersUseCase,
     private val dismissBannerUseCase: DismissBannerUseCase,
     private val getRecommendedSubscriptionWithOfferUseCase: GetRecommendedSubscriptionWithOfferUseCase,
+    private val monitorSubscriptionOfferBannerClosedUseCase: MonitorSubscriptionOfferBannerClosedUseCase,
+    private val setSubscriptionOfferBannerClosedUseCase: SetSubscriptionOfferBannerClosedUseCase,
     private val subscriptionOfferBannerMapper: SubscriptionOfferBannerMapper,
 ) : ViewModel() {
 
@@ -71,19 +76,28 @@ class BannerWidgetViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? =
-        getRecommendedSubscriptionWithOfferUseCase()
+    private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? {
+        if (monitorSubscriptionOfferBannerClosedUseCase().first()) return null
+        return getRecommendedSubscriptionWithOfferUseCase()
             ?.let { subscriptionOfferBannerMapper(it, Locale.getDefault()) }
+    }
 
     /**
-     * Dismiss a banner. The subscription offer banner only exists locally, so it is removed from the
-     * state without calling the banners API.
+     * Dismiss a banner. The subscription offer banner only exists locally, so instead of calling the
+     * banners API its dismissal is persisted per account, keeping it hidden on the next app launch.
      *
      * @param bannerId The ID of the banner to dismiss
      */
     fun dismissBanner(bannerId: Int) {
         if (bannerId == SUBSCRIPTION_OFFER_BANNER_ID) {
-            _uiState.update { it.copy(offerBanner = null) }
+            viewModelScope.launch {
+                runCatching {
+                    setSubscriptionOfferBannerClosedUseCase()
+                }.onFailure { exception ->
+                    Timber.e(exception, "Failed to persist subscription offer banner dismissal")
+                }
+                _uiState.update { it.copy(offerBanner = null) }
+            }
         } else {
             viewModelScope.launch {
                 runCatching {

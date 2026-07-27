@@ -26,6 +26,7 @@ import mega.privacy.android.data.preferences.mediaTimelinePreferenceFileName
 import mega.privacy.android.data.preferences.migration.CameraUploadsSettingsPreferenceDataStoreMigration
 import mega.privacy.android.data.preferences.migration.ChatSettingsPreferenceDataStoreMigration
 import mega.privacy.android.data.preferences.migration.CredentialsPreferencesMigration
+import mega.privacy.android.data.preferences.paymentPreferenceFileName
 import mega.privacy.android.data.preferences.qaAccountCacheDataStoreName
 import mega.privacy.android.data.preferences.security.PasscodeDatastoreV1ToV2Migration
 import mega.privacy.android.data.preferences.security.passcodeDatastoreName
@@ -33,6 +34,7 @@ import mega.privacy.android.data.preferences.pinnedItemsSortPreferenceFileName
 import mega.privacy.android.data.preferences.viewedLinksSortPreferenceFileName
 import mega.privacy.android.data.qualifier.ContinueWhereLeftOffSortPreference
 import mega.privacy.android.data.qualifier.MediaTimelinePreferenceDataStore
+import mega.privacy.android.data.qualifier.PaymentPreference
 import mega.privacy.android.data.qualifier.RequestPhoneNumberPreference
 import mega.privacy.android.data.qualifier.PinnedItemsSortPreference
 import mega.privacy.android.data.qualifier.ViewedLinksSortPreference
@@ -191,6 +193,20 @@ internal object DataStoreModule {
         ),
         scope = CoroutineScope(ioDispatcher),
         produceFile = { context.preferencesDataStoreFile(mediaTimelinePreferenceFileName) }
+    )
+
+    @Provides
+    @Singleton
+    @PaymentPreference
+    internal fun providePaymentPreferenceDataStore(
+        @ApplicationContext context: Context,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        corruptionHandler = ReplaceFileCorruptionHandler(
+            produceNewData = { emptyPreferences() }
+        ),
+        scope = CoroutineScope(ioDispatcher),
+        produceFile = { context.preferencesDataStoreFile(paymentPreferenceFileName) }
     )
 
     @Provides

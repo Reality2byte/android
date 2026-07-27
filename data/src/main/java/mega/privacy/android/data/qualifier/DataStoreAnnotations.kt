@@ -29,3 +29,10 @@ internal annotation class ViewedLinksSortPreference
 @Retention(AnnotationRetention.RUNTIME)
 @Qualifier
 internal annotation class PinnedItemsSortPreference
+
+/**
+ * Annotation for PaymentDatastore
+ */
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+internal annotation class PaymentPreference
