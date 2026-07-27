@@ -123,6 +123,7 @@ internal class SaveScannedDocumentsActivity : AppCompatActivity() {
                             navigationHandler.navigate(navKeys)
                             navigationHandler.remove(key)
                         },
+                        onDismissScreen = ::finish,
                     )
                 }
             }

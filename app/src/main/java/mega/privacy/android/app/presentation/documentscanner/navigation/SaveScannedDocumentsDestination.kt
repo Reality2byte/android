@@ -61,6 +61,7 @@ class SaveScannedDocumentsDestination : FeatureDestination {
                     navigate(navKeys)
                     removeDestination(key)
                 },
+                onDismissScreen = { removeDestination(key) },
             )
         }
     }

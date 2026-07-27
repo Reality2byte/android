@@ -82,6 +82,8 @@ import timber.log.Timber
  * Uri) should begin uploading
  * @param onUploadScansEventConsumed Lambda when the State Event to upload the scanned document/s has
  * been triggered
+ * @param onDismissScreen Lambda when this screen should be dismissed, after the upload has been
+ * delegated to [FileExplorerActivity]
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -96,6 +98,7 @@ internal fun SaveScannedDocumentsView(
     onUploadScansEventConsumed: () -> Unit,
     onBackToChat: (Uri) -> Unit,
     onNavigate: (List<NavKey>) -> Unit,
+    onDismissScreen: () -> Unit,
 ) {
     val resources = LocalResources.current
     val activity = LocalActivity.current
@@ -183,6 +186,7 @@ internal fun SaveScannedDocumentsView(
                             scanFileType = uiState.scanFileType,
                             canSelectScanFileType = uiState.canSelectScanFileType,
                         )
+                        onDismissScreen()
                     }
                 }
             }
@@ -278,9 +282,9 @@ internal fun SaveScannedDocumentsView(
 }
 
 /**
- * When the Activity is accessed from anywhere other than Cloud Drive and the Document Scanning
- * finishes, this creates an [Intent] to [FileExplorerActivity] with the [Uri] containing the
- * scans to be uploaded. This Activity gets finished afterwards
+ * When the Document Scanning finishes and the Cloud Explorer is unavailable, this creates an
+ * [Intent] to [FileExplorerActivity] with the [Uri] containing the scans to be uploaded. This does
+ * not finish or remove the calling screen — dismissing it is the caller's responsibility
  *
  * @param uriToUpload The [Uri] containing the scans to be uploaded
  */
@@ -309,7 +313,6 @@ internal fun navigateToFileExplorer(
     }
 
     activity.startActivity(intent)
-    activity.finish()
 }
 
 private fun getCloudExplorerNavKeys(
@@ -369,6 +372,7 @@ private fun SaveScannedDocumentsViewPreview(
             onUploadScansEventConsumed = {},
             onBackToChat = {},
             onNavigate = {},
+            onDismissScreen = {},
         )
     }
 }

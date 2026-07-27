@@ -40,6 +40,7 @@ import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 
 /**
@@ -70,7 +71,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
@@ -111,7 +113,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
@@ -137,7 +140,8 @@ internal class SaveScannedDocumentsViewTest {
                     onSnackbarMessageConsumed = {},
                     onUploadScansEventConsumed = {},
                     onBackToChat = {},
-                    onNavigate = {}
+                    onNavigate = {},
+                    onDismissScreen = {}
                 )
             }
 
@@ -168,7 +172,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
@@ -187,6 +192,7 @@ internal class SaveScannedDocumentsViewTest {
         val expectedUri = runCatching { FileUtil.getUriForFile(context, file) }
             .getOrDefault(file.toUri())
         val onBackToChat = mock<(Uri) -> Unit>()
+        val onDismissScreen = mock<() -> Unit>()
 
         composeTestRule.setContent {
             SaveScannedDocumentsView(
@@ -204,12 +210,14 @@ internal class SaveScannedDocumentsViewTest {
                 onUploadScansEventConsumed = {},
                 onBackToChat = onBackToChat,
                 onNavigate = {},
+                onDismissScreen = onDismissScreen,
             )
         }
 
         composeTestRule.waitForIdle()
 
         verify(onBackToChat).invoke(expectedUri)
+        verify(onDismissScreen, never()).invoke()
     }
 
     @Test
@@ -219,6 +227,7 @@ internal class SaveScannedDocumentsViewTest {
         val expectedUri = runCatching { FileUtil.getUriForFile(context, file) }
             .getOrDefault(file.toUri())
         val onNavigate = mock<(List<NavKey>) -> Unit>()
+        val onDismissScreen = mock<() -> Unit>()
 
         composeTestRule.setContent {
             SaveScannedDocumentsView(
@@ -235,6 +244,7 @@ internal class SaveScannedDocumentsViewTest {
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
                 onNavigate = onNavigate,
+                onDismissScreen = onDismissScreen,
             )
         }
 
@@ -249,6 +259,38 @@ internal class SaveScannedDocumentsViewTest {
                 )
             )
         )
+        verify(onDismissScreen, never()).invoke()
+    }
+
+    @Test
+    fun `test that onDismissScreen is invoked when cloud explorer is unavailable`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val file = File(context.cacheDir, "scanned.pdf")
+        val onDismissScreen = mock<() -> Unit>()
+
+        composeTestRule.setContent {
+            SaveScannedDocumentsView(
+                uiState = SaveScannedDocumentsUiState(
+                    isCloudExplorerAvailable = false,
+                    scanDestination = ScanDestination.CloudDrive,
+                    uploadScansEvent = triggered(file),
+                ),
+                onFilenameChanged = {},
+                onFilenameConfirmed = {},
+                onSaveButtonClicked = {},
+                onScanFileTypeSelected = {},
+                onScanDestinationSelected = {},
+                onSnackbarMessageConsumed = {},
+                onUploadScansEventConsumed = {},
+                onBackToChat = {},
+                onNavigate = {},
+                onDismissScreen = onDismissScreen,
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        verify(onDismissScreen).invoke()
     }
 
     @Test
@@ -271,7 +313,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
@@ -305,7 +348,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
@@ -336,7 +380,8 @@ internal class SaveScannedDocumentsViewTest {
                 onSnackbarMessageConsumed = {},
                 onUploadScansEventConsumed = {},
                 onBackToChat = {},
-                onNavigate = {}
+                onNavigate = {},
+                onDismissScreen = {}
             )
         }
 
