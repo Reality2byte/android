@@ -127,6 +127,7 @@ private fun ContactInfoContentPreview() {
                 enableCallButtons = true,
                 isOnline = true,
                 showMuteOptionsEvent = consumed(),
+                messageEvent = consumed(),
                 closeEvent = consumed,
             ),
             onSendMessageClick = {},

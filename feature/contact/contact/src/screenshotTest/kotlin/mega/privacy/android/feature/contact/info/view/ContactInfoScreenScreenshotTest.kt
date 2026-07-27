@@ -48,6 +48,7 @@ class ContactInfoScreenScreenshotTest {
                     enableCallButtons = true,
                     isOnline = true,
                     showMuteOptionsEvent = consumed(),
+                    messageEvent = consumed(),
                     closeEvent = consumed,
                 ),
             )
@@ -62,14 +63,17 @@ class ContactInfoScreenScreenshotTest {
             onSendMessageClick = {},
             onStartAudioCallClick = {},
             onStartVideoCallClick = {},
-            onNicknameClick = {},
+            onUpdateNickname = {},
             onVerifyCredentialsClick = {},
             onShareContactClick = {},
             onSharedFoldersClick = {},
             onNotificationToggled = {},
+            onMuteOptionSelected = {},
+            onMuteOptionsEventConsumed = {},
             onSharedFilesClick = {},
             onManageChatHistoryClick = {},
-            onRemoveContactClick = {},
+            onRemoveContact = {},
+            onMessageEventConsumed = {},
         )
     }
 }

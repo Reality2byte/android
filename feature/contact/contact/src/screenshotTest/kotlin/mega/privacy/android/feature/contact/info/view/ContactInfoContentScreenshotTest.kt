@@ -189,6 +189,7 @@ class ContactInfoContentScreenshotTest {
         enableCallButtons = enableCallButtons,
         isOnline = isOnline,
         showMuteOptionsEvent = consumed(),
+        messageEvent = consumed(),
         closeEvent = consumed,
     )
 }

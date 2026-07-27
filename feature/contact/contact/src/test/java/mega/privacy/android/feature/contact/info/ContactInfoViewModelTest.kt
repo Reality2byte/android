@@ -26,6 +26,7 @@ import mega.privacy.android.domain.usecase.contact.MonitorContactInfoUseCase
 import mega.privacy.android.domain.usecase.contact.RemoveContactByEmailUseCase
 import mega.privacy.android.domain.usecase.contact.SetUserAliasUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
+import mega.privacy.android.feature.contact.info.model.ContactInfoMessage
 import mega.privacy.android.feature.contact.info.model.ContactInfoUiState
 import mega.privacy.android.shared.contact.mapper.ContactItemAvatarMapper
 import mega.privacy.android.shared.contact.model.AvatarData
@@ -540,6 +541,125 @@ class ContactInfoViewModelTest {
             verify(getChatMuteOptionListUseCase, never()).invoke(any())
             verify(muteChatNotificationForChatRoomsUseCase, never()).invoke(any(), any())
         }
+
+    @Test
+    fun `test that updateNickname triggers the nickname added message when the nickname is set`() =
+        runTest {
+            stubContactInfo()
+            whenever(setUserAliasUseCase("NewNick", USER_HANDLE)).thenReturn("NewNick")
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.updateNickname("NewNick")
+                val actual = awaitDataState {
+                    it.messageEvent is StateEventWithContentTriggered
+                }
+                val event = actual.messageEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(ContactInfoMessage.NicknameAdded)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that updateNickname triggers the nickname removed message when the nickname is removed`() =
+        runTest {
+            stubContactInfo()
+            whenever(setUserAliasUseCase(null, USER_HANDLE)).thenReturn(null)
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.updateNickname(null)
+                val actual = awaitDataState {
+                    it.messageEvent is StateEventWithContentTriggered
+                }
+                val event = actual.messageEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(ContactInfoMessage.NicknameRemoved)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that updateNickname does not trigger a message when setting the nickname fails`() =
+        runTest {
+            stubContactInfo()
+            whenever(setUserAliasUseCase("NewNick", USER_HANDLE))
+                .thenThrow(RuntimeException("set alias failed"))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.updateNickname("NewNick")
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            assertThat((underTest.uiState.value as ContactInfoUiState.Data).messageEvent)
+                .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+        }
+
+    @Test
+    fun `test that onNotificationsToggled triggers the chat creation error message when chat room creation fails`() =
+        runTest {
+            stubContactInfo(
+                createContactInfoState(chatRoomId = null, isNotificationsMuted = null)
+            )
+            whenever(createChatRoomUseCase(any(), any()))
+                .thenThrow(RuntimeException("creation failed"))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.onNotificationsToggled()
+                val actual = awaitDataState {
+                    it.messageEvent is StateEventWithContentTriggered
+                }
+                val event = actual.messageEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(ContactInfoMessage.ChatCreationError)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that onMuteOptionSelected mutes the chat with the selected option`() = runTest {
+        stubContactInfo()
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.onMuteOptionSelected(ChatPushNotificationMuteOption.Mute6Hours)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(muteChatNotificationForChatRoomsUseCase)
+            .invoke(listOf(CHAT_ID), ChatPushNotificationMuteOption.Mute6Hours)
+    }
+
+    @Test
+    fun `test that onMuteOptionSelected does not call the use case when there is no chat room`() =
+        runTest {
+            stubContactInfo(
+                createContactInfoState(chatRoomId = null, isNotificationsMuted = null)
+            )
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.onMuteOptionSelected(ChatPushNotificationMuteOption.Mute6Hours)
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(muteChatNotificationForChatRoomsUseCase, never()).invoke(any(), any())
+        }
+
+    @Test
+    fun `test that onMessageEventConsumed resets the message event`() = runTest {
+        stubContactInfo()
+        whenever(setUserAliasUseCase("NewNick", USER_HANDLE)).thenReturn("NewNick")
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.updateNickname("NewNick")
+            awaitDataState { it.messageEvent is StateEventWithContentTriggered }
+            underTest.onMessageEventConsumed()
+            awaitDataState { it.messageEvent !is StateEventWithContentTriggered }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun `test that onMuteOptionsEventConsumed resets the mute options event`() = runTest {

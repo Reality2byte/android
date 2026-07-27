@@ -44,13 +44,16 @@ fun ContactInfoEntry(
         onSendMessageClick = {},
         onStartAudioCallClick = {},
         onStartVideoCallClick = {},
-        onNicknameClick = {},
+        onUpdateNickname = viewModel::updateNickname,
         onVerifyCredentialsClick = {},
         onShareContactClick = {},
         onSharedFoldersClick = {},
         onNotificationToggled = { viewModel.onNotificationsToggled() },
+        onMuteOptionSelected = viewModel::onMuteOptionSelected,
+        onMuteOptionsEventConsumed = viewModel::onMuteOptionsEventConsumed,
         onSharedFilesClick = {},
         onManageChatHistoryClick = {},
-        onRemoveContactClick = {},
+        onRemoveContact = viewModel::removeContact,
+        onMessageEventConsumed = viewModel::onMessageEventConsumed,
     )
 }

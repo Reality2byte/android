@@ -51,6 +51,7 @@ sealed interface ContactInfoUiState {
      * @property isOnline True when the device is connected to the internet.
      * @property showMuteOptionsEvent One-shot event requesting the mute options dialog, carrying
      * the mute options to offer.
+     * @property messageEvent One-shot event carrying a feedback message to show in a snackbar.
      * @property closeEvent
      */
     data class Data(
@@ -71,6 +72,7 @@ sealed interface ContactInfoUiState {
         val enableCallButtons: Boolean,
         val isOnline: Boolean,
         val showMuteOptionsEvent: StateEventWithContent<List<ChatPushNotificationMuteOption>>,
+        val messageEvent: StateEventWithContent<ContactInfoMessage>,
         override val closeEvent: StateEvent,
     ) : ContactInfoUiState {
 

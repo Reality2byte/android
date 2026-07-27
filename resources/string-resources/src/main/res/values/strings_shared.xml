@@ -3537,6 +3537,38 @@
         <item quantity="one">%1$d hour</item>
         <item quantity="other">%1$d hours</item>
     </plurals>
+    <!-- Contact info: positive button of the nickname dialog that saves the entered nickname -->
+    <string name="contact_info_nickname_dialog_set_button">Set</string>
+    <!-- Contact info: placeholder of the nickname dialog input field -->
+    <string name="contact_info_nickname_dialog_hint">Nickname</string>
+    <!-- Contact info: snackbar message shown when a nickname is set or updated successfully -->
+    <string name="contact_info_nickname_added">Nickname added</string>
+    <!-- Contact info: snackbar message shown when a nickname is removed successfully -->
+    <string name="contact_info_nickname_removed">Nickname removed</string>
+    <!-- Contact info: title of the confirmation dialog shown before removing the contact -->
+    <string name="contact_info_remove_contact_dialog_title">Remove contact?</string>
+    <!-- Contact info: message of the confirmation dialog shown before removing the contact -->
+    <string name="contact_info_remove_contact_dialog_message">All data associated with the selected contact will be permanently lost.</string>
+    <!-- Contact info: title of the dialog offering the durations to mute chat notifications for -->
+    <string name="contact_info_mute_notifications_dialog_title">Mute chat notifications for</string>
+    <!-- Contact info: mute notifications duration option in minutes. %1$d is the number of minutes -->
+    <plurals name="contact_info_mute_option_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <!-- Contact info: mute notifications duration option in hours. %1$d is the number of hours -->
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <!-- Contact info: option to mute chat notifications until this morning -->
+    <string name="contact_info_mute_option_until_this_morning">Until this morning</string>
+    <!-- Contact info: option to mute chat notifications until tomorrow morning -->
+    <string name="contact_info_mute_option_until_tomorrow_morning">Until tomorrow morning</string>
+    <!-- Contact info: option to mute chat notifications until the user turns them back on -->
+    <string name="contact_info_mute_option_until_turned_back_on">Until I turn them back on</string>
+    <!-- Contact info: snackbar message shown when creating the chat with the contact fails -->
+    <string name="contact_info_create_chat_error">An error occurred when creating the chat</string>
     <!-- Add contacts picker (share flow): warning banner shown when the selection includes recipients whose credentials the user has not verified -->
     <string name="add_contacts_unverified_contact_warning">Some of the contacts you’re sharing information with haven’t been verified by you. To ensure extra security, we recommend that you verify their credentials in Contacts. Tap on the three dots next to the contact you want to verify and tap Info.</string>
     <!-- Audio player: title of the playback-speed bottom sheet -->

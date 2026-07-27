@@ -29,6 +29,7 @@ import mega.privacy.android.domain.usecase.contact.MonitorContactInfoUseCase
 import mega.privacy.android.domain.usecase.contact.RemoveContactByEmailUseCase
 import mega.privacy.android.domain.usecase.contact.SetUserAliasUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
+import mega.privacy.android.feature.contact.info.model.ContactInfoMessage
 import mega.privacy.android.feature.contact.info.model.ContactInfoUiState
 import mega.privacy.android.shared.contact.mapper.ContactItemAvatarMapper
 import mega.privacy.android.shared.contact.model.AvatarData
@@ -73,6 +74,8 @@ internal class ContactInfoViewModel @AssistedInject constructor(
     private val closeEventChannel = Channel<StateEvent>(Channel.BUFFERED)
     private val muteOptionsEventChannel =
         Channel<StateEventWithContent<List<ChatPushNotificationMuteOption>>>(Channel.BUFFERED)
+    private val messageEventChannel =
+        Channel<StateEventWithContent<ContactInfoMessage>>(Channel.BUFFERED)
 
     /**
      * Ui state
@@ -83,12 +86,14 @@ internal class ContactInfoViewModel @AssistedInject constructor(
             monitorConnectivityUseCase(),
             closeEventChannel.receiveAsFlow().onStart { emit(consumed) },
             muteOptionsEventChannel.receiveAsFlow().onStart { emit(consumed()) },
-        ) { info, isOnline, closeEvent, muteOptionsEvent ->
+            messageEventChannel.receiveAsFlow().onStart { emit(consumed()) },
+        ) { info, isOnline, closeEvent, muteOptionsEvent, messageEvent ->
             buildDataState(
                 info = info,
                 isOnline = isOnline,
                 closeEvent = closeEvent,
                 muteOptionsEvent = muteOptionsEvent,
+                messageEvent = messageEvent,
             )
         }.catch {
             Timber.e(it, "Failed to monitor contact info")
@@ -104,6 +109,7 @@ internal class ContactInfoViewModel @AssistedInject constructor(
         isOnline: Boolean,
         closeEvent: StateEvent,
         muteOptionsEvent: StateEventWithContent<List<ChatPushNotificationMuteOption>>,
+        messageEvent: StateEventWithContent<ContactInfoMessage>,
     ): ContactInfoUiState {
         val contact = info.contactItem
         return ContactInfoUiState.Data(
@@ -125,6 +131,7 @@ internal class ContactInfoViewModel @AssistedInject constructor(
             enableCallButtons = isOnline && !info.hasOngoingCall,
             isOnline = isOnline,
             showMuteOptionsEvent = muteOptionsEvent,
+            messageEvent = messageEvent,
             closeEvent = closeEvent,
         )
     }
@@ -138,6 +145,17 @@ internal class ContactInfoViewModel @AssistedInject constructor(
             if (data.email == null) return@launch
             if (data.nickname != null && data.nickname == newNickname) return@launch
             runCatching { setUserAliasUseCase(newNickname, data.userHandle) }
+                .onSuccess {
+                    messageEventChannel.send(
+                        triggered(
+                            if (newNickname == null) {
+                                ContactInfoMessage.NicknameRemoved
+                            } else {
+                                ContactInfoMessage.NicknameAdded
+                            }
+                        )
+                    )
+                }
                 .onFailure { Timber.e(it, "Failed to update nickname") }
         }
     }
@@ -183,14 +201,36 @@ internal class ContactInfoViewModel @AssistedInject constructor(
 
     private suspend fun createChatRoom(userHandle: Long): Long? =
         runCatching { createChatRoomUseCase(isGroup = false, userHandles = listOf(userHandle)) }
-            .onFailure { Timber.e(it, "Failed to create chat room") }
+            .onFailure {
+                Timber.e(it, "Failed to create chat room")
+                messageEventChannel.send(triggered(ContactInfoMessage.ChatCreationError))
+            }
             .getOrNull()
+
+    /**
+     * Mute the chat notifications with the selected mute option.
+     */
+    fun onMuteOptionSelected(option: ChatPushNotificationMuteOption) {
+        viewModelScope.launch {
+            val chatRoomId =
+                (uiState.value as? ContactInfoUiState.Data)?.chatRoomId ?: return@launch
+            runCatching { muteChatNotificationForChatRoomsUseCase(listOf(chatRoomId), option) }
+                .onFailure { Timber.e(it, "Failed to mute chat notifications") }
+        }
+    }
 
     /**
      * Consume the mute options event once the screen has shown the mute options.
      */
     fun onMuteOptionsEventConsumed() {
         muteOptionsEventChannel.trySend(consumed())
+    }
+
+    /**
+     * Consume the message event once the screen has shown the message.
+     */
+    fun onMessageEventConsumed() {
+        messageEventChannel.trySend(consumed())
     }
 
     /**

@@ -13,6 +13,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,38 +24,52 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import de.palm.composestateevents.EventEffect
 import de.palm.composestateevents.consumed
+import mega.android.core.ui.components.LocalSnackBarHostState
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
+import mega.android.core.ui.extensions.showAutoDurationSnackbar
 import mega.android.core.ui.modifiers.shimmerEffect
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
+import mega.privacy.android.domain.entity.chat.ChatPushNotificationMuteOption
 import mega.privacy.android.domain.entity.contacts.UserChatStatus
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.feature.contact.info.model.ContactInfoMessage
 import mega.privacy.android.feature.contact.info.model.ContactInfoUiState
+import mega.privacy.android.feature.contact.info.view.dialog.MutePushNotificationDialogM3
+import mega.privacy.android.feature.contact.info.view.dialog.NicknameDialog
+import mega.privacy.android.feature.contact.info.view.dialog.RemoveContactConfirmationDialog
 import mega.privacy.android.shared.contact.model.AvatarData
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
  * Contact info screen: shows a shimmer placeholder while the contact is being resolved, then the
- * resolved contact's info sections via [ContactInfoContent].
+ * resolved contact's info sections via [ContactInfoContent]. Owns the visibility of the nickname,
+ * remove-contact and mute-options dialogs.
  *
  * @param state
  * @param onNavigateBack invoked when the user navigates back.
  * @param onSendMessageClick
  * @param onStartAudioCallClick
  * @param onStartVideoCallClick
- * @param onNicknameClick
+ * @param onUpdateNickname invoked with the new nickname when the nickname dialog is confirmed,
+ * or with null when the nickname is removed.
  * @param onVerifyCredentialsClick
  * @param onShareContactClick
  * @param onSharedFoldersClick
  * @param onNotificationToggled invoked with the new checked value when the notifications toggle
  * is switched.
+ * @param onMuteOptionSelected invoked with the selected option when the mute options dialog is
+ * confirmed.
+ * @param onMuteOptionsEventConsumed invoked once the mute options event has been consumed.
  * @param onSharedFilesClick
  * @param onManageChatHistoryClick
- * @param onRemoveContactClick
+ * @param onRemoveContact invoked when the remove-contact dialog is confirmed.
+ * @param onMessageEventConsumed invoked once the message event has been consumed.
  * @param modifier
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,14 +80,17 @@ internal fun ContactInfoScreen(
     onSendMessageClick: () -> Unit,
     onStartAudioCallClick: () -> Unit,
     onStartVideoCallClick: () -> Unit,
-    onNicknameClick: () -> Unit,
+    onUpdateNickname: (String?) -> Unit,
     onVerifyCredentialsClick: () -> Unit,
     onShareContactClick: () -> Unit,
     onSharedFoldersClick: () -> Unit,
     onNotificationToggled: (Boolean) -> Unit,
+    onMuteOptionSelected: (ChatPushNotificationMuteOption) -> Unit,
+    onMuteOptionsEventConsumed: () -> Unit,
     onSharedFilesClick: () -> Unit,
     onManageChatHistoryClick: () -> Unit,
-    onRemoveContactClick: () -> Unit,
+    onRemoveContact: () -> Unit,
+    onMessageEventConsumed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     MegaScaffoldWithTopAppBarScrollBehavior(
@@ -91,21 +112,86 @@ internal fun ContactInfoScreen(
                     .testTag(CONTACT_INFO_LOADING_TAG),
             )
 
-            is ContactInfoUiState.Data -> ContactInfoContent(
-                modifier = Modifier.padding(padding),
-                state = state,
-                onSendMessageClick = onSendMessageClick,
-                onStartAudioCallClick = onStartAudioCallClick,
-                onStartVideoCallClick = onStartVideoCallClick,
-                onNicknameClick = onNicknameClick,
-                onVerifyCredentialsClick = onVerifyCredentialsClick,
-                onShareContactClick = onShareContactClick,
-                onSharedFoldersClick = onSharedFoldersClick,
-                onNotificationToggled = onNotificationToggled,
-                onSharedFilesClick = onSharedFilesClick,
-                onManageChatHistoryClick = onManageChatHistoryClick,
-                onRemoveContactClick = onRemoveContactClick,
-            )
+            is ContactInfoUiState.Data -> {
+                var showNicknameDialog by rememberSaveable { mutableStateOf(false) }
+                var showRemoveContactDialog by rememberSaveable { mutableStateOf(false) }
+                var muteOptions by rememberSaveable {
+                    mutableStateOf<List<ChatPushNotificationMuteOption>?>(null)
+                }
+                val snackbarHostState = LocalSnackBarHostState.current
+                val nicknameAddedMessage =
+                    stringResource(sharedR.string.contact_info_nickname_added)
+                val nicknameRemovedMessage =
+                    stringResource(sharedR.string.contact_info_nickname_removed)
+                val chatCreationErrorMessage =
+                    stringResource(sharedR.string.contact_info_create_chat_error)
+                EventEffect(
+                    event = state.messageEvent,
+                    onConsumed = onMessageEventConsumed,
+                ) { message ->
+                    snackbarHostState?.showAutoDurationSnackbar(
+                        when (message) {
+                            ContactInfoMessage.NicknameAdded -> nicknameAddedMessage
+                            ContactInfoMessage.NicknameRemoved -> nicknameRemovedMessage
+                            ContactInfoMessage.ChatCreationError -> chatCreationErrorMessage
+                        }
+                    )
+                }
+                EventEffect(
+                    event = state.showMuteOptionsEvent,
+                    onConsumed = onMuteOptionsEventConsumed,
+                ) { options ->
+                    muteOptions = options
+                }
+                ContactInfoContent(
+                    modifier = Modifier.padding(padding),
+                    state = state,
+                    onSendMessageClick = onSendMessageClick,
+                    onStartAudioCallClick = onStartAudioCallClick,
+                    onStartVideoCallClick = onStartVideoCallClick,
+                    onNicknameClick = { showNicknameDialog = true },
+                    onVerifyCredentialsClick = onVerifyCredentialsClick,
+                    onShareContactClick = onShareContactClick,
+                    onSharedFoldersClick = onSharedFoldersClick,
+                    onNotificationToggled = onNotificationToggled,
+                    onSharedFilesClick = onSharedFilesClick,
+                    onManageChatHistoryClick = onManageChatHistoryClick,
+                    onRemoveContactClick = { showRemoveContactDialog = true },
+                )
+                if (showNicknameDialog) {
+                    NicknameDialog(
+                        nickname = state.nickname,
+                        onConfirm = { newNickname ->
+                            onUpdateNickname(newNickname)
+                            showNicknameDialog = false
+                        },
+                        onRemove = {
+                            onUpdateNickname(null)
+                            showNicknameDialog = false
+                        },
+                        onDismiss = { showNicknameDialog = false },
+                    )
+                }
+                if (showRemoveContactDialog) {
+                    RemoveContactConfirmationDialog(
+                        onConfirm = {
+                            onRemoveContact()
+                            showRemoveContactDialog = false
+                        },
+                        onDismiss = { showRemoveContactDialog = false },
+                    )
+                }
+                muteOptions?.let { options ->
+                    MutePushNotificationDialogM3(
+                        muteOptions = options,
+                        onConfirm = { option ->
+                            onMuteOptionSelected(option)
+                            muteOptions = null
+                        },
+                        onDismiss = { muteOptions = null },
+                    )
+                }
+            }
         }
     }
 }
@@ -163,14 +249,17 @@ private fun ContactInfoScreenLoadingPreview() {
             onSendMessageClick = {},
             onStartAudioCallClick = {},
             onStartVideoCallClick = {},
-            onNicknameClick = {},
+            onUpdateNickname = {},
             onVerifyCredentialsClick = {},
             onShareContactClick = {},
             onSharedFoldersClick = {},
             onNotificationToggled = {},
+            onMuteOptionSelected = {},
+            onMuteOptionsEventConsumed = {},
             onSharedFilesClick = {},
             onManageChatHistoryClick = {},
-            onRemoveContactClick = {},
+            onRemoveContact = {},
+            onMessageEventConsumed = {},
         )
     }
 }
@@ -198,20 +287,24 @@ private fun ContactInfoScreenLoadedPreview() {
                 enableCallButtons = true,
                 isOnline = true,
                 showMuteOptionsEvent = consumed(),
+                messageEvent = consumed(),
                 closeEvent = consumed,
             ),
             onNavigateBack = {},
             onSendMessageClick = {},
             onStartAudioCallClick = {},
             onStartVideoCallClick = {},
-            onNicknameClick = {},
+            onUpdateNickname = {},
             onVerifyCredentialsClick = {},
             onShareContactClick = {},
             onSharedFoldersClick = {},
             onNotificationToggled = {},
+            onMuteOptionSelected = {},
+            onMuteOptionsEventConsumed = {},
             onSharedFilesClick = {},
             onManageChatHistoryClick = {},
-            onRemoveContactClick = {},
+            onRemoveContact = {},
+            onMessageEventConsumed = {},
         )
     }
 }
