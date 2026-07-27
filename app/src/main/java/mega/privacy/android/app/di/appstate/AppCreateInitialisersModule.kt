@@ -5,17 +5,21 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.AccountDefaultsInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.AnalyticsInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ApiServerInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CallObserverInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ChatApiInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CoilImageLoaderInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CrashReportingInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.EmojiInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.FcmTopicInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.FolderApiSetupInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.GreeterInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.LoggingInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.MiscFlagsInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.NetworkStateInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.NotificationChannelsInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.PasscodeInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.RemoteConfigInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.SdkSetupInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ThemeInitialiser
@@ -40,6 +44,7 @@ internal class AppCreateInitialisersModule {
         greeterInitialiser: GreeterInitialiser,
         networkStateInitialiser: NetworkStateInitialiser,
         fcmTopicInitialiser: FcmTopicInitialiser,
+        emojiInitialiser: EmojiInitialiser,
         remoteConfigInitialiser: RemoteConfigInitialiser,
     ): Set<@JvmSuppressWildcards AsyncAppCreateInitialiser> = setOf(
         miscFlagsInitialiser,
@@ -48,6 +53,7 @@ internal class AppCreateInitialisersModule {
         greeterInitialiser,
         fcmTopicInitialiser,
         networkStateInitialiser,
+        emojiInitialiser,
         remoteConfigInitialiser,
     )
 
@@ -61,6 +67,9 @@ internal class AppCreateInitialisersModule {
         callObserverInitialiser: CallObserverInitialiser,
         chatApiInitialiser: ChatApiInitialiser,
         coilImageLoaderInitialiser: CoilImageLoaderInitialiser,
+        analyticsInitialiser: AnalyticsInitialiser,
+        passcodeInitialiser: PasscodeInitialiser,
+        notificationChannelsInitialiser: NotificationChannelsInitialiser,
     ): List<@JvmSuppressWildcards SynchronousAppCreateInitialiser> = listOf(
         loggingInitialiser,
         crashReportingInitialiser,
@@ -70,5 +79,8 @@ internal class AppCreateInitialisersModule {
         callObserverInitialiser,
         chatApiInitialiser,
         coilImageLoaderInitialiser,
+        analyticsInitialiser,
+        passcodeInitialiser,
+        notificationChannelsInitialiser,
     )
 }
