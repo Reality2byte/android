@@ -52,6 +52,7 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCloudOffIma
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCloudUploadImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineContractImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCopy01ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCopyrightImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCornerUpRightImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineDatabaseImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineDevicesImageVector
@@ -350,6 +351,9 @@ public object IconPack : IconPackInterface {
 
                 override val Copy01: ImageVector by
                         lazy { createMediumThinOutlineCopy01ImageVector() }
+
+                override val Copyright: ImageVector by
+                        lazy { createMediumThinOutlineCopyrightImageVector() }
 
                 override val CornerUpRight: ImageVector by
                         lazy { createMediumThinOutlineCornerUpRightImageVector() }

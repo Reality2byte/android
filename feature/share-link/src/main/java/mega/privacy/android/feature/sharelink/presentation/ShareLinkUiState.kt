@@ -26,6 +26,13 @@ sealed interface ShareLinkUiState {
     data object Error : ShareLinkUiState
 
     /**
+     * First-time copyright consent: shown before the first link is ever created (mirroring the
+     * legacy get-link flow). The export is held until the user agrees; disagreeing abandons it and
+     * the screen navigates back.
+     */
+    data object CopyrightConsent : ShareLinkUiState
+
+    /**
      * The selection contains hidden/sensitive nodes; the export is held while a warning dialog is
      * shown. Confirming resumes the export, cancelling abandons it.
      *

@@ -1,71 +1,31 @@
 package mega.privacy.android.feature.sharelink.presentation
 
-import android.content.ClipData
-import android.content.ClipDescription
-import android.os.Build
-import android.os.PersistableBundle
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.toClipEntry
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
-import mega.android.core.ui.components.MegaText
-import mega.android.core.ui.components.banner.InlineInfoBanner
 import mega.android.core.ui.components.button.AnchoredButtonGroup
-import mega.android.core.ui.components.dialogs.BasicDialog
-import mega.android.core.ui.components.divider.SubtleDivider
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
 import mega.android.core.ui.model.Button
 import mega.android.core.ui.model.menu.MenuActionWithClick
 import mega.android.core.ui.model.menu.MenuActionWithIcon
-import mega.android.core.ui.modifiers.shimmerEffect
-import mega.android.core.ui.preview.CombinedThemePreviews
-import mega.android.core.ui.theme.AndroidThemeForPreviews
-import mega.android.core.ui.theme.AppTheme
-import mega.android.core.ui.theme.values.TextColor
-import mega.privacy.android.core.formatter.formatFileSize
-import mega.privacy.android.core.formatter.formatModifiedDate
-import mega.privacy.android.feature.sharelink.presentation.component.ShareLinkDetails
 import mega.privacy.android.icon.pack.IconPack
-import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
- * Revamped Share link result screen (single node).
+ * Revamped Share link result screen.
+ *
+ * The scaffold and its bars live here; the per-state body composables and the preview live in
+ * `ShareLinkStateContent.kt` and `ShareLinkScreenPreview.kt` respectively.
  *
  * @param uiState The current [ShareLinkUiState].
  * @param onBack Invoked when the Close action is tapped.
@@ -80,6 +40,8 @@ import mega.privacy.android.shared.resources.R as sharedR
  * copied to the clipboard automatically.
  * @param onSensitiveWarningConfirmed Invoked when the user confirms the hidden-items warning.
  * @param onSensitiveWarningDismissed Invoked when the user cancels the hidden-items warning.
+ * @param onCopyrightAgreed Invoked when the user agrees to the first-time copyright consent.
+ * @param onCopyrightDisagreed Invoked when the user declines the first-time copyright consent.
  * @param modifier Modifier for the scaffold.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,6 +58,8 @@ fun ShareLinkScreen(
     onLinksCopied: () -> Unit = {},
     onSensitiveWarningConfirmed: () -> Unit = {},
     onSensitiveWarningDismissed: () -> Unit = {},
+    onCopyrightAgreed: () -> Unit = {},
+    onCopyrightDisagreed: () -> Unit = {},
 ) {
     val linkCount = (uiState as? ShareLinkUiState.Data)?.handles?.size ?: 1
 
@@ -104,7 +68,11 @@ fun ShareLinkScreen(
         topBar = {
             MegaTopAppBar(
                 modifier = Modifier.testTag(SHARE_LINK_APP_BAR_TAG),
-                title = pluralStringResource(sharedR.plurals.label_share_links, linkCount),
+                title = if (uiState is ShareLinkUiState.CopyrightConsent) {
+                    ""
+                } else {
+                    pluralStringResource(sharedR.plurals.label_share_links, linkCount)
+                },
                 subtitle = null,
                 navigationType = AppBarNavigationType.Close(onBack),
                 actions = buildList {
@@ -115,22 +83,51 @@ fun ShareLinkScreen(
             )
         },
         bottomBar = {
-            if (uiState is ShareLinkUiState.Data) {
-                val shareText = pluralStringResource(sharedR.plurals.label_share_links, linkCount)
-                AnchoredButtonGroup(
+            when (uiState) {
+                is ShareLinkUiState.Data -> {
+                    val shareText =
+                        pluralStringResource(sharedR.plurals.label_share_links, linkCount)
+                    AnchoredButtonGroup(
+                        modifier = Modifier.fillMaxWidth(),
+                        buttonGroup = listOf(
+                            {
+                                Button.PrimaryButton(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag(SHARE_LINK_SHARE_BUTTON_TAG),
+                                    text = shareText,
+                                    onClick = { onShareLink(uiState.shareableLinksText()) },
+                                )
+                            },
+                        ),
+                    )
+                }
+
+                ShareLinkUiState.CopyrightConsent -> AnchoredButtonGroup(
                     modifier = Modifier.fillMaxWidth(),
                     buttonGroup = listOf(
                         {
                             Button.PrimaryButton(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .testTag(SHARE_LINK_SHARE_BUTTON_TAG),
-                                text = shareText,
-                                onClick = { onShareLink(uiState.shareableLinksText()) },
+                                    .testTag(SHARE_LINK_COPYRIGHT_AGREE_TAG),
+                                text = stringResource(sharedR.string.copyright_action_agree),
+                                onClick = onCopyrightAgreed,
+                            )
+                        },
+                        {
+                            Button.SecondaryButton(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(SHARE_LINK_COPYRIGHT_DISAGREE_TAG),
+                                text = stringResource(sharedR.string.general_dialog_cancel_button),
+                                onClick = onCopyrightDisagreed,
                             )
                         },
                     ),
                 )
+
+                else -> Unit
             }
         },
     ) { contentPadding ->
@@ -142,6 +139,7 @@ fun ShareLinkScreen(
             when (uiState) {
                 ShareLinkUiState.Loading -> ShareLinkLoading()
                 ShareLinkUiState.Error -> ShareLinkError()
+                ShareLinkUiState.CopyrightConsent -> CopyrightConsent()
                 is ShareLinkUiState.SensitiveWarning -> {
                     ShareLinkLoading()
                     SensitiveItemsWarningDialog(
@@ -169,307 +167,6 @@ fun ShareLinkScreen(
             }
         }
     }
-
-}
-
-@Composable
-private fun SensitiveItemsWarningDialog(
-    type: SensitiveWarningType,
-    nodeCount: Int,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val description = when (type) {
-        SensitiveWarningType.Items -> if (nodeCount > 1) {
-            sharedR.string.share_hidden_item_links_description
-        } else {
-            sharedR.string.share_hidden_item_link_description
-        }
-
-        SensitiveWarningType.Folder -> if (nodeCount > 1) {
-            sharedR.string.share_hidden_folders_description
-        } else {
-            sharedR.string.share_hidden_folder_description
-        }
-    }
-    BasicDialog(
-        modifier = Modifier.testTag(SHARE_LINK_SENSITIVE_WARNING_TAG),
-        title = stringResource(sharedR.string.hidden_items),
-        description = stringResource(description),
-        positiveButtonText = stringResource(sharedR.string.button_continue),
-        onPositiveButtonClicked = onConfirm,
-        negativeButtonText = stringResource(sharedR.string.general_dialog_cancel_button),
-        onNegativeButtonClicked = onDismiss,
-        onDismiss = onDismiss,
-    )
-}
-
-@Composable
-private fun ShareLinkContent(
-    uiState: ShareLinkUiState.Data,
-    onCopyLink: () -> Unit,
-    onCopyKey: () -> Unit,
-    modifier: Modifier = Modifier,
-    onCopyPassword: () -> Unit = {},
-) {
-    val clipboard = LocalClipboard.current
-    val coroutineScope = rememberCoroutineScope()
-    val primary = uiState.primary
-    val password = uiState.password?.takeIf { uiState.isPasswordSet }
-    val displayLink = uiState.resolvedSingleLink()
-    val separateKey = primary.key?.takeIf { uiState.isKeySeparate }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-    ) {
-        NodeHeader(node = primary)
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            InlineInfoBanner(
-                modifier = Modifier.testTag(SHARE_LINK_ACCESS_BANNER_TAG),
-                title = stringResource(sharedR.string.share_link_access_banner_title),
-                body = if (uiState.isPasswordSet) {
-                    stringResource(sharedR.string.share_link_access_password_description)
-                } else {
-                    pluralStringResource(
-                        if (uiState.isKeySeparate) {
-                            sharedR.plurals.share_link_access_banner_description_with_key
-                        } else {
-                            sharedR.plurals.share_link_access_banner_description
-                        },
-                        uiState.handles.size,
-                    )
-                },
-                showCancelButton = false,
-            )
-
-            ShareLinkDetails(
-                link = displayLink,
-                onCopyLink = {
-                    coroutineScope.launch {
-                        clipboard.setClipEntry(
-                            ClipData.newPlainText(COPIED_LINK_LABEL, displayLink).toClipEntry(),
-                        )
-                    }
-                    onCopyLink()
-                },
-                key = separateKey,
-                onCopyKey = {
-                    separateKey?.let {
-                        coroutineScope.launch {
-                            clipboard.setClipEntry(
-                                ClipData.newPlainText(COPIED_KEY_LABEL, it).toClipEntry(),
-                            )
-                        }
-                    }
-                    onCopyKey()
-                },
-                passwordProtected = uiState.isPasswordSet,
-                maskedPassword = password?.let { "•".repeat(it.length) },
-                onCopyPassword = {
-                    password?.let {
-                        coroutineScope.launch {
-                            clipboard.setClipEntry(sensitiveClip(COPIED_PASSWORD_LABEL, it))
-                        }
-                    }
-                    onCopyPassword()
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun MultiNodeContent(
-    uiState: ShareLinkUiState.Data,
-    onCopyLink: () -> Unit,
-    onLinksCopied: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val clipboard = LocalClipboard.current
-    val coroutineScope = rememberCoroutineScope()
-
-    // Copy every link once when the screen first opens (parity with the legacy several-links
-    // screen). The rememberSaveable guard keeps it to one copy per screen open, surviving
-    // recomposition / config change / returning to this screen.
-    val linksCopied = rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!linksCopied.value) {
-            linksCopied.value = true
-            clipboard.setClipEntry(
-                ClipData.newPlainText(
-                    COPIED_LINK_LABEL,
-                    uiState.nodeLinks.joinToString(separator = "\n") { it.link },
-                ).toClipEntry()
-            )
-            onLinksCopied()
-        }
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .testTag(SHARE_LINK_MULTI_NODE_LIST_TAG)
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        InlineInfoBanner(
-            modifier = Modifier.testTag(SHARE_LINK_ACCESS_BANNER_TAG),
-            title = stringResource(sharedR.string.share_link_access_banner_title),
-            body = pluralStringResource(
-                sharedR.plurals.share_link_access_banner_description,
-                uiState.nodeLinks.size,
-            ),
-            showCancelButton = false,
-        )
-
-        uiState.nodeLinks.forEach { node ->
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                NodeInfoRow(node = node)
-                ShareLinkDetails(
-                    link = node.link,
-                    onCopyLink = {
-                        coroutineScope.launch {
-                            clipboard.setClipEntry(
-                                ClipData.newPlainText(COPIED_LINK_LABEL, node.link).toClipEntry(),
-                            )
-                        }
-                        onCopyLink()
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NodeHeader(
-    node: ShareLinkNodeItem,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        NodeInfoRow(
-            node = node,
-            modifier = Modifier.testTag(SHARE_LINK_NODE_HEADER_TAG),
-        )
-        SubtleDivider()
-    }
-}
-
-@Composable
-private fun NodeInfoRow(
-    node: ShareLinkNodeItem,
-    modifier: Modifier = Modifier,
-) {
-    val context = LocalContext.current
-    val locale = LocalLocale.current.platformLocale
-    val subtitle = when {
-        node.isFolder && node.childFolderCount != null && node.childFileCount != null ->
-            pluralStringResource(
-                sharedR.plurals.info_num_folders_and_files,
-                node.childFolderCount,
-                node.childFolderCount,
-            ) + pluralStringResource(
-                sharedR.plurals.info_num_files,
-                node.childFileCount,
-                node.childFileCount,
-            )
-
-        else -> remember(node.sizeInBytes, node.modificationTime) {
-            buildList {
-                node.sizeInBytes?.let { add(formatFileSize(it, context)) }
-                node.modificationTime?.let { add(formatModifiedDate(locale, it)) }
-            }.joinToString(separator = " • ")
-        }
-    }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Image(
-            modifier = Modifier.size(32.dp),
-            painter = painterResource(id = node.iconRes),
-            contentDescription = null,
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            MegaText(
-                text = node.name,
-                textColor = TextColor.Primary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = AppTheme.typography.titleMedium,
-            )
-            if (subtitle.isNotEmpty()) {
-                MegaText(
-                    text = subtitle,
-                    textColor = TextColor.Secondary,
-                    style = AppTheme.typography.bodyMedium,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShareLinkLoading(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(SHARE_LINK_LOADING_TAG)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Spacer(
-            modifier = Modifier
-                .width(200.dp)
-                .height(24.dp)
-                .shimmerEffect(),
-        )
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .shimmerEffect(shape = RoundedCornerShape(8.dp)),
-        )
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .shimmerEffect(shape = RoundedCornerShape(8.dp)),
-        )
-    }
-}
-
-@Composable
-private fun ShareLinkError(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(SHARE_LINK_ERROR_TAG)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        MegaText(
-            text = stringResource(sharedR.string.general_request_failed_message),
-            textColor = TextColor.Secondary,
-            style = AppTheme.typography.bodyMedium,
-        )
-    }
 }
 
 /**
@@ -486,152 +183,6 @@ internal data object ShareLinkSettingsAction : MenuActionWithIcon {
     override fun getDescription() = stringResource(sharedR.string.general_settings)
 }
 
-private val previewData = ShareLinkUiState.Data(
-    nodeLinks = listOf(
-        ShareLinkNodeItem(
-            handle = 1L,
-            name = "Presentation.pdf",
-            isFolder = false,
-            iconRes = iconPackR.drawable.ic_pdf_medium_solid,
-            sizeInBytes = 10L * 1024 * 1024,
-            modificationTime = 1_749_000_000L,
-            childFolderCount = null,
-            childFileCount = null,
-            link = "https://mega.nz/file/abc123#decryptionKey",
-            linkWithoutKey = "https://mega.nz/file/abc123",
-            key = "decryptionKey",
-        ),
-    ),
-    accountType = null,
-)
-
-@CombinedThemePreviews
-@Composable
-private fun ShareLinkScreenDataPreview() {
-    AndroidThemeForPreviews {
-        ShareLinkScreen(
-            uiState = previewData,
-            onBack = {},
-            onOpenSettings = {},
-            onShareLink = {},
-            onCopyLink = {},
-            onCopyKey = {},
-        )
-    }
-}
-
-private val previewMultiNodeData = ShareLinkUiState.Data(
-    nodeLinks = listOf(
-        ShareLinkNodeItem(
-            handle = 1L,
-            name = "Documents",
-            isFolder = true,
-            iconRes = iconPackR.drawable.ic_folder_medium_solid,
-            sizeInBytes = null,
-            modificationTime = null,
-            childFolderCount = 6,
-            childFileCount = 12,
-            link = "https://mega.nz/folder/abc123#folderKey",
-            linkWithoutKey = "https://mega.nz/folder/abc123",
-            key = "folderKey",
-        ),
-        ShareLinkNodeItem(
-            handle = 2L,
-            name = "Presentation.pdf",
-            isFolder = false,
-            iconRes = iconPackR.drawable.ic_pdf_medium_solid,
-            sizeInBytes = 10L * 1024 * 1024,
-            modificationTime = 1_749_000_000L,
-            childFolderCount = null,
-            childFileCount = null,
-            link = "https://mega.nz/file/def456#fileKey",
-            linkWithoutKey = "https://mega.nz/file/def456",
-            key = "fileKey",
-        ),
-    ),
-    accountType = null,
-)
-
-@CombinedThemePreviews
-@Composable
-private fun ShareLinkScreenMultiNodePreview() {
-    AndroidThemeForPreviews {
-        ShareLinkScreen(
-            uiState = previewMultiNodeData,
-            onBack = {},
-            onOpenSettings = {},
-            onShareLink = {},
-            onCopyLink = {},
-            onCopyKey = {},
-        )
-    }
-}
-
-@CombinedThemePreviews
-@Composable
-private fun ShareLinkScreenLoadingPreview() {
-    AndroidThemeForPreviews {
-        ShareLinkScreen(
-            uiState = ShareLinkUiState.Loading,
-            onBack = {},
-            onOpenSettings = {},
-            onShareLink = {},
-            onCopyLink = {},
-            onCopyKey = {},
-        )
-    }
-}
-
-@CombinedThemePreviews
-@Composable
-private fun ShareLinkScreenErrorPreview() {
-    AndroidThemeForPreviews {
-        ShareLinkScreen(
-            uiState = ShareLinkUiState.Error,
-            onBack = {},
-            onOpenSettings = {},
-            onShareLink = {},
-            onCopyLink = {},
-            onCopyKey = {},
-        )
-    }
-}
-
-/**
- * The link shown and shared for a single node: the password-protected link when a password is set,
- * the key-less link when the key is shared separately, otherwise the full link.
- */
-private fun ShareLinkUiState.Data.resolvedSingleLink(): String = when {
-    isPasswordSet -> linkWithPassword ?: primary.link
-    isKeySeparate -> primary.linkWithoutKey ?: primary.link
-    else -> primary.link
-}
-
-/**
- * The link text placed on the system share sheet: for multiple nodes every link joined by
- * newlines; for a single node its [resolvedSingleLink].
- */
-private fun ShareLinkUiState.Data.shareableLinksText(): String =
-    if (isMultiNode) {
-        nodeLinks.joinToString(separator = "\n") { it.link }
-    } else {
-        resolvedSingleLink()
-    }
-
-/**
- * A plain-text clip flagged sensitive on API 33+, so the OS keeps it out of the clipboard preview
- * (used for the copied password).
- */
-private fun sensitiveClip(label: String, text: String): ClipEntry {
-    val clip = ClipData.newPlainText(label, text)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        clip.description.extras = PersistableBundle().apply {
-            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
-        }
-    }
-    return clip.toClipEntry()
-}
-
 internal const val SHARE_LINK_APP_BAR_TAG = "share_link_screen:app_bar"
 internal const val SHARE_LINK_SHARE_BUTTON_TAG = "share_link_screen:button_share"
 internal const val SHARE_LINK_NODE_HEADER_TAG = "share_link_screen:node_header"
@@ -640,6 +191,6 @@ internal const val SHARE_LINK_SENSITIVE_WARNING_TAG = "share_link_screen:sensiti
 internal const val SHARE_LINK_ACCESS_BANNER_TAG = "share_link_screen:access_banner"
 internal const val SHARE_LINK_LOADING_TAG = "share_link_screen:loading"
 internal const val SHARE_LINK_ERROR_TAG = "share_link_screen:error"
-private const val COPIED_LINK_LABEL = "Copied Text"
-private const val COPIED_KEY_LABEL = "Copied Key"
-private const val COPIED_PASSWORD_LABEL = "Copied Password"
+internal const val SHARE_LINK_COPYRIGHT_TAG = "share_link_screen:copyright"
+internal const val SHARE_LINK_COPYRIGHT_AGREE_TAG = "share_link_screen:copyright_agree"
+internal const val SHARE_LINK_COPYRIGHT_DISAGREE_TAG = "share_link_screen:copyright_disagree"
