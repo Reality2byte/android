@@ -25,11 +25,13 @@ object Skus {
 /**
  * Tier ranking of a subscription sku, low (cheapest) to high, or [Skus.NO_LEVEL] when the sku is not
  * an upgradeable consumer plan (e.g. business) or is unknown/null. Used to order plans by tier.
+ * A trailing `.test` suffix (e.g. `mega.android.pro1.oneyear.test`) is stripped before ranking so
+ * test skus map to the same tier as their production counterpart.
  *
  * @return tier level from 0 (Starter) to 6 (Pro III), or [Skus.NO_LEVEL] for non-consumer/unknown skus.
  */
 val String?.subscriptionSkuLevel: Int
-    get() = when (this) {
+    get() = when (this?.removeSuffix(".test")) {
         Skus.SKU_STARTER_MONTH, Skus.SKU_STARTER_YEAR -> 0
         Skus.SKU_BASIC_MONTH, Skus.SKU_BASIC_YEAR -> 1
         Skus.SKU_ESSENTIAL_MONTH, Skus.SKU_ESSENTIAL_YEAR -> 2

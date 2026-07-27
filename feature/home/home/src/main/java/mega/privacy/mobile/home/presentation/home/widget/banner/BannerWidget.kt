@@ -16,6 +16,7 @@ import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.event.PwmBannerCloseButtonPressedEvent
 import mega.privacy.mobile.analytics.event.TransferItBannerCloseButtonPressedEvent
 import mega.privacy.mobile.analytics.event.VpnBannerCloseButtonPressedEvent
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
 import mega.privacy.mobile.home.presentation.home.widget.banner.view.ScrollableBanner
 import javax.inject.Inject
 
@@ -41,15 +42,16 @@ class BannerWidget @Inject constructor() : HomeWidget {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val context = LocalContext.current
 
-        if (uiState.banners.isNotEmpty()) {
+        if (uiState.offerBanner != null || uiState.banners.isNotEmpty()) {
             ScrollableBanner(
+                offerBanner = uiState.offerBanner,
                 banners = uiState.banners,
                 onDismiss = { id, url ->
                     if (BannerClickHandler.matchesPwmUrl(url)) {
                         Analytics.tracker.trackEvent(PwmBannerCloseButtonPressedEvent)
                     } else if (BannerClickHandler.matchesVpnUrl(url)) {
                         Analytics.tracker.trackEvent(VpnBannerCloseButtonPressedEvent)
-                    } else {
+                    } else if (url != SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL) {
                         Analytics.tracker.trackEvent(TransferItBannerCloseButtonPressedEvent)
                     }
                     viewModel.dismissBanner(id)

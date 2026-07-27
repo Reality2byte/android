@@ -7,8 +7,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
+import mega.android.core.ui.model.LocalizedText
 import mega.android.core.ui.theme.AndroidThemeForPreviews
 import mega.privacy.android.domain.entity.banner.PromotionalBanner
+import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_ID
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_URL
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,12 +44,20 @@ class ScrollableBannerTest {
         imageLocation = "right"
     )
 
+    private val offerBanner = SubscriptionOfferBannerUiModel(
+        campaignName = LocalizedText.Literal("Black Friday"),
+        discountPercentage = 50,
+        formattedPrice = "€4.99",
+        planNameRes = sharedR.string.pro1_account,
+    )
+
     @Test
     fun `test that banner title is displayed`() {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1),
+                    offerBanner = null,
+                    banners =listOf(banner1),
                     onDismiss = { _, _ -> },
                     onClick = {},
                 )
@@ -59,7 +72,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1),
+                    offerBanner = null,
+                    banners =listOf(banner1),
                     onDismiss = { _, _ -> },
                     onClick = {},
                 )
@@ -74,7 +88,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1, banner2),
+                    offerBanner = null,
+                    banners =listOf(banner1, banner2),
                     onDismiss = { _, _ -> },
                     onClick = {},
                 )
@@ -92,7 +107,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1),
+                    offerBanner = null,
+                    banners =listOf(banner1),
                     onDismiss = { _, _ -> },
                     onClick = { url -> clickedUrl = url },
                 )
@@ -112,7 +128,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1),
+                    offerBanner = null,
+                    banners =listOf(banner1),
                     onDismiss = { _, _ -> },
                     onClick = { url ->
                         clickCount++
@@ -136,7 +153,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = listOf(banner1),
+                    offerBanner = null,
+                    banners =listOf(banner1),
                     onDismiss = { id, url ->
                         dismissedBannerId = id
                         dismissedBannerUrl = url
@@ -161,7 +179,8 @@ class ScrollableBannerTest {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 ScrollableBanner(
-                    banners = emptyList(),
+                    offerBanner = null,
+                    banners =emptyList(),
                     onDismiss = { _, _ -> },
                     onClick = {},
                 )
@@ -170,5 +189,49 @@ class ScrollableBannerTest {
 
         composeRule.onNodeWithText(banner1.title).assertDoesNotExist()
         composeRule.onNodeWithText(banner2.title).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that the offer banner displays its resolved headline and button`() {
+        composeRule.setContent {
+            AndroidThemeForPreviews {
+                ScrollableBanner(
+                    offerBanner = offerBanner,
+                    banners = emptyList(),
+                    onDismiss = { _, _ -> },
+                    onClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Black Friday · Get 50% off", substring = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("€4.99/month for Pro I", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Grab deal").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that dismissing the offer banner reports the offer id and url`() {
+        var dismissedBannerId: Int? = null
+        var dismissedBannerUrl: String? = null
+
+        composeRule.setContent {
+            AndroidThemeForPreviews {
+                ScrollableBanner(
+                    offerBanner = offerBanner,
+                    banners = emptyList(),
+                    onDismiss = { id, url ->
+                        dismissedBannerId = id
+                        dismissedBannerUrl = url
+                    },
+                    onClick = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Dismiss offer").performClick()
+
+        assertThat(dismissedBannerId).isEqualTo(SUBSCRIPTION_OFFER_BANNER_ID)
+        assertThat(dismissedBannerUrl).isEqualTo(SUBSCRIPTION_OFFER_BANNER_URL)
     }
 }

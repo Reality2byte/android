@@ -8,6 +8,8 @@ import mega.privacy.android.domain.entity.LocalPricing
 import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.SubscriptionOption
 import mega.privacy.android.domain.entity.account.CurrencyPoint
+import mega.privacy.android.domain.entity.account.MegaSku
+import mega.privacy.android.domain.entity.account.OfferDetail
 import mega.privacy.android.domain.entity.account.Skus
 import mega.privacy.android.domain.repository.BillingRepository
 import mega.privacy.android.domain.usecase.account.GetCurrentSubscriptionPlanUseCase
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
@@ -179,6 +182,19 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
     private suspend fun stub(currentPlan: AccountType, options: List<SubscriptionOption>) {
         whenever(getCurrentSubscriptionPlanUseCase()).thenReturn(currentPlan)
         whenever(getSubscriptionOptionsUseCase()).thenReturn(options)
+        val products = options.map { option ->
+            MegaSku(
+                sku = option.sku,
+                priceAmountMicros = 0L,
+                priceCurrencyCode = "EUR",
+                offers = if (option.hasOffer) {
+                    listOf(OfferDetail(null, null, null, null))
+                } else {
+                    emptyList()
+                },
+            )
+        }
+        whenever(billingRepository.querySkus(any())).thenReturn(products)
     }
 
     /**

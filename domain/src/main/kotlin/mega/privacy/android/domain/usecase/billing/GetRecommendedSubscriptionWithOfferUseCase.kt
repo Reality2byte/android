@@ -43,14 +43,14 @@ class GetRecommendedSubscriptionWithOfferUseCase @Inject constructor(
         val currentLevel = availablePlans
             .firstOrNull { it.accountType == currentPlan }
             ?.sku.subscriptionSkuLevel
+        val skus = availablePlans.map { it.sku }.distinct()
+        val products = billingRepository.querySkus(skus).associateBy { it.sku }
 
         val offerPlan = availablePlans
             .filter { it.sku.subscriptionSkuLevel > currentLevel }
-            .firstOrNull { it.hasOffer }
+            .firstOrNull { it.hasOffer && products[it.sku]?.offers.orEmpty().isNotEmpty() }
             ?: return null
 
-        // Pre-fetch the SKU into the billing cache so getLocalPricingUseCase can resolve local pricing.
-        billingRepository.querySkus(listOf(offerPlan.sku))
         val localPricing = getLocalPricingUseCase(offerPlan.sku)
         return subscriptionMapper(offerPlan, localPricing)
     }

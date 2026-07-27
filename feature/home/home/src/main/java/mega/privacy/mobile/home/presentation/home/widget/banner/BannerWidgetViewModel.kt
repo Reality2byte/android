@@ -3,6 +3,8 @@ package mega.privacy.mobile.home.presentation.home.widget.banner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,8 +12,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.usecase.banner.DismissBannerUseCase
 import mega.privacy.android.domain.usecase.banner.GetPromoBannersUseCase
+import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_ID
 import mega.privacy.mobile.home.presentation.home.widget.banner.model.BannerUiState
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -21,6 +28,8 @@ import javax.inject.Inject
 class BannerWidgetViewModel @Inject constructor(
     private val getPromoBannersUseCase: GetPromoBannersUseCase,
     private val dismissBannerUseCase: DismissBannerUseCase,
+    private val getRecommendedSubscriptionWithOfferUseCase: GetRecommendedSubscriptionWithOfferUseCase,
+    private val subscriptionOfferBannerMapper: SubscriptionOfferBannerMapper,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BannerUiState())
@@ -31,7 +40,8 @@ class BannerWidgetViewModel @Inject constructor(
     }
 
     /**
-     * Load banners
+     * Load banners. The subscription offer banner is not delivered by the banners API, so it is
+     * built locally from the active subscription offer and shown ahead of the promo banners.
      */
     private fun loadBanners() {
         viewModelScope.launch {
@@ -39,20 +49,21 @@ class BannerWidgetViewModel @Inject constructor(
                 it.copy(isLoading = true)
             }
 
-            runCatching {
-                getPromoBannersUseCase()
-            }.onSuccess { bannerList ->
-                _uiState.update {
-                    it.copy(
-                        banners = bannerList,
-                        isLoading = false
-                    )
+            coroutineScope {
+                val offerBannerDeferred = async {
+                    runCatching { getSubscriptionOfferBanner() }
+                        .onFailure { Timber.e(it, "Failed to load subscription offer banner") }
+                        .getOrNull()
                 }
-            }.onFailure { exception ->
-                Timber.e(exception, "Failed to load banners")
+                val promoBannersDeferred = async {
+                    runCatching { getPromoBannersUseCase() }
+                        .onFailure { Timber.e(it, "Failed to load banners") }
+                        .getOrDefault(emptyList())
+                }
                 _uiState.update {
                     it.copy(
-                        banners = emptyList(),
+                        offerBanner = offerBannerDeferred.await(),
+                        banners = promoBannersDeferred.await(),
                         isLoading = false
                     )
                 }
@@ -60,24 +71,37 @@ class BannerWidgetViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? =
+        getRecommendedSubscriptionWithOfferUseCase()
+            ?.let { subscriptionOfferBannerMapper(it, Locale.getDefault()) }
+
     /**
-     * Dismiss a banner
+     * Dismiss a banner. The subscription offer banner only exists locally, so it is removed from the
+     * state without calling the banners API.
+     *
      * @param bannerId The ID of the banner to dismiss
      */
     fun dismissBanner(bannerId: Int) {
-        viewModelScope.launch {
-            runCatching {
-                dismissBannerUseCase(bannerId)
-            }.onSuccess {
-                // Remove dismissed banner from state
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        banners = currentState.banners.filter { it.id != bannerId }
-                    )
+        if (bannerId == SUBSCRIPTION_OFFER_BANNER_ID) {
+            _uiState.update { it.copy(offerBanner = null) }
+        } else {
+            viewModelScope.launch {
+                runCatching {
+                    dismissBannerUseCase(bannerId)
+                }.onSuccess {
+                    removeBanner(bannerId)
+                }.onFailure { exception ->
+                    Timber.e(exception, "Failed to dismiss banner $bannerId")
                 }
-            }.onFailure { exception ->
-                Timber.e(exception, "Failed to dismiss banner $bannerId")
             }
+        }
+    }
+
+    private fun removeBanner(bannerId: Int) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                banners = currentState.banners.filter { it.id != bannerId }
+            )
         }
     }
 }

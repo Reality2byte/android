@@ -3198,6 +3198,12 @@
         <item quantity="one">Minute</item>
         <item quantity="other">Minutes</item>
     </plurals>
+    <!-- Title of the subscription offer banner on the Home screen. %1$s is the campaign name (e.g. "Black Friday"), %2$d is the discount percentage. -->
+    <string name="home_offer_banner_title">%1$s · Get %2$d%% off</string>
+    <!-- Subtitle of the subscription offer banner on the Home screen. %1$s is the localised discounted monthly price (e.g. "€4.99"), %2$s is the plan name (e.g. "Pro I"). -->
+    <string name="home_offer_banner_subtitle">%1$s/month for %2$s</string>
+    <!-- Action button label on the Home screen subscription offer banner, opens the upgrade screen. -->
+    <string name="home_offer_banner_button">Grab deal</string>
     <!-- Password strength label shown below a password field when the password is very weak -->
     <string name="password_strength_very_weak">Very weak password</string>
     <!-- Password strength label shown below a password field when the password is weak -->

@@ -14,59 +14,98 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.banner.HomeBanner
 import mega.android.core.ui.theme.devicetype.DeviceType
 import mega.android.core.ui.theme.devicetype.LocalDeviceType
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
+import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import mega.privacy.android.domain.entity.banner.PromotionalBanner as DomainPromoBanner
+import mega.privacy.android.shared.resources.R as sharedR
 
 /**
- * Scrollable banner component that displays multiple PromoBanner instances horizontally
+ * Scrollable banner component that displays the subscription offer banner (if any) followed by the
+ * promotional banners horizontally.
  *
+ * @param offerBanner The locally-built subscription offer banner shown first, or null when inactive
  * @param banners List of domain PromoBanner entities to display
- * @param onDismiss Callback when a banner is dismissed, receives banner ID
+ * @param onDismiss Callback when a banner is dismissed, receives banner ID and URL
  * @param onClick Callback when a banner is clicked, receives banner URL
  * @param modifier Modifier for the composable
  */
 @Composable
 fun ScrollableBanner(
+    offerBanner: SubscriptionOfferBannerUiModel?,
     banners: List<DomainPromoBanner>,
     onDismiss: (Int, String) -> Unit,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (banners.isNotEmpty()) {
+    val totalCount = (if (offerBanner != null) 1 else 0) + banners.size
+    if (totalCount == 0) return
 
-        val listState = rememberLazyListState()
-        val cardWidth = rememberBannerCardWidth(bannerCount = banners.size)
+    val listState = rememberLazyListState()
+    val cardWidth = rememberBannerCardWidth(bannerCount = totalCount)
 
-        LazyRow(
-            modifier = modifier,
-            state = listState,
-            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
-            horizontalArrangement = Arrangement.spacedBy(BANNER_SPACING),
-            contentPadding = PaddingValues(horizontal = BANNER_HORIZONTAL_PADDING),
-        ) {
-            items(
-                items = banners,
-                key = { it.id }
-            ) { promoBanner ->
-                HomeBanner(
+    LazyRow(
+        modifier = modifier,
+        state = listState,
+        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+        horizontalArrangement = Arrangement.spacedBy(BANNER_SPACING),
+        contentPadding = PaddingValues(horizontal = BANNER_HORIZONTAL_PADDING),
+    ) {
+        offerBanner?.let { offer ->
+            item(key = SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_ID) {
+                val title = stringResource(
+                    sharedR.string.home_offer_banner_title,
+                    offer.campaignName.text,
+                    offer.discountPercentage,
+                )
+                val subtitle = stringResource(
+                    sharedR.string.home_offer_banner_subtitle,
+                    offer.formattedPrice,
+                    stringResource(offer.planNameRes),
+                )
+                HomeOfferBanner(
                     modifier = Modifier
                         .width(cardWidth)
                         .clickable {
-                            onClick(promoBanner.url)
+                            onClick(SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL)
                         },
-                    backgroundImageUrl = promoBanner.backgroundImage.takeIf { it.isNotEmpty() },
-                    imageUrl = promoBanner.image.takeIf { it.isNotEmpty() },
-                    title = promoBanner.title,
-                    buttonText = promoBanner.buttonText,
-                    showDismissButton = true,
-                    onClick = { onClick(promoBanner.url) },
-                    onDismissClick = { onDismiss(promoBanner.id, promoBanner.url) },
+                    title = "$title\n$subtitle",
+                    buttonText = stringResource(sharedR.string.home_offer_banner_button),
+                    onClick = {
+                        onClick(SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL)
+                    },
+                    onDismissClick = {
+                        onDismiss(
+                            SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_ID,
+                            SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL,
+                        )
+                    },
                 )
             }
+        }
+        items(
+            items = banners,
+            key = { it.id }
+        ) { promoBanner ->
+            HomeBanner(
+                modifier = Modifier
+                    .width(cardWidth)
+                    .clickable {
+                        onClick(promoBanner.url)
+                    },
+                backgroundImageUrl = promoBanner.backgroundImage.takeIf { it.isNotEmpty() },
+                imageUrl = promoBanner.image.takeIf { it.isNotEmpty() },
+                title = promoBanner.title,
+                buttonText = promoBanner.buttonText,
+                showDismissButton = true,
+                onClick = { onClick(promoBanner.url) },
+                onDismissClick = { onDismiss(promoBanner.id, promoBanner.url) },
+            )
         }
     }
 }

@@ -7,10 +7,12 @@ import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.usecase.domainmigration.GetDomainNameUseCase.Companion.MEGA_APP_DOMAIN_NAME
 import mega.privacy.android.domain.usecase.domainmigration.GetDomainNameUseCase.Companion.MEGA_NZ_DOMAIN_NAME
 import mega.privacy.android.navigation.contract.NavigationHandler
+import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
 import mega.privacy.android.navigation.destination.WebSiteNavKey
 import mega.privacy.mobile.analytics.event.PwmSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.TransferItSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.VpnSmartBannerItemSelectedEvent
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_URL
 
 /**
  * Handles banner click actions based on URL patterns
@@ -30,6 +32,10 @@ object BannerClickHandler {
         url: String,
     ) {
         when {
+            url == SUBSCRIPTION_OFFER_BANNER_URL -> {
+                navigationHandler.navigate(UpgradeAccountNavKey(isUpgrade = true))
+            }
+
             matchesVpnUrl(url) -> {
                 Analytics.tracker.trackEvent(VpnSmartBannerItemSelectedEvent)
                 openInSpecificApp(context, url, MEGA_VPN_PACKAGE_NAME)
