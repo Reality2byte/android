@@ -5,7 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 
 /**
@@ -67,4 +69,33 @@ val opaqueFadeBackwardTransition = (EnterTransition.None togetherWith fadeOut(
     targetContentZIndex = -1f
 }
 
+/**
+ * Forward transition for modal-style destinations: the entering screen slides in from the bottom
+ * over the outgoing screen, which is held fully visible beneath it for the whole animation and
+ * removed instantly at the end.
+ */
+val slideUpForwardTransition = (slideInVertically(
+    initialOffsetY = { it },
+    animationSpec = tween(SLIDE_ANIM_DURATION_MS),
+) togetherWith fadeOut(
+    // Hold the outgoing entry visible for the whole duration, then drop it in a single frame.
+    animationSpec = tween(durationMillis = 1, delayMillis = SLIDE_ANIM_DURATION_MS)
+)).apply {
+    // Draw the incoming entry on top so it slides over the outgoing entry.
+    targetContentZIndex = 1f
+}
+
+/**
+ * Backward (pop) counterpart of [slideUpForwardTransition]: the outgoing (top-most) entry slides
+ * down out of the screen while the revealed entry beneath it is shown at full opacity immediately.
+ */
+val slideDownBackwardTransition = (EnterTransition.None togetherWith slideOutVertically(
+    targetOffsetY = { it },
+    animationSpec = tween(SLIDE_ANIM_DURATION_MS),
+)).apply {
+    // Keep the revealed entry beneath the sliding-out one.
+    targetContentZIndex = -1f
+}
+
 private const val FADE_ANIM_DURATION_MS = 500
+private const val SLIDE_ANIM_DURATION_MS = 400

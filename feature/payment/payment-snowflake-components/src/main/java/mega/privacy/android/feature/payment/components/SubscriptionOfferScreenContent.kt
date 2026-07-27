@@ -1,0 +1,305 @@
+package mega.privacy.android.feature.payment.components
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import mega.android.core.ui.components.MegaScaffold
+import mega.android.core.ui.components.MegaText
+import mega.android.core.ui.components.badge.Badge
+import mega.android.core.ui.components.badge.BadgeType
+import mega.android.core.ui.components.button.SecondaryNavigationIconButton
+import mega.android.core.ui.preview.CombinedThemePreviews
+import mega.android.core.ui.theme.AndroidTheme
+import mega.android.core.ui.theme.values.TextColor
+import mega.android.core.ui.tokens.theme.DSTokens
+import mega.privacy.android.icon.pack.IconPack
+import mega.privacy.android.icon.pack.R as iconPackR
+import mega.privacy.android.shared.resources.R as sharedR
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * Content of the full-screen subscription offer landing screen (DSN-3130): the campaign artwork
+ * drawn edge-to-edge behind the status bar and fading into the page background, a dismiss (X)
+ * affordance, a promotional header (badge, title, campaign name, countdown), the discounted plan
+ * as an [OfferPriceCard] (without its own buy button) and a pinned [BuyPlanBottomBar] CTA.
+ *
+ * The countdown is driven by [validUntil] and recomputed once a minute; it is hidden while
+ * [validUntil] is null or already elapsed.
+ *
+ * @param campaignText the campaign name (e.g. "Black Friday: 50% off"), shown as the header
+ * subtitle and as the plan card badge
+ * @param validUntil the offer expiry as epoch seconds, null to hide the countdown
+ * @param validUntilText the countdown caption (e.g. "valid until July 11, 2026"), null to hide
+ * the countdown
+ * @param planName the plan name (e.g. "Pro I")
+ * @param priceText the discounted price (e.g. "€4.99/month")
+ * @param originalPriceText the pre-discount price shown with a strikethrough (e.g. "€9.99")
+ * @param discountDescriptionText the discount description (e.g. "Billed at €4.99/month for the
+ * first 12 months, €9.99/month after")
+ * @param storageText storage benefit (e.g. "2 TB cloud storage")
+ * @param transferText transfer benefit (e.g. "2 TB transfer")
+ * @param buyButtonText the pinned CTA label (e.g. "Get Pro I")
+ * @param onBuyClick called when the pinned CTA is tapped
+ * @param onDismissClick called when the dismiss (X) icon is tapped
+ * @param modifier
+ * @param monthlyPriceText the per-month price shown above the yearly total (e.g. "€4.99/month"),
+ * null for monthly plans
+ */
+@Composable
+fun SubscriptionOfferScreenContent(
+    campaignText: String,
+    validUntil: Long?,
+    validUntilText: String?,
+    planName: String,
+    priceText: String,
+    originalPriceText: String,
+    discountDescriptionText: String,
+    storageText: String,
+    transferText: String,
+    buyButtonText: String,
+    onBuyClick: () -> Unit,
+    onDismissClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    monthlyPriceText: String? = null,
+) {
+    MegaScaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            BuyPlanBottomBar(
+                text = buyButtonText,
+                onClick = onBuyClick,
+                modifier = Modifier.navigationBarsPadding(),
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DSTokens.colors.background.pageBackground)
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Image(
+                    painter = painterResource(iconPackR.drawable.subscription_offer_banner),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(BANNER_HEIGHT)
+                        .testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_BANNER),
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(top = BANNER_HEIGHT - GRADIENT_HEIGHT)
+                        .fillMaxWidth()
+                        .height(GRADIENT_HEIGHT)
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                GRADIENT_SOLID_STOP to DSTokens.colors.background.pageBackground,
+                            )
+                        ),
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(top = HEADER_TOP)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Badge(
+                        badgeType = BadgeType.Mega,
+                        text = stringResource(sharedR.string.subscription_offer_special_offer_badge),
+                        modifier = Modifier.testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_BADGE),
+                    )
+                    MegaText(
+                        text = stringResource(sharedR.string.subscription_revamp_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        textColor = TextColor.Primary,
+                        modifier = Modifier.testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_TITLE),
+                    )
+                    MegaText(
+                        text = campaignText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        textColor = TextColor.Primary,
+                        modifier = Modifier.testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_CAMPAIGN),
+                    )
+                    if (validUntil != null && validUntilText != null) {
+                        OfferCountdownSection(
+                            validUntil = validUntil,
+                            validUntilText = validUntilText,
+                        )
+                    }
+                }
+                SecondaryNavigationIconButton(
+                    icon = rememberVectorPainter(IconPack.Medium.Thin.Outline.X),
+                    onClick = onDismissClick,
+                    contentDescription = stringResource(sharedR.string.general_dismiss_dialog),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(16.dp)
+                        .testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_DISMISS),
+                )
+            }
+            OfferPriceCard(
+                planName = planName,
+                priceText = priceText,
+                originalPriceText = originalPriceText,
+                discountDescriptionText = discountDescriptionText,
+                discountBadgeText = campaignText,
+                storageText = storageText,
+                transferText = transferText,
+                monthlyPriceText = monthlyPriceText,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Renders the offer countdown driven by [validUntil] (epoch seconds). Renders nothing once
+ * elapsed; the remaining time is recomputed once a minute.
+ */
+@Composable
+private fun OfferCountdownSection(
+    validUntil: Long,
+    validUntilText: String,
+    modifier: Modifier = Modifier,
+) {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(validUntil) {
+        while (true) {
+            now = System.currentTimeMillis()
+            if (validUntil * 1000L - now <= 0L) break
+            delay(60.seconds)
+        }
+    }
+    val remainingMillis = validUntil * 1000L - now
+    if (remainingMillis <= 0L) return
+    val totalMinutes = remainingMillis / 60_000L
+    val days = totalMinutes / (60L * 24L)
+    val hours = totalMinutes / 60L % 24L
+    val minutes = totalMinutes % 60L
+    OfferCountdown(
+        validUntilText = validUntilText,
+        days = days.toString().padStart(2, '0'),
+        hours = hours.toString().padStart(2, '0'),
+        minutes = minutes.toString().padStart(2, '0'),
+        daysLabel = pluralStringResource(
+            sharedR.plurals.subscription_offer_countdown_days,
+            days.toInt(),
+        ),
+        hoursLabel = pluralStringResource(
+            sharedR.plurals.subscription_offer_countdown_hours,
+            hours.toInt(),
+        ),
+        minutesLabel = pluralStringResource(
+            sharedR.plurals.subscription_offer_countdown_minutes,
+            minutes.toInt(),
+        ),
+        modifier = modifier,
+    )
+}
+
+private val BANNER_HEIGHT = 220.dp
+private val GRADIENT_HEIGHT = 86.dp
+
+/**
+ * Header content overlaps the bottom of the banner artwork, replicating the Figma layout where the
+ * title sits on the gradient fade.
+ */
+private val HEADER_TOP = 160.dp
+
+/**
+ * Gradient stop where the fade becomes fully opaque, replicating the Figma fade which reaches the
+ * page background colour at ~73% of its height.
+ */
+private const val GRADIENT_SOLID_STOP = 0.73f
+
+@CombinedThemePreviews
+@Composable
+private fun SubscriptionOfferScreenContentPreview() {
+    AndroidTheme(isSystemInDarkTheme()) {
+        SubscriptionOfferScreenContent(
+            campaignText = "Black Friday: 50% off",
+            validUntil = System.currentTimeMillis() / 1000L +
+                    28L * 24L * 3600L + 12L * 3600L + 90L,
+            validUntilText = "valid until July 11, 2026",
+            planName = "Pro I",
+            priceText = "€4.99/month",
+            originalPriceText = "€9.99",
+            discountDescriptionText = "Billed at €4.99/month for the first 12 months, €9.99/month after",
+            storageText = "2 TB cloud storage",
+            transferText = "2 TB transfer",
+            buyButtonText = "Get Pro I",
+            onBuyClick = {},
+            onDismissClick = {},
+        )
+    }
+}
+
+/**
+ * Tag for the SubscriptionOfferScreenContent root container
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN = "subscription_offer_screen"
+
+/**
+ * Tag for the SubscriptionOfferScreenContent banner artwork
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_BANNER = "subscription_offer_screen:banner"
+
+/**
+ * Tag for the SubscriptionOfferScreenContent dismiss icon
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_DISMISS = "subscription_offer_screen:dismiss"
+
+/**
+ * Tag for the SubscriptionOfferScreenContent header badge
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_BADGE = "subscription_offer_screen:badge"
+
+/**
+ * Tag for the SubscriptionOfferScreenContent header title
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_TITLE = "subscription_offer_screen:title"
+
+/**
+ * Tag for the SubscriptionOfferScreenContent header campaign name
+ */
+const val TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_CAMPAIGN = "subscription_offer_screen:campaign"

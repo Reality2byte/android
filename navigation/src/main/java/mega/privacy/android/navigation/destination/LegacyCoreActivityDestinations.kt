@@ -222,6 +222,13 @@ data class UpgradeAccountNavKey(
     val source: UpgradeAccountSource = UpgradeAccountSource.UNKNOWN,
 ) : NavKey, Parcelable
 
+/**
+ * Full-screen promo for the recommended discounted plan (DSN-3130 offer landing screen), opened
+ * with a slide-up-from-bottom transition.
+ */
+@Serializable
+data object SubscriptionOfferNavKey : NavKey
+
 @Serializable
 @Parcelize
 data class QuotaWarningUpgradeNavKey(

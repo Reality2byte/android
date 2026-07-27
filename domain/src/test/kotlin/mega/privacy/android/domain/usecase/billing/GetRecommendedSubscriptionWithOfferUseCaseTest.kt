@@ -167,6 +167,22 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
             assertThat(underTest.invoke()).isNull()
         }
 
+    @Test
+    fun `test that ignores a plan that has the offer flag but no play billing offer`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+        whenever(billingRepository.querySkus(any())).thenReturn(
+            listOf(
+                megaSku(Skus.SKU_PRO_LITE_MONTH, hasRealOffer = false),
+                megaSku(Skus.SKU_PRO_I_MONTH, hasRealOffer = false),
+            )
+        )
+
+        assertThat(underTest.invoke()).isNull()
+    }
+
     private fun subscriptionOption(
         type: AccountType,
         sku: String,
@@ -182,20 +198,23 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
     private suspend fun stub(currentPlan: AccountType, options: List<SubscriptionOption>) {
         whenever(getCurrentSubscriptionPlanUseCase()).thenReturn(currentPlan)
         whenever(getSubscriptionOptionsUseCase()).thenReturn(options)
-        val products = options.map { option ->
-            MegaSku(
-                sku = option.sku,
-                priceAmountMicros = 0L,
-                priceCurrencyCode = "EUR",
-                offers = if (option.hasOffer) {
-                    listOf(OfferDetail(null, null, null, null))
-                } else {
-                    emptyList()
-                },
-            )
-        }
+        val products = options.map { megaSku(it.sku, hasRealOffer = it.hasOffer) }
         whenever(billingRepository.querySkus(any())).thenReturn(products)
     }
+
+    private fun megaSku(sku: String, hasRealOffer: Boolean) = MegaSku(
+        sku = sku,
+        priceAmountMicros = 0L,
+        priceCurrencyCode = "EUR",
+        offers = if (hasRealOffer) listOf(offerDetail) else emptyList(),
+    )
+
+    private val offerDetail = OfferDetail(
+        offerId = "offer",
+        discountedPriceMonthly = null,
+        discountPercentage = null,
+        offerPeriod = null,
+    )
 
     /**
      * Stubs the local-pricing lookup and mapper for [option] so the use case resolves to a fresh

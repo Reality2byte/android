@@ -48,6 +48,7 @@ dependencies {
     implementation(androidx.material3.adaptive.navigation.suite)
     implementation(lib.kotlin.serialisation)
     implementation(androidx.navigation3.runtime)
+    implementation(androidx.navigation3.ui)
     implementation(lib.billing.client.ktx)
     implementation(androidx.fragment)
 

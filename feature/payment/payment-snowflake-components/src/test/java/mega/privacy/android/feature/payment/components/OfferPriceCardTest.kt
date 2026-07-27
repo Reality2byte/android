@@ -96,6 +96,23 @@ class OfferPriceCardTest {
     }
 
     @Test
+    fun `test that OfferPriceCard hides buy button when buyButtonText is null`() {
+        composeRule.setContent {
+            OfferPriceCard(
+                modifier = Modifier.fillMaxWidth(),
+                planName = "Pro I",
+                priceText = "€4.99/month",
+                originalPriceText = "€9.99",
+                discountDescriptionText = "Discount price for the first 12 months",
+                discountBadgeText = "Black Friday · 50% off",
+                storageText = "2 TB cloud storage",
+                transferText = "2 TB transfer",
+            )
+        }
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_PRICE_CARD_BUTTON).assertDoesNotExist()
+    }
+
+    @Test
     fun `test that OfferPriceCard buy button triggers onBuyClick`() {
         var clicks = 0
         composeRule.setContent {

@@ -44,7 +44,8 @@ import mega.privacy.android.icon.pack.IconPack
  * @param discountBadgeText the promotional badge text (e.g. "Black Friday · 50% off")
  * @param storageText storage benefit (e.g. "2 TB cloud storage")
  * @param transferText transfer benefit (e.g. "2 TB transfer")
- * @param buyButtonText buy button label (e.g. "Get Pro I for €4.99/month")
+ * @param buyButtonText buy button label (e.g. "Get Pro I for €4.99/month"), null when the caller
+ * renders its own CTA elsewhere (e.g. a pinned bottom bar)
  * @param onBuyClick called when the buy button is tapped
  * @param monthlyPriceText the per-month price shown above the yearly total (e.g. "€4.99/month"),
  * null for monthly plans
@@ -59,9 +60,9 @@ fun OfferPriceCard(
     discountBadgeText: String,
     storageText: String,
     transferText: String,
-    buyButtonText: String,
-    onBuyClick: () -> Unit,
     modifier: Modifier = Modifier,
+    buyButtonText: String? = null,
+    onBuyClick: () -> Unit = {},
     monthlyPriceText: String? = null,
     useBrandButton: Boolean = false,
 ) {
@@ -141,22 +142,24 @@ fun OfferPriceCard(
                     modifier = Modifier.testTag(TEST_TAG_OFFER_PRICE_CARD_TRANSFER),
                 )
             }
-            if (useBrandButton) {
-                BrandFilledButton(
-                    text = buyButtonText,
-                    onClick = onBuyClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(TEST_TAG_OFFER_PRICE_CARD_BUTTON),
-                )
-            } else {
-                PrimaryFilledButton(
-                    text = buyButtonText,
-                    onClick = onBuyClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(TEST_TAG_OFFER_PRICE_CARD_BUTTON),
-                )
+            if (buyButtonText != null) {
+                if (useBrandButton) {
+                    BrandFilledButton(
+                        text = buyButtonText,
+                        onClick = onBuyClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(TEST_TAG_OFFER_PRICE_CARD_BUTTON),
+                    )
+                } else {
+                    PrimaryFilledButton(
+                        text = buyButtonText,
+                        onClick = onBuyClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(TEST_TAG_OFFER_PRICE_CARD_BUTTON),
+                    )
+                }
             }
         }
         DiscountBadge(
