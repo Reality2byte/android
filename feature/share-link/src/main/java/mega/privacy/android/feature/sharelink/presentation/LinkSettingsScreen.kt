@@ -61,7 +61,24 @@ import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.LinkColor
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
+import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkRemovePasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkResetPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEvent
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 import java.text.DateFormat
@@ -101,6 +118,22 @@ fun LinkSettingsScreen(
     val onCloseRequest = {
         if (uiState.hasUnsavedChanges) showDiscardDialog = true else onBack()
     }
+    val onSeparateKeyToggled = { enabled: Boolean ->
+        trackSeparateKeyToggle(uiState.isFolder, enabled)
+        onSeparateKeyEnabled(enabled)
+    }
+    val onExpiryToggled = { enabled: Boolean ->
+        trackExpiryToggle(uiState.isFolder, enabled)
+        onExpiryEnabled(enabled)
+    }
+    val onPasswordToggled = { enabled: Boolean ->
+        trackPasswordToggle(uiState, enabled)
+        onPasswordEnabled(enabled)
+    }
+    val onSaveClick = {
+        trackPasswordCommit(uiState)
+        onSave()
+    }
 
     BackHandler(enabled = uiState.hasUnsavedChanges) { showDiscardDialog = true }
 
@@ -123,7 +156,7 @@ fun LinkSettingsScreen(
                                 .fillMaxWidth()
                                 .testTag(LINK_SETTINGS_SAVE_BUTTON_TAG),
                             text = stringResource(sharedR.string.general_action_save),
-                            onClick = onSave,
+                            onClick = onSaveClick,
                             enabled = uiState.isSaveEnabled,
                             isLoading = uiState.isSaving,
                         )
@@ -142,11 +175,11 @@ fun LinkSettingsScreen(
             } else {
                 LinkSettingsContent(
                     uiState = uiState,
-                    onSeparateKeyEnabled = onSeparateKeyEnabled,
+                    onSeparateKeyEnabled = onSeparateKeyToggled,
                     onLearnMore = onLearnMore,
-                    onExpiryEnabled = onExpiryEnabled,
+                    onExpiryEnabled = onExpiryToggled,
                     onExpiryDateChanged = onExpiryDateChanged,
-                    onPasswordEnabled = onPasswordEnabled,
+                    onPasswordEnabled = onPasswordToggled,
                     onPasswordChanged = onPasswordChanged,
                 )
             }
@@ -312,6 +345,56 @@ private fun LinkSettingsContent(
             onDismiss = { showDatePicker = false },
         )
     }
+}
+
+private fun trackSeparateKeyToggle(isFolder: Boolean, enabled: Boolean) {
+    Analytics.tracker.trackEvent(
+        when {
+            enabled && isFolder -> LinkSendDecryptionKeyFolderButtonEnabledEvent
+            enabled -> LinkSendDecryptionKeyFileButtonEnabledEvent
+            isFolder -> LinkSendDecryptionKeyFolderButtonDisabledEvent
+            else -> LinkSendDecryptionKeyFileButtonDisabledEvent
+        }
+    )
+}
+
+private fun trackExpiryToggle(isFolder: Boolean, enabled: Boolean) {
+    Analytics.tracker.trackEvent(
+        when {
+            enabled && isFolder -> LinkSetExpiryDateFolderButtonPressedEnabledEvent
+            enabled -> LinkSetExpiryDateFileButtonPressedEnabledEvent
+            isFolder -> LinkSetExpiryDateFolderButtonPressedDisabledEvent
+            else -> LinkSetExpiryDateFileButtonPressedDisabledEvent
+        }
+    )
+}
+
+private fun trackPasswordToggle(uiState: LinkSettingsUiState, enabled: Boolean) {
+    val event = when {
+        enabled && uiState.isFolder -> LinkSetPasswordFolderButtonPressedEvent
+        enabled -> LinkSetPasswordFileButtonPressedEvent
+        !uiState.isPasswordAlreadySet -> return
+        uiState.isFolder -> LinkRemovePasswordFolderButtonPressedEvent
+        else -> LinkRemovePasswordFileButtonPressedEvent
+    }
+    Analytics.tracker.trackEvent(event)
+}
+
+/**
+ * Save is the commit action for the password, so it stands in for the legacy screen's
+ * "Set"/"Reset" button: a first-time password reports confirm, replacing an existing one
+ * reports reset.
+ */
+private fun trackPasswordCommit(uiState: LinkSettingsUiState) {
+    if (!uiState.isPasswordEnabled || uiState.password.isNullOrBlank()) return
+    val event = when {
+        !uiState.isPasswordAlreadySet && uiState.isFolder -> LinkConfirmPasswordFolderButtonPressedEvent
+        !uiState.isPasswordAlreadySet -> LinkConfirmPasswordFileButtonPressedEvent
+        uiState.password == uiState.initialPassword -> return
+        uiState.isFolder -> LinkResetPasswordFolderButtonPressedEvent
+        else -> LinkResetPasswordFileButtonPressedEvent
+    }
+    Analytics.tracker.trackEvent(event)
 }
 
 /** A link expiry cannot be in the past, so only today onwards is selectable. */

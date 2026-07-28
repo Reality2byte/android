@@ -13,8 +13,21 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import mega.privacy.android.analytics.test.AnalyticsTestRule
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
+import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSetPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEvent
 import mega.privacy.android.shared.resources.R as sharedR
 import org.junit.Rule
 import org.junit.Test
@@ -29,9 +42,14 @@ class LinkSettingsScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    @get:Rule
+    val analyticsRule = AnalyticsTestRule()
+
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     private val loaded = LinkSettingsUiState(isLoading = false, accountType = AccountType.PRO_I)
+
+    private val loadedFolder = loaded.copy(isFolder = true)
 
     @Test
     fun `test that the loading placeholder is displayed while loading`() {
@@ -277,6 +295,168 @@ class LinkSettingsScreenTest {
         composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).assertIsEnabled()
     }
 
+    @Test
+    fun `test that tapping the separate-key toggle tracks the file enabled event`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSendDecryptionKeyFileButtonEnabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the separate-key toggle tracks the folder enabled event for a folder`() {
+        setContent(uiState = loadedFolder)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSendDecryptionKeyFolderButtonEnabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the separate-key toggle off tracks the file disabled event`() {
+        setContent(uiState = loaded.copy(isSeparateKeyEnabled = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSendDecryptionKeyFileButtonDisabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the expiry toggle tracks the file enabled event`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSetExpiryDateFileButtonPressedEnabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the expiry toggle tracks the folder enabled event for a folder`() {
+        setContent(uiState = loadedFolder)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSetExpiryDateFolderButtonPressedEnabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the expiry toggle off tracks the file disabled event`() {
+        setContent(uiState = loaded.copy(isExpiryEnabled = true, expiryDate = EXPIRY_MILLIS))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSetExpiryDateFileButtonPressedDisabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the password toggle tracks the file set password event`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSetPasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the password toggle tracks the folder set password event for a folder`() {
+        setContent(uiState = loadedFolder)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSetPasswordFolderButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the password toggle off tracks the remove password event when a password was set`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                isPasswordAlreadySet = true,
+                initialPassword = PASSWORD,
+                password = PASSWORD,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkRemovePasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the password toggle off does not track the remove password event when no password was set`() {
+        setContent(uiState = loaded.copy(isPasswordEnabled = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).doesNotContain(LinkRemovePasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Save tracks the confirm password event when a password is set for the first time`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = PASSWORD,
+                isSaveEnabled = true,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SAVE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkConfirmPasswordFileButtonPressedEvent)
+        assertThat(analyticsRule.events).doesNotContain(LinkResetPasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Save tracks the folder confirm password event for a folder`() {
+        setContent(
+            uiState = loadedFolder.copy(
+                isPasswordEnabled = true,
+                password = PASSWORD,
+                isSaveEnabled = true,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SAVE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkConfirmPasswordFolderButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Save tracks the reset password event when an existing password is changed`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                isPasswordAlreadySet = true,
+                initialPassword = OLD_PASSWORD,
+                password = PASSWORD,
+                isSaveEnabled = true,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SAVE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkResetPasswordFileButtonPressedEvent)
+        assertThat(analyticsRule.events).doesNotContain(LinkConfirmPasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Save does not track a password event when only the expiry date changed`() {
+        setContent(
+            uiState = loaded.copy(
+                isExpiryEnabled = true,
+                expiryDate = EXPIRY_MILLIS,
+                isSaveEnabled = true,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SAVE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).doesNotContain(LinkConfirmPasswordFileButtonPressedEvent)
+        assertThat(analyticsRule.events).doesNotContain(LinkResetPasswordFileButtonPressedEvent)
+    }
+
     private fun setContent(
         uiState: LinkSettingsUiState,
         onBack: () -> Unit = {},
@@ -318,5 +498,8 @@ class LinkSettingsScreenTest {
 
         // A fixed, far-future instant used to seed the expiry field.
         const val EXPIRY_MILLIS = 1_800_000_000_000L
+
+        const val PASSWORD = "Str0ngP@ss"
+        const val OLD_PASSWORD = "0ldP@ssw0rd"
     }
 }
