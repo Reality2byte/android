@@ -165,6 +165,8 @@ internal fun ShareLinkContent(
                     }
                     onCopyPassword()
                 },
+                expirationTime = uiState.primary.expirationTime,
+                isExpired = uiState.primary.isExpired,
             )
         }
     }
@@ -228,6 +230,8 @@ internal fun MultiNodeContent(
                         }
                         onCopyLink()
                     },
+                    expirationTime = node.expirationTime,
+                    isExpired = node.isExpired,
                 )
             }
         }

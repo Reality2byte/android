@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.image.MegaIcon
+import mega.android.core.ui.components.inputfields.HelpTextError
+import mega.android.core.ui.components.inputfields.HelpTextInfo
 import mega.android.core.ui.components.surface.BoxSurface
 import mega.android.core.ui.components.surface.SurfaceColor
 import mega.android.core.ui.preview.CombinedThemePreviews
@@ -24,7 +27,9 @@ import mega.android.core.ui.theme.AndroidThemeForPreviews
 import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.feature.sharelink.presentation.formatExpiryDate
 import mega.privacy.android.icon.pack.IconPack
+import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
@@ -46,6 +51,9 @@ import mega.privacy.android.shared.resources.R as sharedR
  * @param maskedPassword The password shown (already masked) in a separate card, or null when the
  * link is not password protected.
  * @param onCopyPassword Invoked when the password's copy icon is tapped; copies the real password.
+ * @param expirationTime Link expiry in UTC milliseconds, shown under the link, or null when the
+ * link never expires.
+ * @param isExpired Whether [expirationTime] has passed; replaces the expiry notice with a warning.
  */
 @Composable
 fun ShareLinkDetails(
@@ -57,6 +65,8 @@ fun ShareLinkDetails(
     passwordProtected: Boolean = false,
     maskedPassword: String? = null,
     onCopyPassword: () -> Unit = {},
+    expirationTime: Long? = null,
+    isExpired: Boolean = false,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -78,6 +88,21 @@ fun ShareLinkDetails(
                     value = link,
                     onCopy = onCopyLink,
                 )
+                when {
+                    isExpired -> HelpTextError(
+                        modifier = Modifier.testTag(SHARE_LINK_EXPIRED_TAG),
+                        text = stringResource(sharedR.string.share_link_expired),
+                    )
+
+                    expirationTime != null -> {
+                        val date = remember(expirationTime) { formatExpiryDate(expirationTime) }
+                        HelpTextInfo(
+                            modifier = Modifier.testTag(SHARE_LINK_EXPIRY_NOTICE_TAG),
+                            text = stringResource(sharedR.string.share_link_expires_on, date),
+                            iconResId = iconPackR.drawable.ic_calendar_01_medium_thin_outline,
+                        )
+                    }
+                }
                 if (passwordProtected) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -174,9 +199,39 @@ private fun ShareLinkDetailsPasswordPreview() {
     }
 }
 
+@CombinedThemePreviews
+@Composable
+private fun ShareLinkDetailsExpiryPreview() {
+    AndroidThemeForPreviews {
+        ShareLinkDetails(
+            link = "https://mega.nz/file/abc123#decryptionKey",
+            onCopyLink = {},
+            expirationTime = PREVIEW_EXPIRY_MILLIS,
+        )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun ShareLinkDetailsExpiredPreview() {
+    AndroidThemeForPreviews {
+        ShareLinkDetails(
+            link = "https://mega.nz/file/abc123#decryptionKey",
+            onCopyLink = {},
+            expirationTime = PREVIEW_EXPIRY_MILLIS,
+            isExpired = true,
+        )
+    }
+}
+
+/** Fixed instant so the previewed expiry date does not shift with the clock. */
+private const val PREVIEW_EXPIRY_MILLIS = 1_800_000_000_000L
+
 internal const val SHARE_LINK_DETAILS_TAG = "share_link_details:card"
 internal const val SHARE_LINK_KEY_DETAILS_TAG = "share_link_details:key_card"
 internal const val SHARE_LINK_KEY_COPY_TAG = "share_link_details:key_copy"
 internal const val SHARE_LINK_PASSWORD_PROTECTED_TAG = "share_link_details:password_protected"
 internal const val SHARE_LINK_PASSWORD_DETAILS_TAG = "share_link_details:password_card"
 internal const val SHARE_LINK_PASSWORD_COPY_TAG = "share_link_details:password_copy"
+internal const val SHARE_LINK_EXPIRY_NOTICE_TAG = "share_link_details:expiry_notice"
+internal const val SHARE_LINK_EXPIRED_TAG = "share_link_details:expired"

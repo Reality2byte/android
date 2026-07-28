@@ -91,9 +91,7 @@ import mega.privacy.mobile.analytics.event.LinkSettingsSaveFailedEvent
 import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
-import java.text.DateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.TimeZone
 
 /**
@@ -439,8 +437,6 @@ private object TodayOnwardSelectableDates : SelectableDates {
         year >= Calendar.getInstance(UTC).get(Calendar.YEAR)
 }
 
-private val UTC: TimeZone = TimeZone.getTimeZone("UTC")
-
 private fun todayStartUtcMillis(): Long =
     Calendar.getInstance(UTC).apply {
         set(Calendar.HOUR_OF_DAY, 0)
@@ -493,11 +489,6 @@ private fun ExpiryDateField(
         )
     }
 }
-
-private fun formatExpiryDate(millis: Long): String =
-    DateFormat.getDateInstance(DateFormat.MEDIUM)
-        .apply { timeZone = UTC }
-        .format(Date(millis))
 
 @StringRes
 private fun PasswordStrength.strengthLabelRes(): Int? = when (this) {

@@ -3143,6 +3143,10 @@
     <string name="share_link_set_password">Set password</string>
     <!-- Share link revamp: subtitle explaining the "Set password" row -->
     <string name="share_link_password_subtitle">Limit access with a password</string>
+    <!-- Share link revamp: notice under the link showing the date it stops working. %1$s is a date, for example "Jan 11, 2026" -->
+    <string name="share_link_expires_on">Link expires on %1$s</string>
+    <!-- Share link revamp: warning under the link when its expiry date has already passed -->
+    <string name="share_link_expired">Link expired</string>
     <!-- Settings: title of the Sorting and view mode screen -->
     <string name="settings_sorting_and_view_mode_title">Sorting and view mode</string>
     <!-- Settings: title of the sorting preference option -->
