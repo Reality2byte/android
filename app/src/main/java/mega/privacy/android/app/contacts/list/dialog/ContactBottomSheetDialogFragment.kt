@@ -1,7 +1,6 @@
 package mega.privacy.android.app.contacts.list.dialog
 
 import android.Manifest
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,10 +25,8 @@ import mega.privacy.android.app.contacts.list.ContactListViewModel
 import mega.privacy.android.app.contacts.list.data.ContactItem
 import mega.privacy.android.app.databinding.BottomSheetContactDetailBinding
 import mega.privacy.android.app.modalbottomsheet.BaseBottomSheetDialogFragment
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.transfers.attach.NodeAttachmentViewModel
 import mega.privacy.android.app.utils.CallUtil
-import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.app.utils.Constants.NODE_HANDLES
 import mega.privacy.android.app.utils.Constants.SELECTED_CHATS
 import mega.privacy.android.app.utils.Constants.SELECTED_USERS
@@ -198,9 +195,7 @@ class ContactBottomSheetDialogFragment : BaseBottomSheetDialogFragment() {
      */
     private fun setupButtons(contactEmail: String, contactHandle: Long) {
         binding.optionInfo.setOnClickListener {
-            val i = Intent(context, ContactInfoActivity::class.java)
-            i.putExtra(Constants.NAME, contactEmail)
-            requireContext().startActivity(i)
+            navigator.openContactInfoActivity(requireContext(), contactEmail)
             dismiss()
         }
 

@@ -24,7 +24,6 @@ import mega.privacy.android.app.main.controllers.ContactController
 import mega.privacy.android.app.main.megachat.chatAdapters.MegaContactsAttachedAdapter
 import mega.privacy.android.app.modalbottomsheet.ModalBottomSheetUtil.isBottomSheetDialogShown
 import mega.privacy.android.app.modalbottomsheet.chatmodalbottomsheet.ContactAttachmentBottomSheetDialogFragment
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.app.utils.ContactUtil
 import mega.privacy.android.app.utils.Util
@@ -279,9 +278,7 @@ class ContactAttachmentActivity : PasscodeActivity(), MegaRequestListenerInterfa
         val contact: MegaUser? = megaApi.getContact(c.email)
         if (contact != null) {
             if (contact.visibility == MegaUser.VISIBILITY_VISIBLE) {
-                val i = Intent(this, ContactInfoActivity::class.java)
-                i.putExtra(Constants.NAME, contact.email)
-                startActivity(i)
+                navigator.openContactInfoActivity(this, contact.email)
             } else {
                 Timber.d("The user is not contact")
                 showSnackbar(getString(R.string.alert_user_is_not_contact))

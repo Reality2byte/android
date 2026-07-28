@@ -15,7 +15,6 @@ import mega.privacy.android.app.components.RoundedImageView
 import mega.privacy.android.app.main.controllers.ChatController
 import mega.privacy.android.app.modalbottomsheet.BaseBottomSheetDialogFragment
 import mega.privacy.android.app.myAccount.MyAccountActivity
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.meeting.ChatInfoViewModel
 import mega.privacy.android.app.utils.AvatarUtil.setImageAvatar
 import mega.privacy.android.app.utils.CallUtil.canCallBeStartedFromContactOption
@@ -25,11 +24,11 @@ import mega.privacy.android.app.utils.ChatUtil.setContactStatus
 import mega.privacy.android.app.utils.Constants.CONTACT_HANDLE
 import mega.privacy.android.app.utils.Constants.MAX_WIDTH_BOTTOM_SHEET_DIALOG_LAND
 import mega.privacy.android.app.utils.Constants.MAX_WIDTH_BOTTOM_SHEET_DIALOG_PORT
-import mega.privacy.android.app.utils.Constants.NAME
 import mega.privacy.android.app.utils.Util.dp2px
 import mega.privacy.android.app.utils.Util.isScreenInPortrait
 import mega.privacy.android.app.utils.Util.scaleHeightPx
 import mega.privacy.android.app.utils.Util.scaleWidthPx
+import mega.privacy.android.navigation.MegaNavigator
 import mega.privacy.android.navigation.destination.ChatNavKey
 import mega.privacy.android.thirdpartylib.twemoji.EmojiTextView
 import nz.mega.sdk.MegaApiAndroid
@@ -47,6 +46,9 @@ class ScheduledMeetingParticipantBottomSheetDialogFragment : BaseBottomSheetDial
 
     @Inject
     lateinit var chatController: ChatController
+
+    @Inject
+    lateinit var navigator: MegaNavigator
 
     private var selectedChat: MegaChatRoom? = null
     private var chatId = MegaApiJava.INVALID_HANDLE
@@ -290,11 +292,9 @@ class ScheduledMeetingParticipantBottomSheetDialogFragment : BaseBottomSheetDial
     override fun onClick(v: View) {
         val id = v.getId()
         if (id == R.id.contact_info_group_participants_chat) {
-            val intent = Intent(requireActivity(), ContactInfoActivity::class.java)
-            intent.putExtra(NAME, chatController.getParticipantEmail(participantHandle))
-            startActivity(
-                intent
-            )
+            chatController.getParticipantEmail(participantHandle)?.let {
+                navigator.openContactInfoActivity(requireActivity(), it)
+            }
         } else if (id == R.id.start_chat_group_participants_chat) {
             viewModel.onSendMsgTap()
         } else if (id == R.id.contact_list_option_call_layout) {

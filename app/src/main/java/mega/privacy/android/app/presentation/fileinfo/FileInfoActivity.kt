@@ -40,7 +40,6 @@ import mega.privacy.android.app.interfaces.ActionBackupListener
 import mega.privacy.android.app.main.controllers.NodeController
 import mega.privacy.android.app.main.legacycontact.AddContactActivity
 import mega.privacy.android.app.presentation.contact.authenticitycredendials.AuthenticityCredentialsActivity
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.fileinfo.model.FileInfoJobInProgressState
 import mega.privacy.android.app.presentation.fileinfo.model.FileInfoMenuAction
 import mega.privacy.android.app.presentation.fileinfo.model.FileInfoOneOffViewEvent
@@ -241,9 +240,7 @@ class FileInfoActivity : BaseActivity() {
                         viewModel.initiateChangePermission(listOf(it.email))
                     },
                     onSharedWithContactMoreInfoClick = {
-                        val i = Intent(this, ContactInfoActivity::class.java)
-                        i.putExtra(Constants.NAME, it.email)
-                        startActivity(i)
+                        megaNavigator.openContactInfoActivity(this, it.email)
                     }
                 )
                 uiState.leaveFolderNodeIds?.let { nodeIds ->
@@ -487,9 +484,7 @@ class FileInfoActivity : BaseActivity() {
     }
 
     private fun navigateToUserDetails(email: String) {
-        val i = Intent(this, ContactInfoActivity::class.java)
-        i.putExtra(Constants.NAME, email)
-        startActivity(i)
+        megaNavigator.openContactInfoActivity(this, email)
     }
 
     private fun navigateToCopy() {

@@ -42,7 +42,6 @@ import mega.privacy.android.app.meeting.fragments.MakeModeratorFragment
 import mega.privacy.android.app.meeting.fragments.MeetingBaseFragment
 import mega.privacy.android.app.meeting.gateway.RTCAudioManagerGateway
 import mega.privacy.android.app.myAccount.MyAccountActivity
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.meeting.WaitingRoomManagementViewModel
 import mega.privacy.android.app.presentation.meeting.model.MeetingState
 import mega.privacy.android.app.presentation.meeting.model.WaitingRoomManagementState
@@ -762,12 +761,7 @@ class MeetingActivity : PasscodeActivity() {
      * @param email        User email
      */
     private fun openContactInfo(email: String?) {
-        startActivity(Intent(this, ContactInfoActivity::class.java).apply {
-            putExtra(
-                Constants.NAME,
-                email
-            )
-        })
+        email?.let { navigator.openContactInfoActivity(this, it) }
     }
 
     /**

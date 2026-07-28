@@ -1,6 +1,5 @@
 package mega.privacy.android.app.main.dialog.contactlink
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,7 +16,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import mega.privacy.android.app.BaseActivity
 import mega.privacy.android.app.R
 import mega.privacy.android.app.arch.extensions.collectFlow
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.extensions.contacts.getMessage
 import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.core.sharedcomponents.extension.isDarkMode
@@ -76,9 +74,7 @@ internal class ContactLinkDialogFragment : DialogFragment() {
                                     cancelButtonText = stringResource(id = sharedR.string.general_dialog_cancel_button),
                                     onConfirm = {
                                         if (contactLink.isContact) {
-                                            val i = Intent(context, ContactInfoActivity::class.java)
-                                            i.putExtra(Constants.NAME, email)
-                                            context.startActivity(i)
+                                            megaNavigator.openContactInfoActivity(context, email)
                                             dismissAllowingStateLoss()
                                         } else {
                                             viewModel.sendContactInvitation(

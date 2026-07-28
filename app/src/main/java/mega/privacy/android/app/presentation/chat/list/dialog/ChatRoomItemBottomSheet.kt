@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dagger.hilt.android.EntryPointAccessors
 import mega.android.core.ui.components.sheets.MegaModalBottomSheet
 import mega.android.core.ui.components.sheets.MegaModalBottomSheetBackground
 import mega.privacy.android.analytics.Analytics
@@ -19,13 +20,13 @@ import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.main.megachat.GroupChatInfoActivity
 import mega.privacy.android.app.presentation.chat.dialog.view.ChatRoomItemBottomSheetView
 import mega.privacy.android.app.presentation.chat.list.ChatTabsViewModel
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.presentation.meeting.ChatInfoActivity
 import mega.privacy.android.app.presentation.meeting.RecurringMeetingInfoActivity
 import mega.privacy.android.app.presentation.meeting.ScheduledMeetingManagementViewModel
 import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.domain.entity.chat.ChatAvatarItem
 import mega.privacy.android.domain.entity.chat.ChatRoomItem
+import mega.privacy.android.navigation.MegaNavigatorEntryPoint
 import mega.privacy.android.navigation.destination.ChatNavKey
 import mega.privacy.android.shared.original.core.ui.theme.OriginalTheme
 import mega.privacy.mobile.analytics.event.ArchiveNoteToSelfButtonPressedEvent
@@ -110,11 +111,12 @@ fun ChatRoomItemBottomSheet(
                     }
 
                     current is ChatRoomItem.IndividualChatRoomItem -> {
-                        context.startActivity(
-                            Intent(context, ContactInfoActivity::class.java).apply {
-                                putExtra(Constants.NAME, current.peerEmail)
-                            }
-                        )
+                        current.peerEmail?.let {
+                            EntryPointAccessors.fromApplication(
+                                context,
+                                MegaNavigatorEntryPoint::class.java
+                            ).megaNavigator.openContactInfoActivity(context, it)
+                        }
                         onDismissRequest()
                     }
 

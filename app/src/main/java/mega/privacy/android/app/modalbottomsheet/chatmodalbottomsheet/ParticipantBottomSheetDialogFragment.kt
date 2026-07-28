@@ -16,13 +16,13 @@ import mega.privacy.android.app.main.controllers.ChatController
 import mega.privacy.android.app.main.megachat.GroupChatInfoActivity
 import mega.privacy.android.app.modalbottomsheet.BaseBottomSheetDialogFragment
 import mega.privacy.android.app.myAccount.MyAccountActivity
-import mega.privacy.android.app.presentation.contactinfo.ContactInfoActivity
 import mega.privacy.android.app.utils.AvatarUtil
 import mega.privacy.android.app.utils.CallUtil
 import mega.privacy.android.app.utils.ChatUtil
 import mega.privacy.android.app.utils.ChatUtil.StatusIconLocation
 import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.app.utils.Util
+import mega.privacy.android.navigation.MegaNavigator
 import mega.privacy.android.navigation.destination.ChatNavKey
 import mega.privacy.android.navigation.destination.ChatNavKey.Companion.LEGACY_CHAT_ID
 import mega.privacy.android.thirdpartylib.twemoji.EmojiTextView
@@ -41,6 +41,9 @@ class ParticipantBottomSheetDialogFragment : BaseBottomSheetDialogFragment(), Vi
 
     @Inject
     lateinit var chatController: ChatController
+
+    @Inject
+    lateinit var navigator: MegaNavigator
 
     private var titleNameContactChatPanel: EmojiTextView? = null
     private var contactImageView: RoundedImageView? = null
@@ -270,9 +273,7 @@ class ParticipantBottomSheetDialogFragment : BaseBottomSheetDialogFragment(), Vi
                 Timber.w("Cannot open contact info. Selected email is NULL")
                 return
             }
-            val i = Intent(context, ContactInfoActivity::class.java)
-            i.putExtra(Constants.NAME, email)
-            requireContext().startActivity(i)
+            navigator.openContactInfoActivity(requireContext(), email)
         } else if (id == R.id.start_chat_group_participants_chat) {
             (requireActivity() as GroupChatInfoActivity).startConversation(participantHandle)
         } else if (id == R.id.contact_list_option_call_layout) {
