@@ -77,6 +77,18 @@ sealed interface ShareLinkUiState {
 }
 
 /**
+ * The kind of hidden/sensitive-items warning to show before creating links, mirroring the legacy
+ * get-link flow. [Items] wins over [Folder] when a selection triggers both.
+ */
+enum class SensitiveWarningType {
+    /** One or more selected nodes are themselves hidden (or inherit hidden). */
+    Items,
+
+    /** A selected folder contains hidden descendants. */
+    Folder,
+}
+
+/**
  * A single shared node and its public link.
  *
  * @property handle Node handle.
@@ -90,19 +102,8 @@ sealed interface ShareLinkUiState {
  * @property link The full public link including the decryption key.
  * @property linkWithoutKey The public link with the decryption key stripped, or null.
  * @property key The decryption key split from the link, or null.
+ * @property expirationTime Link expiry in UTC milliseconds, or null when the link never expires.
  */
-/**
- * The kind of hidden/sensitive-items warning to show before creating links, mirroring the legacy
- * get-link flow. [Items] wins over [Folder] when a selection triggers both.
- */
-enum class SensitiveWarningType {
-    /** One or more selected nodes are themselves hidden (or inherit hidden). */
-    Items,
-
-    /** A selected folder contains hidden descendants. */
-    Folder,
-}
-
 @Stable
 data class ShareLinkNodeItem(
     val handle: Long,
@@ -116,4 +117,8 @@ data class ShareLinkNodeItem(
     val link: String,
     val linkWithoutKey: String?,
     val key: String?,
-)
+    val expirationTime: Long? = null,
+) {
+    /** Whether [expirationTime] has already passed. */
+    val isExpired: Boolean get() = expirationTime?.let { it <= System.currentTimeMillis() } == true
+}

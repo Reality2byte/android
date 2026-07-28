@@ -42,6 +42,9 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(CoroutineMainDispatcherExtension::class)
 class ShareLinkViewModelTest {
@@ -633,7 +636,75 @@ class ShareLinkViewModelTest {
         }
     }
 
+    private suspend fun stubExportedNode(expirationSeconds: Long?) {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "report.pdf"
+            on { exportedData } doReturn ExportedData(LINK, 0L, expirationSeconds)
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+        whenever(splitLinkAndKeyUseCase(LINK)).thenReturn(LinkAndKey(LINK_WITHOUT_KEY, "key123"))
+    }
+
+    @Test
+    fun `test that expirationTime is null and isExpired is false when the link never expires`() =
+        runTest {
+            stubExportedNode(expirationSeconds = null)
+
+            underTest.uiState.test {
+                val node = awaitData().primary
+                assertThat(node.expirationTime).isNull()
+                assertThat(node.isExpired).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that expirationTime is null when the exported data reports a zero expiry`() =
+        runTest {
+            stubExportedNode(expirationSeconds = 0L)
+
+            underTest.uiState.test {
+                val node = awaitData().primary
+                assertThat(node.expirationTime).isNull()
+                assertThat(node.isExpired).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that expirationTime is exposed in milliseconds and isExpired is false for a future expiry`() =
+        runTest {
+            val futureSeconds = (System.currentTimeMillis().milliseconds + 30.days).inWholeSeconds
+            stubExportedNode(expirationSeconds = futureSeconds)
+
+            underTest.uiState.test {
+                val node = awaitData().primary
+                assertThat(node.expirationTime)
+                    .isEqualTo(futureSeconds.seconds.inWholeMilliseconds)
+                assertThat(node.isExpired).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that isExpired is true for an expiry in the past`() =
+        runTest {
+            val pastSeconds = (System.currentTimeMillis().milliseconds - 1.days).inWholeSeconds
+            stubExportedNode(expirationSeconds = pastSeconds)
+
+            underTest.uiState.test {
+                val node = awaitData().primary
+                assertThat(node.expirationTime).isEqualTo(pastSeconds.seconds.inWholeMilliseconds)
+                assertThat(node.isExpired).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     private companion object {
+        const val LINK = "https://mega.nz/file/abc#key123"
+        const val LINK_WITHOUT_KEY = "https://mega.nz/file/abc"
         const val NODE_HANDLE = 123L
         const val SECOND_HANDLE = 456L
         const val CALLER_NAME = "ShareLinkViewModel"

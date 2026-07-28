@@ -34,6 +34,7 @@ import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
 import mega.privacy.android.shared.nodes.extension.getIcon
 import mega.privacy.android.shared.nodes.mapper.FileTypeIconMapper
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * ViewModel for the revamped Share link result screen.
@@ -153,6 +154,9 @@ class ShareLinkViewModel @AssistedInject constructor(
                     ?: exportedLinks[node.id.longValue]
                     ?: return@mapNotNull null
                 val (linkWithoutKey, key) = splitLinkAndKeyUseCase(link)
+                val expiryMillis = node.exportedData?.expirationTime
+                    ?.takeIf { it > 0 }
+                    ?.seconds?.inWholeMilliseconds
                 ShareLinkNodeItem(
                     handle = node.id.longValue,
                     name = node.name,
@@ -165,6 +169,7 @@ class ShareLinkViewModel @AssistedInject constructor(
                     link = link,
                     linkWithoutKey = linkWithoutKey,
                     key = key,
+                    expirationTime = expiryMillis,
                 )
             }
         }.onSuccess { nodeLinks ->
