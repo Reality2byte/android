@@ -19,7 +19,7 @@ import mega.privacy.android.app.nav.MediaPlayerIntentMapper
 import mega.privacy.android.app.presentation.audiosection.audioSectionDestination
 import mega.privacy.android.app.presentation.changepassword.navigation.parkAccountDestination
 import mega.privacy.android.app.presentation.chat.navigation.chatLegacyDestination
-import mega.privacy.android.app.presentation.chat.navigation.chatListLegacyDestination
+import mega.privacy.android.app.presentation.chat.navigation.chatListDestination
 import mega.privacy.android.app.presentation.chat.navigation.showChatMessagesDestination
 import mega.privacy.android.app.presentation.contact.authenticitycredendials.navigation.authenticityCredentialsLegacyDestination
 import mega.privacy.android.app.presentation.contact.invite.navigation.inviteContactLegacyDestination
@@ -96,7 +96,7 @@ class LegacyCoreActivityFeatureGraph(
             legacyExportRecoveryKeyScreen(navigationHandler::back)
             legacyFolderLinkScreen(navigationHandler::back)
             getLinkLegacyDestination(navigationHandler::back)
-            chatListLegacyDestination(navigationHandler::back)
+            chatListDestination(navigationHandler)
             legacyPdfViewerScreen(navigationHandler::back, nodeContentUriIntentMapper)
             legacyImageViewerScreen(navigationHandler::back)
             legacyTextEditorScreen(

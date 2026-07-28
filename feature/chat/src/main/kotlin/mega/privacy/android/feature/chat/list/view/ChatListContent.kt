@@ -1,0 +1,145 @@
+package mega.privacy.android.feature.chat.list.view
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import mega.android.core.ui.components.state.EmptyStateView
+import mega.android.core.ui.model.MegaSpanStyle
+import mega.android.core.ui.model.SpanIndicator
+import mega.android.core.ui.model.SpanStyleWithAnnotation
+import mega.android.core.ui.preview.CombinedThemePreviews
+import mega.android.core.ui.theme.AndroidThemeForPreviews
+import mega.android.core.ui.theme.values.LinkColor
+import mega.privacy.android.feature.chat.list.model.ChatRoomUiItem
+import mega.privacy.android.icon.pack.R as iconPackR
+import mega.privacy.android.shared.resources.R as sharedR
+
+/**
+ * Content of one chat list tab: the chat room rows, or an empty state view.
+ *
+ * @param items Chat rooms to show.
+ * @param isMeetingsTab Whether this tab shows meetings; drives the empty state content.
+ * @param onItemClick Callback when a row is clicked, with the chat id.
+ * @param modifier [Modifier]
+ * @param contentPadding Padding for the list content.
+ */
+@Composable
+internal fun ChatListContent(
+    items: ImmutableList<ChatRoomUiItem>,
+    isMeetingsTab: Boolean,
+    onItemClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(),
+) {
+    if (items.isEmpty()) {
+        ChatListEmptyView(
+            isMeetingsTab = isMeetingsTab,
+            modifier = modifier,
+        )
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .testTag(if (isMeetingsTab) MEETING_LIST_TAG else CHAT_LIST_TAG),
+            contentPadding = contentPadding,
+        ) {
+            items(items = items, key = ChatRoomUiItem::chatId) { item ->
+                ChatRoomItemView(
+                    item = item,
+                    onItemClick = onItemClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatListEmptyView(
+    isMeetingsTab: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val uriHandler = LocalUriHandler.current
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .testTag(if (isMeetingsTab) MEETING_LIST_EMPTY_TAG else CHAT_LIST_EMPTY_TAG),
+        contentAlignment = Alignment.Center,
+    ) {
+        EmptyStateView(
+            illustration = if (isMeetingsTab) {
+                iconPackR.drawable.ic_video_glass
+            } else {
+                iconPackR.drawable.ic_message_call_glass
+            },
+            title = stringResource(
+                if (isMeetingsTab) {
+                    sharedR.string.meeting_recent_list_empty_title
+                } else {
+                    sharedR.string.chat_recent_list_empty_title
+                }
+            ),
+            description = stringResource(
+                if (isMeetingsTab) {
+                    sharedR.string.meeting_recent_list_empty_subtitle
+                } else {
+                    sharedR.string.chat_recent_list_empty_subtitle
+                }
+            ),
+            descriptionSpanStyles = mapOf(
+                SpanIndicator('A') to SpanStyleWithAnnotation(
+                    MegaSpanStyle.LinkColorStyle(
+                        SpanStyle(),
+                        LinkColor.Primary,
+                    ),
+                    LEARN_MORE_URL,
+                ),
+            ),
+            onDescriptionAnnotationClick = { uriHandler.openUri(LEARN_MORE_URL) },
+        )
+    }
+}
+
+private const val LEARN_MORE_URL = "https://mega.io/chatandmeetings"
+
+internal const val CHAT_LIST_TAG = "chat_list_content:chat_list"
+internal const val MEETING_LIST_TAG = "chat_list_content:meeting_list"
+internal const val CHAT_LIST_EMPTY_TAG = "chat_list_content:chat_empty"
+internal const val MEETING_LIST_EMPTY_TAG = "chat_list_content:meeting_empty"
+
+@CombinedThemePreviews
+@Composable
+private fun ChatListContentEmptyPreview() {
+    AndroidThemeForPreviews {
+        ChatListContent(
+            items = persistentListOf(),
+            isMeetingsTab = false,
+            onItemClick = {},
+        )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun MeetingListContentEmptyPreview() {
+    AndroidThemeForPreviews {
+        ChatListContent(
+            items = persistentListOf(),
+            isMeetingsTab = true,
+            onItemClick = {},
+        )
+    }
+}

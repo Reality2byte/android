@@ -3587,4 +3587,6 @@
     <string name="share_link_password_protected_label">Password protected</string>
     <!-- Share link revamp: snackbar shown after the link password is copied to the clipboard -->
     <string name="share_link_password_copied_snackbar">Password copied to clipboard</string>
+    <!--Title of the Meetings tab in the chat list-->
+    <string name="chat_tab_meetings_title">Meetings</string>
 </resources>

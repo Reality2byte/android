@@ -1,7 +1,6 @@
 package mega.privacy.android.app.presentation.notification.model.extensions
 
 import android.content.Context
-import mega.privacy.android.app.R
 import mega.privacy.android.domain.entity.ContactAlert
 import mega.privacy.android.domain.entity.CustomAlert
 import mega.privacy.android.domain.entity.IncomingShareAlert
@@ -26,7 +25,7 @@ internal fun UserAlert.sectionTitle(): (Context) -> String = when (this) {
     }
 
     is ScheduledMeetingAlert -> { context ->
-        context.getString(R.string.chat_tab_meetings_title)
+        context.getString(sharedR.string.chat_tab_meetings_title)
     }
 
     is PaymentSucceededAlert, is PaymentFailedAlert -> { context ->
