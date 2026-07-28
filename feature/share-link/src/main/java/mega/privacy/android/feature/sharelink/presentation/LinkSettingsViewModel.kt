@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mega.privacy.android.domain.entity.node.FolderNode
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.GetPasswordStrengthUseCase
@@ -159,14 +160,18 @@ class LinkSettingsViewModel @AssistedInject constructor(
     private fun loadNode() {
         val handle = handle ?: return
         viewModelScope.launch {
-            val exportedData = runCatching { getNodeByIdUseCase(NodeId(handle))?.exportedData }
+            val node = runCatching { getNodeByIdUseCase(NodeId(handle)) }
                 .onFailure { Timber.e(it, "Failed to load node for link settings") }
                 .getOrNull()
+            val exportedData = node?.exportedData
             publicLink = exportedData?.publicLink
             val expiryMillis = exportedData?.expirationTime?.seconds?.inWholeMilliseconds
-            if (expiryMillis != null) {
-                update {
+            update {
+                if (expiryMillis == null) {
+                    it.copy(isFolder = node is FolderNode)
+                } else {
                     it.copy(
+                        isFolder = node is FolderNode,
                         isExpiryEnabled = true,
                         isExpiryAlreadySet = true,
                         initialExpiryDate = expiryMillis,

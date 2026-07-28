@@ -16,6 +16,7 @@ import mega.privacy.android.domain.entity.changepassword.PasswordStrength
 import mega.privacy.android.domain.entity.node.ExportedData
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.TypedFileNode
+import mega.privacy.android.domain.entity.node.TypedFolderNode
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.GetPasswordStrengthUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
@@ -83,6 +84,13 @@ class LinkSettingsViewModelTest {
         whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
     }
 
+    private suspend fun stubFolderNode() {
+        val node = mock<TypedFolderNode> {
+            on { exportedData } doReturn ExportedData(PUBLIC_LINK, 0L)
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+    }
+
     private suspend fun stubNodeWithExpiry(expirationSeconds: Long) {
         val node = mock<TypedFileNode> {
             on { exportedData } doReturn ExportedData(PUBLIC_LINK, 0L, expirationSeconds)
@@ -144,6 +152,32 @@ class LinkSettingsViewModelTest {
                 assertThat(state.isExpiryEnabled).isFalse()
                 assertThat(state.isPasswordEnabled).isFalse()
                 assertThat(state.isSaveEnabled).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that isFolder is false when the node is a file`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                assertThat(awaitItem().isFolder).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that isFolder is true when the node is a folder`() =
+        runTest(extension.testDispatcher) {
+            stubFolderNode()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                assertThat(awaitItem().isFolder).isTrue()
                 cancelAndIgnoreRemainingEvents()
             }
         }

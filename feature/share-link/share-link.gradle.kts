@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":core:navigation-contract"))
     implementation(project(":navigation"))
     implementation(project(":domain"))
+    implementation(project(":core:analytics:analytics-tracker"))
     implementation(project(":core:coroutine"))
     implementation(project(":core:formatter"))
     implementation(project(":resources:icon-pack"))
@@ -35,6 +36,7 @@ dependencies {
 
     implementation(lib.mega.core.ui)
     implementation(lib.mega.core.ui.tokens)
+    implementation(lib.mega.analytics)
 
     implementation(lib.kotlin.ktx)
     implementation(lib.logging.timber)
@@ -52,6 +54,7 @@ dependencies {
 
     testImplementation(project(":core-test"))
     testImplementation(project(":core-ui-test"))
+    testImplementation(project(":core:analytics:analytics-test"))
     testImplementation(platform(testlib.junit5.bom))
     testImplementation(testlib.bundles.ui.test)
     testImplementation(testlib.bundles.unit.test)

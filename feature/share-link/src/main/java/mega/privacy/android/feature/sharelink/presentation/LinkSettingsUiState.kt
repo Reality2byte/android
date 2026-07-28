@@ -19,10 +19,13 @@ import mega.privacy.android.domain.entity.changepassword.PasswordStrength
  * the baseline for detecting an actual change; null when no password was set.
  * @property initialSeparateKeyEnabled The "separate link and key" preference when the screen
  * opened, used as the baseline for detecting an actual change.
+ * @property isFolder Whether the node being edited is a folder, selecting the file/folder variant
+ * of the link analytics events.
  */
 @Stable
 data class LinkSettingsUiState(
     val isLoading: Boolean = true,
+    val isFolder: Boolean = false,
     val isSeparateKeyEnabled: Boolean = false,
     val initialSeparateKeyEnabled: Boolean = false,
     val isExpiryEnabled: Boolean = false,
