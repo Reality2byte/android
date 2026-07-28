@@ -15,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
@@ -195,7 +196,7 @@ class TextEditorComposeViewModel @AssistedInject constructor(
      */
     private var lastReadThroughFraction: Float = 0f
 
-    /** Active content-load job; cancelled if connectivity drops while loading. */
+    /** Active content-load job; cancelled if connectivity drops during a network load. */
     private var loadJob: Job? = null
 
     init {
@@ -379,7 +380,11 @@ class TextEditorComposeViewModel @AssistedInject constructor(
                 saveRecentlyUsed()
                 fetchBottomBarActions(resolvedNode)
             }
-            monitorConnectivityDuringLoad()
+            // Local files load without the network, so a connectivity drop must not
+            // interrupt them; only network-backed loads need the mid-load monitor.
+            if (args.localPath.isNullOrBlank()) {
+                monitorConnectivityDuringLoad()
+            }
         } else {
             lastSavedContent = ""
             chunkTexts.add("")
@@ -1235,14 +1240,18 @@ class TextEditorComposeViewModel @AssistedInject constructor(
 
     /**
      * Cancels the content load and surfaces a no-internet error if connectivity drops
-     * while the editor is still loading. The initial offline case is handled by the
-     * synchronous [isConnectedToInternetUseCase] check at the top of the load; the
-     * `.drop(1)` here keeps this monitor focused on *transitions* (mid-load drops)
-     * so it cannot pre-empt a load that is still trying to read a local file.
+     * while the editor is still loading. Only started for network-backed loads (no
+     * local path). The initial offline case is handled by the synchronous
+     * [isConnectedToInternetUseCase] check at the top of the load;
+     * `distinctUntilChanged` + `drop(1)` keeps this monitor focused on *transitions*
+     * (mid-load drops) — the connectivity flow replays its current state more than
+     * once on collection, so dropping by count alone would let a replayed initial
+     * `false` cancel a load that is still in flight.
      */
     private fun monitorConnectivityDuringLoad() {
         viewModelScope.launch {
             monitorConnectivityUseCase()
+                .distinctUntilChanged()
                 .drop(1)
                 .collect { isConnected ->
                     if (isConnected) return@collect

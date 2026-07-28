@@ -8,6 +8,7 @@ import de.palm.composestateevents.triggered
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -787,6 +788,65 @@ internal class TextEditorComposeViewModelTest {
         assertThat(state.errorEvent).isEqualTo(consumed)
         assertThat(state.isNoInternetError).isFalse()
     }
+
+    @Test
+    fun `test that load completes when offline with localPath and connectivity emits false twice at start`() =
+        runTest {
+            whenever(isConnectedToInternetUseCase()).thenReturn(false)
+            whenever(monitorConnectivityUseCase()).thenReturn(flowOf(false, false))
+            val slowLocalRead = flow {
+                delay(100)
+                emit(listOf("local content"))
+            }
+            doReturn(slowLocalRead)
+                .whenever(getTextContentForTextEditorUseCase)
+                .invoke(any<Long>(), anyOrNull(), any())
+            initUnderTest(nodeHandle = 1L, mode = TextEditorMode.View, localPath = "/some/local.txt")
+            advanceUntilIdle()
+            val state = underTest.uiState.value
+            assertThat(state.isNoInternetError).isFalse()
+            assertThat(state.errorEvent).isEqualTo(consumed)
+            assertThat(state.isLoading).isFalse()
+        }
+
+    @Test
+    fun `test that connectivity drop during load does not cancel load when localPath is set`() =
+        runTest {
+            val connectivity = MutableStateFlow(true)
+            whenever(monitorConnectivityUseCase()).thenReturn(connectivity)
+            val slowLocalRead = flow {
+                delay(100)
+                emit(listOf("local content"))
+            }
+            doReturn(slowLocalRead)
+                .whenever(getTextContentForTextEditorUseCase)
+                .invoke(any<Long>(), anyOrNull(), any())
+            initUnderTest(nodeHandle = 1L, mode = TextEditorMode.View, localPath = "/some/local.txt")
+            assertThat(underTest.uiState.value.isLoading).isTrue()
+
+            connectivity.value = false
+            advanceUntilIdle()
+
+            val state = underTest.uiState.value
+            assertThat(state.isNoInternetError).isFalse()
+            assertThat(state.errorEvent).isEqualTo(consumed)
+            assertThat(state.isLoading).isFalse()
+        }
+
+    @Test
+    fun `test that remote load continues when connectivity emits duplicate false values at start`() =
+        runTest {
+            whenever(monitorConnectivityUseCase()).thenReturn(flowOf(false, false))
+            val hangingFlow = flow<List<String>> { awaitCancellation() }
+            doReturn(hangingFlow)
+                .whenever(getTextContentForTextEditorUseCase)
+                .invoke(any<Long>(), anyOrNull(), any())
+            initUnderTest(nodeHandle = 1L, mode = TextEditorMode.View)
+            advanceUntilIdle()
+            val state = underTest.uiState.value
+            assertThat(state.isNoInternetError).isFalse()
+            assertThat(state.isLoading).isTrue()
+        }
 
     @Test
     fun `test that setEditMode updates uiState to edit mode`() {
