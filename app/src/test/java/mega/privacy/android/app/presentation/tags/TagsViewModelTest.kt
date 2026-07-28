@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
@@ -146,6 +147,47 @@ class TagsViewModelTest {
         underTest.updateExistingTagsAndErrorState(NodeId(123L))
         underTest.addOrRemoveTag("old tag")
         verify(manageNodeTagUseCase).invoke(NodeId(123L), oldTag = "old tag", newTag = null)
+    }
+
+    @Test
+    fun `test that tags are sorted with node tags first when screen loads`() = runTest {
+        val node = mock<TypedNode> {
+            on { id } doReturn NodeId(123L)
+            on { tags } doReturn listOf("tag3")
+        }
+        whenever(getNodeByIdUseCase(NodeId(123L))).thenReturn(node)
+        whenever(getAllNodeTagsUseCase("")).thenReturn(listOf("tag1", "tag2", "tag3"))
+        whenever(tagsValidationMessageMapper(any(), any(), any())).thenReturn(Pair("", false))
+
+        underTest.updateExistingTagsAndErrorState(NodeId(123L))
+
+        assertThat(underTest.uiState.value.tags)
+            .containsExactly("tag3", "tag1", "tag2")
+            .inOrder()
+    }
+
+    @Test
+    fun `test that tags keep their initial order when node tags change after load`() = runTest {
+        val node = mock<TypedNode> {
+            on { id } doReturn NodeId(123L)
+            on { tags } doReturn listOf("tag3")
+        }
+        val updatedNode = mock<TypedNode> {
+            on { id } doReturn NodeId(123L)
+            on { tags } doReturn listOf("tag3", "tag1")
+        }
+        whenever(getNodeByIdUseCase(NodeId(123L))).thenReturn(node, updatedNode)
+        whenever(getAllNodeTagsUseCase("")).thenReturn(listOf("tag1", "tag2", "tag3"))
+        whenever(tagsValidationMessageMapper(any(), any(), any())).thenReturn(Pair("", false))
+
+        underTest.updateExistingTagsAndErrorState(NodeId(123L))
+        underTest.updateExistingTagsAndErrorState(NodeId(123L))
+
+        assertThat(underTest.uiState.value.nodeTags)
+            .containsExactly("tag3", "tag1")
+        assertThat(underTest.uiState.value.tags)
+            .containsExactly("tag3", "tag1", "tag2")
+            .inOrder()
     }
 
     @Test

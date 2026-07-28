@@ -99,9 +99,16 @@ class TagsViewModel @AssistedInject constructor(
             runCatching {
                 getAllNodeTagsUseCase(searchString = tag.trim())
             }.onSuccess { userTags ->
-                val sortedTags = userTags.orEmpty()
-                    .sortedByDescending { it in uiState.value.nodeTags }
-                    .toImmutableList()
+                val tags = userTags.orEmpty()
+                val currentTags = uiState.value.tags
+                // Re-sorting on every fetch would move a chip the moment it is toggled,
+                // so keep the on-screen order unless the content actually changed.
+                val sortedTags = if (tags.toSet() == currentTags.toSet()) {
+                    currentTags
+                } else {
+                    tags.sortedByDescending { it in uiState.value.nodeTags }
+                        .toImmutableList()
+                }
                 val (message, isError) = tagsValidationMessageMapper(
                     tag = tag,
                     nodeTags = uiState.value.nodeTags,
