@@ -11,7 +11,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mega.privacy.android.app.initializer.canResolveHiltEntryPoints
+import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.domain.qualifier.ApplicationScope
 import mega.privacy.android.domain.usecase.workers.StartCameraUploadUseCase
 import timber.log.Timber
@@ -43,6 +43,18 @@ class BootEventReceiver : BroadcastReceiver() {
             startCameraUploadUseCase = entryPoint.startCameraUploadUseCase(),
         )
     }
+
+    /**
+     * True when the receiver may resolve Hilt entry points.
+     *
+     * This is the one architecturally honest guard: the OS times the BOOT_COMPLETED broadcast,
+     * so it can arrive in an instrumented test process before the Hilt test component exists.
+     * There the application is a Hilt test application rather than [MegaApplication], and entry
+     * point resolution would crash, so the receiver must no-op; tests exercise [handleIntent]
+     * directly instead.
+     */
+    private fun Context.canResolveHiltEntryPoints(): Boolean =
+        applicationContext is MegaApplication
 
     @VisibleForTesting
     internal fun handleIntent(

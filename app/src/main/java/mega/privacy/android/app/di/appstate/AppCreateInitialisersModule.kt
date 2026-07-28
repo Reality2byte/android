@@ -8,6 +8,7 @@ import mega.privacy.android.app.appstate.global.initialisation.appcreate.Account
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.AnalyticsInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ApiServerInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CallObserverInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.CameraUploadsWorkerNotificationInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ChatApiInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CoilImageLoaderInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.CrashReportingInitialiser
@@ -22,6 +23,7 @@ import mega.privacy.android.app.appstate.global.initialisation.appcreate.Notific
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.PasscodeInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.RemoteConfigInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.SdkSetupInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.SyncMonitorInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ThemeInitialiser
 import mega.privacy.android.navigation.contract.initialisation.AsyncAppCreateInitialiser
 import mega.privacy.android.navigation.contract.initialisation.SynchronousAppCreateInitialiser
@@ -46,6 +48,8 @@ internal class AppCreateInitialisersModule {
         fcmTopicInitialiser: FcmTopicInitialiser,
         emojiInitialiser: EmojiInitialiser,
         remoteConfigInitialiser: RemoteConfigInitialiser,
+        cameraUploadsWorkerNotificationInitialiser: CameraUploadsWorkerNotificationInitialiser,
+        syncMonitorInitialiser: SyncMonitorInitialiser,
     ): Set<@JvmSuppressWildcards AsyncAppCreateInitialiser> = setOf(
         miscFlagsInitialiser,
         apiServerInitialiser,
@@ -55,6 +59,8 @@ internal class AppCreateInitialisersModule {
         networkStateInitialiser,
         emojiInitialiser,
         remoteConfigInitialiser,
+        cameraUploadsWorkerNotificationInitialiser,
+        syncMonitorInitialiser,
     )
 
     @Provides
