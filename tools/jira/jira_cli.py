@@ -521,16 +521,26 @@ def cmd_update_field(args):
     # future callers (a new skill matching a different field-id candidate
     # list) fail loudly instead of silently corrupting data.
     schema = _lookup_field_schema(args.field_id)
-    if schema is not None:
-        ftype = schema.get("type")
-        if ftype != "string" and not args.force_type:
+    if args.select:
+        if schema is not None and schema.get("type") != "option":
             die(
-                f"field {args.field_id!r} has schema.type={ftype!r}, not "
-                f"'string'. update-field only supports text/textarea fields. "
-                f"Use --force-type if you know what you're doing.",
+                f"field {args.field_id!r} has schema.type={schema.get('type')!r}, "
+                f"not 'option'. --select only supports single-select fields.",
                 1,
             )
-    code, body = jira("PUT", f"/issue/{args.key}", {"fields": {args.field_id: value}})
+        payload_value = {"value": value.strip()}
+    else:
+        if schema is not None:
+            ftype = schema.get("type")
+            if ftype != "string" and not args.force_type:
+                die(
+                    f"field {args.field_id!r} has schema.type={ftype!r}, not "
+                    f"'string'. update-field only supports text/textarea fields. "
+                    f"Use --force-type if you know what you're doing.",
+                    1,
+                )
+        payload_value = value
+    code, body = jira("PUT", f"/issue/{args.key}", {"fields": {args.field_id: payload_value}})
     expect_status(code, body, 204)
 
 
@@ -1170,6 +1180,8 @@ def main():
                     help="Allow clearing the field with empty stdin")
     sp.add_argument("--force-type", action="store_true",
                     help="Allow writing a raw string to a non-string field (advanced)")
+    sp.add_argument("--select", action="store_true",
+                    help="Wrap stdin value as {\"value\": ...} for single-select fields")
     sp.set_defaults(func=cmd_update_field)
 
     sp = sub.add_parser("create", help="Create an issue (description on stdin)")
