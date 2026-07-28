@@ -7,11 +7,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.scene.DialogSceneStrategy
+import mega.privacy.android.app.deeplinks.view.DeepLinkContentUnavailableDialog
 import mega.privacy.android.app.deeplinks.view.DeepLinksDialog
 import mega.privacy.android.navigation.contract.NavOptions
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.dialog.AppDialogDestinations
 import mega.privacy.android.navigation.contract.dialog.DialogNavKey
+import mega.privacy.android.navigation.destination.DeepLinkContentUnavailableDialogNavKey
 import mega.privacy.android.navigation.destination.DeepLinksAfterFetchNodesDialogNavKey
 import mega.privacy.android.navigation.destination.DeepLinksDialogNavKey
 
@@ -33,7 +35,27 @@ data object DeepLinksDialogDestinations : AppDialogDestinations {
                 navigate = navigationHandler::navigate,
                 onDialogHandled = onHandled
             )
+            deepLinkContentUnavailableDialogDestination(
+                remove = navigationHandler::remove,
+                onDialogHandled = onHandled
+            )
         }
+}
+
+fun EntryProviderScope<in DialogNavKey>.deepLinkContentUnavailableDialogDestination(
+    remove: (NavKey) -> Unit,
+    onDialogHandled: () -> Unit,
+) {
+    entry<DeepLinkContentUnavailableDialogNavKey>(
+        metadata = DialogSceneStrategy.dialog()
+    ) { key ->
+        DeepLinkContentUnavailableDialog(
+            onDismiss = {
+                remove(key)
+                onDialogHandled()
+            }
+        )
+    }
 }
 
 fun EntryProviderScope<in DialogNavKey>.deepLinkDialogDestination(

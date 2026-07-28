@@ -22,6 +22,7 @@ import mega.privacy.android.domain.usecase.node.GetNodeIdFromBase64UseCase
 import mega.privacy.android.domain.usecase.node.GetNodeLocationUseCase
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
 import mega.privacy.android.navigation.destination.CloudDriveNavKey
+import mega.privacy.android.navigation.destination.DeepLinkContentUnavailableDialogNavKey
 import mega.privacy.android.navigation.destination.DeepLinksAfterFetchNodesDialogNavKey
 import mega.privacy.android.navigation.destination.DriveSyncNavKey
 import mega.privacy.android.navigation.destination.HomeScreensNavKey
@@ -185,7 +186,7 @@ class CloudDriveDeepLinkHandlerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `test that root cloud drive is returned when node is not found`(
+    fun `test that content unavailable dialog is returned when node is not found`(
         isLoggedIn: Boolean,
     ) = runTest {
         val base64Handle = "validBase64"
@@ -201,13 +202,7 @@ class CloudDriveDeepLinkHandlerTest {
         val actual = underTest.getNavKeysInternal(uri, RegexPatternType.HANDLE_LINK, isLoggedIn)
 
         if (isLoggedIn) {
-            val actualHomeScreensNavKey = actual?.firstOrNull() as? HomeScreensNavKey
-            assertThat(actual).containsExactly(
-                createExpectedHomeScreensNavKey(
-                    actual = actualHomeScreensNavKey,
-                    root = DriveSyncNavKey()
-                )
-            )
+            assertThat(actual).containsExactly(DeepLinkContentUnavailableDialogNavKey)
             verifyNoInteractions(snackbarEventQueue)
         } else {
             assertThat(actual).isEmpty()

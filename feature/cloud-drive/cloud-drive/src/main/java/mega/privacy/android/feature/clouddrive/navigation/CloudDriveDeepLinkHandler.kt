@@ -20,6 +20,7 @@ import mega.privacy.android.domain.usecase.node.GetNodeLocationUseCase
 import mega.privacy.android.navigation.contract.deeplinks.DeepLinkHandler
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
 import mega.privacy.android.navigation.destination.CloudDriveNavKey
+import mega.privacy.android.navigation.destination.DeepLinkContentUnavailableDialogNavKey
 import mega.privacy.android.navigation.destination.DeepLinksAfterFetchNodesDialogNavKey
 import mega.privacy.android.navigation.destination.DriveSyncNavKey
 import mega.privacy.android.navigation.destination.HomeScreensNavKey
@@ -57,10 +58,17 @@ class CloudDriveDeepLinkHandler @Inject constructor(
                 )
 
                 else -> {
-                    val node = uri.extractNodeHandleBase64FromUri()
-                        ?.let { getNodeIdFromBase64UseCase(it) }?.longValue?.let { handle ->
-                            getNodeByIdUseCase(NodeId(handle))
-                        }
+                    val nodeId = uri.extractNodeHandleBase64FromUri()
+                        ?.let { getNodeIdFromBase64UseCase(it) }
+                    val node = nodeId?.longValue?.let { handle ->
+                        getNodeByIdUseCase(NodeId(handle))
+                    }
+                    if (nodeId != null && node == null) {
+                        // Valid handle but not found in this account, e.g. it belongs to a different account
+                        return@catchWithEmptyListAndLog listOf(
+                            DeepLinkContentUnavailableDialogNavKey
+                        )
+                    }
                     val nodeLocation = node?.let { getNodeLocationUseCase(it) }
                     val nodeSourceType = nodeLocation?.nodeSourceType
                         ?: NodeSourceType.CLOUD_DRIVE

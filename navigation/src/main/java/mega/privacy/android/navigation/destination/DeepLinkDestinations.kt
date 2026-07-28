@@ -15,3 +15,6 @@ data class DeepLinksAfterFetchNodesDialogNavKey(
     val deepLink: String,
     val regexPatternType: RegexPatternType,
 ) : DialogNavKey
+
+@Serializable
+data object DeepLinkContentUnavailableDialogNavKey : DialogNavKey
