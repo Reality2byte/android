@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
@@ -15,10 +16,24 @@ import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.button.AnchoredButtonGroup
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
+import mega.android.core.ui.extensions.LaunchedOnceEffect
 import mega.android.core.ui.model.Button
 import mega.android.core.ui.model.menu.MenuActionWithClick
 import mega.android.core.ui.model.menu.MenuActionWithIcon
+import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.icon.pack.IconPack
+import mega.privacy.mobile.analytics.event.LinkCopyAllLinksButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyDecryptionKeyButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyLinkButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyPasswordButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightAgreeButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightWarningDialogEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsContinueButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsWarningDialogEvent
+import mega.privacy.mobile.analytics.event.LinkShareButtonPressedEvent
+import mega.privacy.mobile.analytics.event.ShareLinkScreenEvent
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
@@ -63,6 +78,20 @@ fun ShareLinkScreen(
 ) {
     val linkCount = (uiState as? ShareLinkUiState.Data)?.handles?.size ?: 1
 
+    LaunchedOnceEffect(Unit) {
+        Analytics.tracker.trackEvent(ShareLinkScreenEvent)
+    }
+    LaunchedEffect(uiState is ShareLinkUiState.CopyrightConsent) {
+        if (uiState is ShareLinkUiState.CopyrightConsent) {
+            Analytics.tracker.trackEvent(LinkCopyrightWarningDialogEvent)
+        }
+    }
+    LaunchedEffect(uiState is ShareLinkUiState.SensitiveWarning) {
+        if (uiState is ShareLinkUiState.SensitiveWarning) {
+            Analytics.tracker.trackEvent(LinkHiddenItemsWarningDialogEvent)
+        }
+    }
+
     MegaScaffoldWithTopAppBarScrollBehavior(
         modifier = modifier,
         topBar = {
@@ -96,7 +125,10 @@ fun ShareLinkScreen(
                                         .fillMaxWidth()
                                         .testTag(SHARE_LINK_SHARE_BUTTON_TAG),
                                     text = shareText,
-                                    onClick = { onShareLink(uiState.shareableLinksText()) },
+                                    onClick = {
+                                        Analytics.tracker.trackEvent(LinkShareButtonPressedEvent)
+                                        onShareLink(uiState.shareableLinksText())
+                                    },
                                 )
                             },
                         ),
@@ -112,7 +144,10 @@ fun ShareLinkScreen(
                                     .fillMaxWidth()
                                     .testTag(SHARE_LINK_COPYRIGHT_AGREE_TAG),
                                 text = stringResource(sharedR.string.copyright_action_agree),
-                                onClick = onCopyrightAgreed,
+                                onClick = {
+                                    Analytics.tracker.trackEvent(LinkCopyrightAgreeButtonPressedEvent)
+                                    onCopyrightAgreed()
+                                },
                             )
                         },
                         {
@@ -121,7 +156,10 @@ fun ShareLinkScreen(
                                     .fillMaxWidth()
                                     .testTag(SHARE_LINK_COPYRIGHT_DISAGREE_TAG),
                                 text = stringResource(sharedR.string.general_dialog_cancel_button),
-                                onClick = onCopyrightDisagreed,
+                                onClick = {
+                                    Analytics.tracker.trackEvent(LinkCopyrightCancelButtonPressedEvent)
+                                    onCopyrightDisagreed()
+                                },
                             )
                         },
                     ),
@@ -145,23 +183,44 @@ fun ShareLinkScreen(
                     SensitiveItemsWarningDialog(
                         type = uiState.type,
                         nodeCount = uiState.nodeCount,
-                        onConfirm = onSensitiveWarningConfirmed,
-                        onDismiss = onSensitiveWarningDismissed,
+                        onConfirm = {
+                            Analytics.tracker.trackEvent(LinkHiddenItemsContinueButtonPressedEvent)
+                            onSensitiveWarningConfirmed()
+                        },
+                        onDismiss = {
+                            Analytics.tracker.trackEvent(LinkHiddenItemsCancelButtonPressedEvent)
+                            onSensitiveWarningDismissed()
+                        },
                     )
                 }
 
                 is ShareLinkUiState.Data -> if (uiState.isMultiNode) {
                     MultiNodeContent(
                         uiState = uiState,
-                        onCopyLink = onCopyLink,
-                        onLinksCopied = onLinksCopied,
+                        onCopyLink = {
+                            Analytics.tracker.trackEvent(LinkCopyLinkButtonPressedEvent)
+                            onCopyLink()
+                        },
+                        onLinksCopied = {
+                            Analytics.tracker.trackEvent(LinkCopyAllLinksButtonPressedEvent)
+                            onLinksCopied()
+                        },
                     )
                 } else {
                     ShareLinkContent(
                         uiState = uiState,
-                        onCopyLink = onCopyLink,
-                        onCopyKey = onCopyKey,
-                        onCopyPassword = onCopyPassword,
+                        onCopyLink = {
+                            Analytics.tracker.trackEvent(LinkCopyLinkButtonPressedEvent)
+                            onCopyLink()
+                        },
+                        onCopyKey = {
+                            Analytics.tracker.trackEvent(LinkCopyDecryptionKeyButtonPressedEvent)
+                            onCopyKey()
+                        },
+                        onCopyPassword = {
+                            Analytics.tracker.trackEvent(LinkCopyPasswordButtonPressedEvent)
+                            onCopyPassword()
+                        },
                     )
                 }
             }

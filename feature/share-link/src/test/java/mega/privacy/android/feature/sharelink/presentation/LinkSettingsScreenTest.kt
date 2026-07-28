@@ -13,11 +13,15 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import de.palm.composestateevents.triggered
 import mega.privacy.android.analytics.test.AnalyticsTestRule
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesDialogEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesDiscardButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
@@ -26,8 +30,12 @@ import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonEnab
 import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedDisabledEvent
 import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFileButtonPressedEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedEnabledEvent
+import mega.privacy.mobile.analytics.event.LinkSeparateKeyLearnMoreButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsSaveButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsSaveFailedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
 import mega.privacy.android.shared.resources.R as sharedR
 import org.junit.Rule
 import org.junit.Test
@@ -455,6 +463,86 @@ class LinkSettingsScreenTest {
 
         assertThat(analyticsRule.events).doesNotContain(LinkConfirmPasswordFileButtonPressedEvent)
         assertThat(analyticsRule.events).doesNotContain(LinkResetPasswordFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that the screen view event is tracked once when the screen is shown`() {
+        setContent(uiState = loaded)
+
+        assertThat(analyticsRule.events.filterIsInstance<LinkSettingsScreenEvent>()).hasSize(1)
+    }
+
+    @Test
+    fun `test that tapping Save tracks the save button event`() {
+        setContent(uiState = loaded.copy(isSaveEnabled = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SAVE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSettingsSaveButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the separate-key Learn more link tracks the learn more event`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_LEARN_MORE_TAG, useUnmergedTree = true)
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSeparateKeyLearnMoreButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that showing the discard dialog tracks the dialog displayed event once`() {
+        setContent(uiState = loaded.copy(hasUnsavedChanges = true))
+
+        composeRule.onNodeWithContentDescription(NAVIGATION_ICON).performClick()
+        composeRule.waitForIdle()
+
+        assertThat(analyticsRule.events.filterIsInstance<LinkDiscardChangesDialogEvent>())
+            .hasSize(1)
+    }
+
+    @Test
+    fun `test that the discard dialog displayed event is not tracked until the dialog is shown`() {
+        setContent(uiState = loaded.copy(hasUnsavedChanges = true))
+
+        assertThat(analyticsRule.events).doesNotContain(LinkDiscardChangesDialogEvent)
+    }
+
+    @Test
+    fun `test that discarding changes tracks the discard event`() {
+        setContent(uiState = loaded.copy(hasUnsavedChanges = true))
+
+        composeRule.onNodeWithContentDescription(NAVIGATION_ICON).performClick()
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_dialog_discard_button))
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkDiscardChangesDiscardButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that cancelling the discard dialog tracks the cancel event`() {
+        setContent(uiState = loaded.copy(hasUnsavedChanges = true))
+
+        composeRule.onNodeWithContentDescription(NAVIGATION_ICON).performClick()
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_dialog_cancel_button))
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkDiscardChangesCancelButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that a triggered error event tracks the save failed event`() {
+        setContent(uiState = loaded.copy(errorEvent = triggered))
+
+        assertThat(analyticsRule.events).contains(LinkSettingsSaveFailedEvent)
+    }
+
+    @Test
+    fun `test that the save failed event is not tracked without an error`() {
+        setContent(uiState = loaded)
+
+        assertThat(analyticsRule.events).doesNotContain(LinkSettingsSaveFailedEvent)
     }
 
     private fun setContent(

@@ -18,6 +18,19 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import mega.privacy.android.analytics.test.AnalyticsTestRule
+import mega.privacy.mobile.analytics.event.LinkCopyAllLinksButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyDecryptionKeyButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyLinkButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyPasswordButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightAgreeButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkCopyrightWarningDialogEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsContinueButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkHiddenItemsWarningDialogEvent
+import mega.privacy.mobile.analytics.event.LinkShareButtonPressedEvent
+import mega.privacy.mobile.analytics.event.ShareLinkScreenEvent
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_DETAILS_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_COPY_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_DETAILS_TAG
@@ -35,6 +48,9 @@ class ShareLinkScreenTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+
+    @get:Rule
+    val analyticsRule = AnalyticsTestRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
@@ -485,6 +501,122 @@ class ShareLinkScreenTest {
                 ?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE)
             assertThat(sensitive).isTrue()
         }
+    }
+
+    @Test
+    fun `test that the screen view event is tracked once when the screen is shown`() {
+        setContent(uiState = data)
+
+        assertThat(analyticsRule.events.filterIsInstance<ShareLinkScreenEvent>()).hasSize(1)
+    }
+
+    @Test
+    fun `test that tapping Share tracks the share button event`() {
+        setContent(uiState = data)
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkShareButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping a node's copy icon tracks the copy link event`() {
+        setContent(uiState = data)
+
+        composeRule.onNodeWithContentDescription(context.getString(sharedR.string.general_copy))
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkCopyLinkButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the key copy icon tracks the copy decryption key event`() {
+        setContent(uiState = data.copy(isKeySeparate = true))
+
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG, useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkCopyDecryptionKeyButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping the password copy icon tracks the copy password event`() {
+        setContent(uiState = passwordData)
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG, useUnmergedTree = true)
+            .performScrollTo()
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkCopyPasswordButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that opening the multi-node screen tracks the copy all links event`() {
+        setContent(uiState = multiNodeData)
+        composeRule.waitForIdle()
+
+        assertThat(analyticsRule.events).contains(LinkCopyAllLinksButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that the copyright warning displayed event is tracked in the CopyrightConsent state`() {
+        setContent(uiState = ShareLinkUiState.CopyrightConsent)
+
+        assertThat(analyticsRule.events.filterIsInstance<LinkCopyrightWarningDialogEvent>())
+            .hasSize(1)
+    }
+
+    @Test
+    fun `test that the copyright warning displayed event is not tracked in the Data state`() {
+        setContent(uiState = data)
+
+        assertThat(analyticsRule.events).doesNotContain(LinkCopyrightWarningDialogEvent)
+    }
+
+    @Test
+    fun `test that tapping Agree tracks the copyright agree event`() {
+        setContent(uiState = ShareLinkUiState.CopyrightConsent)
+
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_AGREE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkCopyrightAgreeButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Cancel tracks the copyright cancel event`() {
+        setContent(uiState = ShareLinkUiState.CopyrightConsent)
+
+        composeRule.onNodeWithTag(SHARE_LINK_COPYRIGHT_DISAGREE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkCopyrightCancelButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that the hidden-items warning displayed event is tracked in the SensitiveWarning state`() {
+        setContent(uiState = ShareLinkUiState.SensitiveWarning(SensitiveWarningType.Items, 1))
+
+        assertThat(analyticsRule.events.filterIsInstance<LinkHiddenItemsWarningDialogEvent>())
+            .hasSize(1)
+    }
+
+    @Test
+    fun `test that confirming the hidden-items warning tracks the continue event`() {
+        setContent(uiState = ShareLinkUiState.SensitiveWarning(SensitiveWarningType.Items, 1))
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.button_continue)).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkHiddenItemsContinueButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that cancelling the hidden-items warning tracks the cancel event`() {
+        setContent(uiState = ShareLinkUiState.SensitiveWarning(SensitiveWarningType.Items, 1))
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_dialog_cancel_button))
+            .performClick()
+
+        assertThat(analyticsRule.events).contains(LinkHiddenItemsCancelButtonPressedEvent)
     }
 
     private fun setContent(

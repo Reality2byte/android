@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SelectableDates
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import de.palm.composestateevents.triggered
 import mega.android.core.ui.components.LinkSpannedText
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.MegaText
@@ -50,6 +52,7 @@ import mega.android.core.ui.components.list.GenericListItem
 import mega.android.core.ui.components.toggle.Toggle
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
+import mega.android.core.ui.extensions.LaunchedOnceEffect
 import mega.android.core.ui.model.Button
 import mega.android.core.ui.model.MegaSpanStyle
 import mega.android.core.ui.model.SpanIndicator
@@ -65,10 +68,14 @@ import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesDialogEvent
+import mega.privacy.mobile.analytics.event.LinkDiscardChangesDiscardButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFolderButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSeparateKeyLearnMoreButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonDisabledEvent
@@ -79,6 +86,9 @@ import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedD
 import mega.privacy.mobile.analytics.event.LinkSetExpiryDateFolderButtonPressedEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsSaveButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsSaveFailedEvent
+import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 import java.text.DateFormat
@@ -118,6 +128,19 @@ fun LinkSettingsScreen(
     val onCloseRequest = {
         if (uiState.hasUnsavedChanges) showDiscardDialog = true else onBack()
     }
+
+    LaunchedOnceEffect(Unit) {
+        Analytics.tracker.trackEvent(LinkSettingsScreenEvent)
+    }
+    LaunchedEffect(showDiscardDialog) {
+        if (showDiscardDialog) Analytics.tracker.trackEvent(LinkDiscardChangesDialogEvent)
+    }
+    LaunchedEffect(uiState.errorEvent) {
+        if (uiState.errorEvent == triggered) {
+            Analytics.tracker.trackEvent(LinkSettingsSaveFailedEvent)
+        }
+    }
+
     val onSeparateKeyToggled = { enabled: Boolean ->
         trackSeparateKeyToggle(uiState.isFolder, enabled)
         onSeparateKeyEnabled(enabled)
@@ -131,8 +154,13 @@ fun LinkSettingsScreen(
         onPasswordEnabled(enabled)
     }
     val onSaveClick = {
+        Analytics.tracker.trackEvent(LinkSettingsSaveButtonPressedEvent)
         trackPasswordCommit(uiState)
         onSave()
+    }
+    val onLearnMoreClick = {
+        Analytics.tracker.trackEvent(LinkSeparateKeyLearnMoreButtonPressedEvent)
+        onLearnMore()
     }
 
     BackHandler(enabled = uiState.hasUnsavedChanges) { showDiscardDialog = true }
@@ -176,7 +204,7 @@ fun LinkSettingsScreen(
                 LinkSettingsContent(
                     uiState = uiState,
                     onSeparateKeyEnabled = onSeparateKeyToggled,
-                    onLearnMore = onLearnMore,
+                    onLearnMore = onLearnMoreClick,
                     onExpiryEnabled = onExpiryToggled,
                     onExpiryDateChanged = onExpiryDateChanged,
                     onPasswordEnabled = onPasswordToggled,
@@ -193,11 +221,15 @@ fun LinkSettingsScreen(
             description = stringResource(sharedR.string.general_dialog_discard_changes_message),
             positiveButtonText = stringResource(sharedR.string.general_dialog_discard_button),
             onPositiveButtonClicked = {
+                Analytics.tracker.trackEvent(LinkDiscardChangesDiscardButtonPressedEvent)
                 showDiscardDialog = false
                 onBack()
             },
             negativeButtonText = stringResource(sharedR.string.general_dialog_cancel_button),
-            onNegativeButtonClicked = { showDiscardDialog = false },
+            onNegativeButtonClicked = {
+                Analytics.tracker.trackEvent(LinkDiscardChangesCancelButtonPressedEvent)
+                showDiscardDialog = false
+            },
             onDismiss = { showDiscardDialog = false },
         )
     }
