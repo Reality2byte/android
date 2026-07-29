@@ -33,6 +33,9 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.SURFACE_TYPE_TEXTURE_VIEW
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import mega.privacy.android.feature.videoeditor.components.FreeFormCropOverlay
 import mega.privacy.android.feature.videoeditor.presentation.editor.engine.ToolRegistry
 import mega.privacy.android.feature.videoeditor.presentation.editor.engine.buildMediaItem
@@ -42,9 +45,6 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.state.Editor
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.crop.CropAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.crop.CropPreset
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
 
 /**

@@ -1,22 +1,15 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.trim
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import mega.android.core.ui.components.MegaText
-import mega.android.core.ui.theme.AppTheme
-import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.core.formatter.mapper.DurationInSecondsTextMapper
 import mega.privacy.android.feature.videoeditor.components.Filmstrip
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
@@ -84,39 +77,32 @@ object TrimTool : EditorTool {
         modifier: Modifier,
     ) {
         val durationInSecondsTextMapper = remember { DurationInSecondsTextMapper() }
-        val selectionMs = (state.trim.endMs - state.trim.startMs).coerceAtLeast(0L)
         // System-gesture exclusion is applied at the ToolDeck level, so the
-        // filmstrip handles inherit it without re-applying here.
-        Column(
-            modifier = modifier.padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Filmstrip(
-                sourceUri = state.source.uri,
-                durationMs = state.source.durationMs,
-                trimStartMs = state.trim.startMs,
-                trimEndMs = state.trim.endMs,
-                playheadMs = state.playback.playheadMs,
-                onTrimChange = { start, end -> onAction(TrimAction.SetRange(start, end)) },
-                minTrimRangeMs = MIN_TRIM_RANGE_MS,
-                onSeek = { ms -> onAction(TrimAction.SeekTo(ms)) },
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                MegaText(
-                    text = "Selection",
-                    style = AppTheme.typography.labelMedium,
-                    textColor = TextColor.Secondary,
-                )
-                MegaText(
-                    text = durationInSecondsTextMapper(selectionMs.milliseconds),
-                    style = AppTheme.typography.titleSmall,
-                    textColor = TextColor.Primary,
-                )
-            }
-        }
+        // filmstrip handles inherit it without re-applying here. The time
+        // ruler, playhead badge and selection duration are all rendered by the
+        // filmstrip itself.
+        Filmstrip(
+            sourceUri = state.source.uri,
+            durationMs = state.source.durationMs,
+            trimStartMs = state.trim.startMs,
+            trimEndMs = state.trim.endMs,
+            playheadMs = state.playback.playheadMs,
+            onTrimChange = { start, end -> onAction(TrimAction.SetRange(start, end)) },
+            formatTime = { ms -> durationInSecondsTextMapper(ms.milliseconds) },
+            minTrimRangeMs = MIN_TRIM_RANGE_MS,
+            onSeek = { ms -> onAction(TrimAction.SeekTo(ms)) },
+            // Pulls the panel 4dp up into the deck's shared top padding (and
+            // shrinks its height to match) so the gap above the time ruler is
+            // tighter without affecting the other tools or the bottom gap.
+            modifier = modifier
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    val inset = 4.dp.roundToPx()
+                    layout(placeable.width, placeable.height - inset) {
+                        placeable.place(0, -inset)
+                    }
+                }
+                .padding(horizontal = 20.dp),
+        )
     }
 }

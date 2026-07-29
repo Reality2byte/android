@@ -123,8 +123,20 @@ private fun ToolTabBarPreview() {
     AndroidThemeForPreviews {
         ToolTabBar(
             items = listOf(
-                ToolTabUiItem("trim", Icons.Filled.ContentCut, "Trim", selected = true, applied = false),
-                ToolTabUiItem("crop", Icons.Filled.ContentCut, "Crop", selected = false, applied = true),
+                ToolTabUiItem(
+                    id = "trim",
+                    icon = Icons.Filled.ContentCut,
+                    label = "Trim",
+                    selected = true,
+                    applied = false
+                ),
+                ToolTabUiItem(
+                    id = "crop",
+                    icon = Icons.Filled.ContentCut,
+                    label = "Crop",
+                    selected = false,
+                    applied = true
+                ),
             ),
             onSelect = {},
         )

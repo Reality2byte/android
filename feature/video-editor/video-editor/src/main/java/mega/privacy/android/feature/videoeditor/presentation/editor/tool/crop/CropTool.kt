@@ -16,13 +16,14 @@ import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Crop
 import mega.privacy.android.feature.videoeditor.components.AspectRatioChip
-import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.ToolRollback
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.BuiltInToolIds
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.EditorTool
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolId
+import mega.privacy.android.feature.videoeditor.presentation.editor.tool.crop.CropTool.pauseOnEnter
+import mega.privacy.android.icon.pack.IconPack
 
 /**
  * Built-in Crop tool.
@@ -52,7 +53,8 @@ object CropTool : EditorTool {
             is CropAction.SetPreset -> {
                 val srcW = state.source.widthPx
                 val srcH = state.source.heightPx
-                val sourceAspect = if (srcW > 0 && srcH > 0) srcW.toFloat() / srcH.toFloat() else null
+                val sourceAspect =
+                    if (srcW > 0 && srcH > 0) srcW.toFloat() / srcH.toFloat() else null
                 val lock = when {
                     cropAction.preset.free -> null
                     cropAction.preset == CropPreset.ORIGINAL -> sourceAspect
