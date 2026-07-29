@@ -1249,6 +1249,8 @@ class TextEditorComposeViewModel @AssistedInject constructor(
      * `false` cancel a load that is still in flight.
      */
     private fun monitorConnectivityDuringLoad() {
+        // Skip checking if a local path existed
+        if (!args.localPath.isNullOrBlank()) return
         viewModelScope.launch {
             monitorConnectivityUseCase()
                 .distinctUntilChanged()
