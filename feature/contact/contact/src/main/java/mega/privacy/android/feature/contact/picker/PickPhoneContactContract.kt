@@ -1,4 +1,4 @@
-package mega.privacy.android.feature.contact.add.view
+package mega.privacy.android.feature.contact.picker
 
 import android.content.Context
 import android.content.Intent

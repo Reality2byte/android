@@ -1,4 +1,4 @@
-package mega.privacy.android.feature.contact.add.view
+package mega.privacy.android.feature.contact.picker
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

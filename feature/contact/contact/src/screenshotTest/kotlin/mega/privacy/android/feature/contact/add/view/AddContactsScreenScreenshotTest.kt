@@ -10,7 +10,7 @@ import mega.android.core.ui.components.contact.state.ContactItemStatus
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
 import mega.privacy.android.feature.contact.add.model.AddContactUiState
-import mega.privacy.android.feature.contact.add.model.PhoneContactsSection
+import mega.privacy.android.feature.contact.picker.PhoneContactsSection
 import mega.privacy.android.shared.contact.model.AvatarData
 import mega.privacy.android.shared.contact.model.ContactItemUiState
 import mega.privacy.android.shared.resources.R as sharedR

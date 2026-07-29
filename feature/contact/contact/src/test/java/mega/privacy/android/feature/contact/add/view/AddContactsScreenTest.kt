@@ -25,8 +25,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import mega.android.core.ui.components.contact.state.ContactItemStatus
 import mega.privacy.android.feature.contact.add.model.AddContactUiState
-import mega.privacy.android.feature.contact.add.model.PhoneContactsSection
 import mega.privacy.android.feature.contact.add.model.ScannedContactDialog
+import mega.privacy.android.feature.contact.picker.MANUAL_EMAIL_ADD_TAG
+import mega.privacy.android.feature.contact.picker.MANUAL_EMAIL_SECTION_TAG
+import mega.privacy.android.feature.contact.picker.PhoneContactsSection
 import mega.privacy.android.shared.contact.components.SCANNED_CONTACT_ALREADY_ADDED_DIALOG_TAG
 import mega.privacy.android.shared.contact.components.SCANNED_CONTACT_FOUND_DIALOG_TAG
 import mega.privacy.android.shared.contact.components.SCANNED_CONTACT_INVALID_CODE_DIALOG_TAG

@@ -1,4 +1,4 @@
-package mega.privacy.android.feature.contact.add.view
+package mega.privacy.android.feature.contact.picker
 
 import androidx.compose.runtime.saveable.SaverScope
 import com.google.common.truth.Truth.assertThat

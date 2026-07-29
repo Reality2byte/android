@@ -1,4 +1,4 @@
-package mega.privacy.android.feature.contact.add.view
+package mega.privacy.android.feature.contact.picker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

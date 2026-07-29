@@ -32,9 +32,9 @@ import mega.privacy.android.domain.usecase.environment.GetDeviceSdkVersionUseCas
 import mega.privacy.android.domain.usecase.qrcode.ParseScannedContactLinkHandleUseCase
 import mega.privacy.android.domain.usecase.qrcode.QueryScannedContactLinkUseCase
 import mega.privacy.android.feature.contact.add.model.AddContactUiState
-import mega.privacy.android.feature.contact.add.model.PhoneContactsSection
 import mega.privacy.android.feature.contact.add.model.ScannedContactDialog
 import mega.privacy.android.feature.contact.add.model.ScannedContactInviteFeedback
+import mega.privacy.android.feature.contact.picker.PhoneContactsSection
 import mega.privacy.android.shared.contact.mapper.ContactItemAvatarMapper
 import mega.privacy.android.shared.contact.mapper.ContactItemStatusMapper
 import mega.privacy.android.shared.contact.mapper.ContactItemUiStateMapper

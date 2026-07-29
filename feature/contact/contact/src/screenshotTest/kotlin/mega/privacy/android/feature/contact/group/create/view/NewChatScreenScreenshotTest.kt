@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.toImmutableList
 import mega.android.core.ui.components.contact.state.ContactItemStatus
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
-import mega.privacy.android.feature.contact.add.view.rememberContactSelectionState
+import mega.privacy.android.feature.contact.picker.rememberContactSelectionState
 import mega.privacy.android.feature.contact.group.create.model.CreateChatUiState
 import mega.privacy.android.shared.contact.model.AvatarData
 import mega.privacy.android.shared.contact.model.ContactItemUiState
