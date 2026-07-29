@@ -8,7 +8,8 @@ import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mega.privacy.android.feature.videoeditor.components.ToolDeckSurface
+import mega.android.core.ui.components.surface.ColumnSurface
+import mega.android.core.ui.components.surface.SurfaceColor
 
 /**
  * Styled container for the active tool's panel. The panel itself is supplied by
@@ -24,7 +25,8 @@ fun ToolDeck(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    ToolDeckSurface(
+    ColumnSurface(
+        surfaceColor = SurfaceColor.Surface1,
         modifier = modifier
             .fillMaxWidth()
             .systemGestureExclusion(),

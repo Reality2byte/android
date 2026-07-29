@@ -83,7 +83,11 @@ object SpeedTool : EditorTool {
         // the new clip duration can be verified by playing the preview.
         SpeedSelector(
             options = SpeedOptions.map { speed ->
-                "${if (speed % 1f == 0f) speed.toInt() else speed}x"
+                when (speed) {
+                    0.25f -> "¼x"
+                    0.5f -> "½x"
+                    else -> "${if (speed % 1f == 0f) speed.toInt() else speed}x"
+                }
             },
             selectedIndex = SpeedOptions.indexOf(state.speed.speed),
             onSelect = { index -> onAction(SpeedAction.SetSpeed(SpeedOptions[index])) },

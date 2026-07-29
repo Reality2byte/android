@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.image.MegaIcon
@@ -66,7 +67,9 @@ fun ToolActionBar(
             }
             MegaText(
                 text = toolLabel,
-                style = AppTheme.typography.titleMedium,
+                style = AppTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.W400
+                ),
                 textColor = TextColor.Primary,
             )
             Box(

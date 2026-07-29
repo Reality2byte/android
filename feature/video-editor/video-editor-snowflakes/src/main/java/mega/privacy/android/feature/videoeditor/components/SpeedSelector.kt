@@ -2,6 +2,7 @@ package mega.privacy.android.feature.videoeditor.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,18 +12,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.theme.AndroidThemeForPreviews
 import mega.android.core.ui.theme.AppTheme
-import mega.android.core.ui.theme.values.TextColor
 import mega.android.core.ui.tokens.theme.DSTokens
 
 
@@ -87,6 +91,7 @@ private fun RowScope.ConnectedToggleButton(
             .height(GroupHeight)
             .clip(shape)
             .background(background)
+            .border(1.dp, borderColor, shape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -94,10 +99,21 @@ private fun RowScope.ConnectedToggleButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            MegaText(
-                text = label,
-                style = AppTheme.typography.labelLarge,
-                textColor = if (selected) TextColor.Primary else TextColor.Secondary,
+            // Roboto's precomposed fraction glyphs (¼, ½) render smaller and
+            // lighter than full-size digits, so bold just those characters to
+            // keep their visual weight consistent with the "1x".."4x" labels.
+            Text(
+                text = buildAnnotatedString {
+                    label.forEach { char ->
+                        if (char == '¼' || char == '½') {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(char) }
+                        } else {
+                            append(char)
+                        }
+                    }
+                },
+                style = AppTheme.typography.titleMedium,
+                color = if (selected) DSTokens.colors.text.primary else DSTokens.colors.text.secondary,
             )
         }
     }
@@ -115,7 +131,7 @@ private val FullCorner = GroupHeight / 2
 private fun SpeedSelectorPreview() {
     AndroidThemeForPreviews {
         SpeedSelector(
-            options = listOf("0.25x", "0.5x", "1x", "1.5x", "2x", "4x"),
+            options = listOf("¼x", "½x", "1x", "1.5x", "2x", "4x"),
             selectedIndex = 2,
             onSelect = {},
             modifier = Modifier.padding(16.dp),

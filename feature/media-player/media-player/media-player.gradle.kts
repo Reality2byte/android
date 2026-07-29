@@ -21,6 +21,7 @@ dependencies {
     implementation(project(":core:navigation-contract"))
     implementation(project(":core:coroutine"))
     implementation(project(":core:ui-components:node-components"))
+    implementation(project(":core:ui-components:shared-components"))
     implementation(project(":core:analytics:analytics-tracker"))
     implementation(project(":resources:string-resources"))
     implementation(project(":resources:icon-pack"))

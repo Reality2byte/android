@@ -36,10 +36,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import de.palm.composestateevents.EventEffect
+import mega.privacy.android.core.sharedcomponents.systemui.DarkSystemBarsEffect
+import mega.privacy.android.core.sharedcomponents.systemui.LockPortraitOrientationEffect
 import mega.android.core.ui.components.MegaScaffold
 import mega.android.core.ui.components.button.PrimaryFilledButtonM3XSmall
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
+import mega.android.core.ui.theme.AndroidTheme
 import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.feature.videoeditor.components.ToolTabBar
 import mega.privacy.android.feature.videoeditor.components.ToolTabUiItem
@@ -88,6 +91,9 @@ internal fun VideoEditorRoute(
         }
 
     val editorViewModel = hiltViewModel<EditorViewModel>()
+
+    LockPortraitOrientationEffect()
+    DarkSystemBarsEffect()
 
     val uiState by screenViewModel.uiState.collectAsStateWithLifecycle()
     val editorState by editorViewModel.editorState.collectAsStateWithLifecycle()
@@ -145,21 +151,23 @@ internal fun VideoEditorRoute(
         }
     }
 
-    VideoEditorScreen(
-        uiState = uiState,
-        editorState = editorState,
-        exportProgress = exportProgress,
-        registry = editorViewModel.toolRegistry,
-        saveEnabled = saveEnabled,
-        onAction = editorViewModel::dispatch,
-        onSave = editorViewModel::startExport,
-        onCancelExport = editorViewModel::cancelExport,
-        onCancelDownload = {
-            screenViewModel.cancelDownload()
-            onClose()
-        },
-        onClose = onClose,
-    )
+    AndroidTheme(isDark = true) {
+        VideoEditorScreen(
+            uiState = uiState,
+            editorState = editorState,
+            exportProgress = exportProgress,
+            registry = editorViewModel.toolRegistry,
+            saveEnabled = saveEnabled,
+            onAction = editorViewModel::dispatch,
+            onSave = editorViewModel::startExport,
+            onCancelExport = editorViewModel::cancelExport,
+            onCancelDownload = {
+                screenViewModel.cancelDownload()
+                onClose()
+            },
+            onClose = onClose,
+        )
+    }
 }
 
 /**

@@ -49,6 +49,8 @@ import androidx.media3.ui.TimeBar
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import mega.privacy.android.core.sharedcomponents.systemui.DarkStatusBarEffect
+import mega.privacy.android.core.sharedcomponents.systemui.TransparentNavigationBarEffect
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.MegaTextWithIndicator

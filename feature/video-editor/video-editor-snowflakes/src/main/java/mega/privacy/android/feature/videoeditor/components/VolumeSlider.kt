@@ -52,7 +52,7 @@ import kotlin.math.roundToInt
  *
  * The value indicator is drawn inline (not in a popup) so it follows the thumb
  * in the same layout pass. It floats above the slider bounds, so ancestors
- * must not clip (the tool deck draws its rounded shape instead of clipping).
+ * must not clip.
  *
  * The decorative leading icon reflects the current level: off when muted, min
  * up to 10%, plain up to 50%, max above.
