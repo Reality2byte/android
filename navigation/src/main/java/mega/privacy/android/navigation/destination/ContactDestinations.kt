@@ -27,6 +27,20 @@ data class AddContactsNavKey(val preselectedHandles: List<Long>) : NavKey {
 }
 
 /**
+ * Invite contact nav key. Launches the invite-contact flow.
+ *
+ * @property isFromAchievement whether the flow was opened from the achievements screen.
+ */
+@Serializable
+data class InviteContactNavKey(
+    val isFromAchievement: Boolean = false,
+) : NavKey {
+    companion object {
+        const val KEY: String = "invite_contact"
+    }
+}
+
+/**
  * Add chat participants nav key. Opens the MEGA-contacts multi-select picker filtered to the
  * contacts that are not already participants of chat [chatId]; the selected contact emails are
  * published as a `List<String>` under [KEY].

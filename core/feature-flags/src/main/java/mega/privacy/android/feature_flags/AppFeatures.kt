@@ -84,14 +84,6 @@ enum class AppFeatures(override val description: String, private val defaultValu
     ),
 
     /**
-     * New contact request screen
-     */
-    NewContactRequestScreen(
-        "Enable new contact request screen",
-        false
-    ),
-
-    /**
      * Enables prefetch timeline photos as soon initialization screen completed
      */
     PrefetchTimeline(

@@ -407,11 +407,6 @@ data class GetLinkNavKey(
 ) : NavKey
 
 @Serializable
-data class InviteContactNavKey(
-    val isFromAchievement: Boolean = false,
-) : NavKey
-
-@Serializable
 data class LegacyVideoToPlaylistNavKey(
     val nodeHandle: Long,
 ) : NavKey {
