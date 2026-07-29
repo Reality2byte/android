@@ -408,16 +408,6 @@ class ShareLinkScreenTest {
     }
 
     @Test
-    fun `test that the share button shares the password link when a password is set`() {
-        var shared: String? = null
-        setContent(uiState = passwordData, onShareLink = { shared = it })
-
-        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
-
-        assertThat(shared).isEqualTo(passwordData.linkWithPassword)
-    }
-
-    @Test
     fun `test that the share button shares every link joined by newlines for multiple nodes`() {
         var shared: String? = null
         setContent(uiState = multiNodeData, onShareLink = { shared = it })
@@ -617,6 +607,73 @@ class ShareLinkScreenTest {
             .performClick()
 
         assertThat(analyticsRule.events).contains(LinkHiddenItemsCancelButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that tapping Share shares the link directly when no password is set`() {
+        var shared: String? = null
+        setContent(uiState = data, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DIALOG_TAG).assertDoesNotExist()
+        assertThat(shared).isEqualTo(data.primary.link)
+    }
+
+    @Test
+    fun `test that tapping Share asks about the password when the link is password protected`() {
+        var shared: String? = null
+        setContent(uiState = passwordData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_password_dialog_title)
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_password_dialog_message)
+        ).assertIsDisplayed()
+        assertThat(shared).isNull()
+    }
+
+    @Test
+    fun `test that choosing Share on the password dialog shares the link and the password`() {
+        var shared: String? = null
+        setContent(uiState = passwordData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_share)).performClick()
+
+        assertThat(shared).isEqualTo(
+            context.getString(
+                sharedR.string.share_link_with_password,
+                passwordData.linkWithPassword,
+                passwordData.password,
+            )
+        )
+    }
+
+    @Test
+    fun `test that choosing Dismiss on the password dialog shares only the link`() {
+        var shared: String? = null
+        setContent(uiState = passwordData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_dismiss_dialog))
+            .performClick()
+
+        assertThat(shared).isEqualTo(passwordData.linkWithPassword)
+    }
+
+    @Test
+    fun `test that the password dialog is not shown in the multi-node flow`() {
+        var shared: String? = null
+        setContent(uiState = multiNodeData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DIALOG_TAG).assertDoesNotExist()
+        assertThat(shared).isNotNull()
     }
 
     private fun setContent(

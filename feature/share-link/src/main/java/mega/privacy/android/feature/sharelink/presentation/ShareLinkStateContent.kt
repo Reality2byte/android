@@ -412,6 +412,13 @@ internal fun ShareLinkUiState.Data.shareableLinksText(): String =
     }
 
 /**
+ * The password to offer alongside the link when sharing, or null when there is none to offer.
+ * Password protection is single-node only, so the multi-node flow never asks.
+ */
+internal val ShareLinkUiState.Data.sharePassword: String?
+    get() = password?.takeIf { isPasswordSet && !isMultiNode }
+
+/**
  * The link shown and shared for a single node: the password-protected link when a password is set,
  * the key-less link when the key is shared separately, otherwise the full link.
  */

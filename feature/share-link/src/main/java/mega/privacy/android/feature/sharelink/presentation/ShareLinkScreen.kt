@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
@@ -14,6 +18,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.button.AnchoredButtonGroup
+import mega.android.core.ui.components.dialogs.BasicDialog
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
 import mega.android.core.ui.extensions.LaunchedOnceEffect
@@ -77,6 +82,7 @@ fun ShareLinkScreen(
     onCopyrightDisagreed: () -> Unit = {},
 ) {
     val linkCount = (uiState as? ShareLinkUiState.Data)?.handles?.size ?: 1
+    var showSharePasswordDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedOnceEffect(Unit) {
         Analytics.tracker.trackEvent(ShareLinkScreenEvent)
@@ -127,7 +133,11 @@ fun ShareLinkScreen(
                                     text = shareText,
                                     onClick = {
                                         Analytics.tracker.trackEvent(LinkShareButtonPressedEvent)
-                                        onShareLink(uiState.shareableLinksText())
+                                        if (uiState.sharePassword != null) {
+                                            showSharePasswordDialog = true
+                                        } else {
+                                            onShareLink(uiState.shareableLinksText())
+                                        }
                                     },
                                 )
                             },
@@ -226,6 +236,32 @@ fun ShareLinkScreen(
             }
         }
     }
+
+    val data = uiState as? ShareLinkUiState.Data
+    val sharePassword = data?.sharePassword
+    if (showSharePasswordDialog && data != null && sharePassword != null) {
+        val linkAndPassword = stringResource(
+            sharedR.string.share_link_with_password,
+            data.shareableLinksText(),
+            sharePassword,
+        )
+        BasicDialog(
+            modifier = Modifier.testTag(SHARE_LINK_PASSWORD_DIALOG_TAG),
+            title = stringResource(sharedR.string.share_link_password_dialog_title),
+            description = stringResource(sharedR.string.share_link_password_dialog_message),
+            positiveButtonText = stringResource(sharedR.string.general_share),
+            onPositiveButtonClicked = {
+                showSharePasswordDialog = false
+                onShareLink(linkAndPassword)
+            },
+            negativeButtonText = stringResource(sharedR.string.general_dismiss_dialog),
+            onNegativeButtonClicked = {
+                showSharePasswordDialog = false
+                onShareLink(data.shareableLinksText())
+            },
+            onDismiss = { showSharePasswordDialog = false },
+        )
+    }
 }
 
 /**
@@ -253,3 +289,4 @@ internal const val SHARE_LINK_ERROR_TAG = "share_link_screen:error"
 internal const val SHARE_LINK_COPYRIGHT_TAG = "share_link_screen:copyright"
 internal const val SHARE_LINK_COPYRIGHT_AGREE_TAG = "share_link_screen:copyright_agree"
 internal const val SHARE_LINK_COPYRIGHT_DISAGREE_TAG = "share_link_screen:copyright_disagree"
+internal const val SHARE_LINK_PASSWORD_DIALOG_TAG = "share_link_screen:share_password_dialog"
