@@ -22,9 +22,13 @@ import java.util.Date
  *
  * Renders a full-screen empty placeholder while [SubscriptionOfferState.offerSubscription] is null.
  *
+ * When more than one plan carries the campaign, a "View all plans" text button is shown below the
+ * buy CTA so the other discounted plans stay reachable.
+ *
  * @param uiState the offer to promote
  * @param onBuyClick called with the promoted [Subscription] when the buy CTA is tapped
  * @param onDismiss called when the dismiss (X) icon is tapped
+ * @param onViewAllPlansClick called when the "View all plans" text button is tapped
  * @param modifier
  */
 @Composable
@@ -32,6 +36,7 @@ internal fun SubscriptionOfferScreen(
     uiState: SubscriptionOfferState,
     onBuyClick: (Subscription) -> Unit,
     onDismiss: () -> Unit,
+    onViewAllPlansClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isMonthly = uiState.isMonthly
@@ -120,5 +125,8 @@ internal fun SubscriptionOfferScreen(
         onDismissClick = onDismiss,
         modifier = modifier,
         monthlyPriceText = monthlyPriceText,
+        viewAllPlansText = stringResource(sharedR.string.subscription_quota_view_all_plans)
+            .takeIf { uiState.hasMultipleOffers },
+        onViewAllPlansClick = onViewAllPlansClick,
     )
 }

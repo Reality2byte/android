@@ -30,7 +30,7 @@ class ShouldShowSubscriptionOfferUseCase @Inject constructor(
     suspend operator fun invoke(): Boolean {
         val offer = getRecommendedSubscriptionWithOfferUseCase() ?: return false
         val lastShownTime = billingRepository.getSubscriptionOfferLastShownTime() ?: return true
-        val reshowInterval = offer.offerReshowInterval ?: return false
+        val reshowInterval = offer.subscription.offerReshowInterval ?: return false
         return getCurrentTimeInMillisUseCase() - lastShownTime >=
                 reshowInterval.seconds.inWholeMilliseconds
     }

@@ -7,7 +7,7 @@ import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.usecase.domainmigration.GetDomainNameUseCase.Companion.MEGA_APP_DOMAIN_NAME
 import mega.privacy.android.domain.usecase.domainmigration.GetDomainNameUseCase.Companion.MEGA_NZ_DOMAIN_NAME
 import mega.privacy.android.navigation.contract.NavigationHandler
-import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
+import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
 import mega.privacy.android.navigation.destination.WebSiteNavKey
 import mega.privacy.mobile.analytics.event.PwmSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.TransferItSmartBannerItemSelectedEvent
@@ -33,7 +33,7 @@ object BannerClickHandler {
     ) {
         when {
             url == SUBSCRIPTION_OFFER_BANNER_URL -> {
-                navigationHandler.navigate(UpgradeAccountNavKey(isUpgrade = true))
+                navigationHandler.navigate(SubscriptionOfferNavKey)
             }
 
             matchesVpnUrl(url) -> {

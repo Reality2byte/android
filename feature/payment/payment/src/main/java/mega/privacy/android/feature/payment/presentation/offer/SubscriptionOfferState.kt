@@ -10,10 +10,13 @@ import mega.privacy.android.feature.payment.model.LocalisedSubscription
  * higher-tier plan carries an offer
  * @property isMonthly whether the promoted offer is on the monthly billing period
  * @property offerValidUntil the offer expiry as epoch seconds, null to hide the countdown
+ * @property hasMultipleOffers whether the campaign discounts more than one plan, in which case the
+ * screen offers a way to see all plans instead of only the promoted one
  */
 data class SubscriptionOfferState(
     val isLoading: Boolean = true,
     val offerSubscription: LocalisedSubscription? = null,
     val isMonthly: Boolean = true,
     val offerValidUntil: Long? = null,
+    val hasMultipleOffers: Boolean = false,
 )

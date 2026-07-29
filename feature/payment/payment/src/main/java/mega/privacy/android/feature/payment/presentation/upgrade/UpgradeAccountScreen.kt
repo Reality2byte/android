@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -67,6 +69,7 @@ import mega.privacy.android.domain.entity.account.OfferPeriod
 import mega.privacy.android.feature.payment.components.AdditionalBenefitProPlanView
 import mega.privacy.android.feature.payment.components.BuyPlanBottomBar
 import mega.privacy.android.feature.payment.components.FreePlanCard
+import mega.privacy.android.feature.payment.components.HeaderImageFade
 import mega.privacy.android.feature.payment.components.NewFeatureRow
 import mega.privacy.android.feature.payment.components.TEST_TAG_FREE_PLAN_CARD
 import mega.privacy.android.feature.payment.components.UpgradeAccountScreenTopBar
@@ -395,6 +398,7 @@ fun UpgradeAccountScreen(
             PortraitUpgradeAccountLayout(
                 showFullSkeleton = showFullSkeleton,
                 showOfferBanner = showOfferBanner,
+                showHeaderFade = isSubscriptionRevampEnabled,
                 lazyListState = lazyListState,
                 innerPadding = innerPadding,
                 content = bodyContent,
@@ -428,13 +432,15 @@ private fun UpgradeAccountHeaderImage(
 }
 
 /**
- * Default single-column layout: the header image scrolls as the first item above [content]. The
- * image is omitted while the full-page skeleton is shown.
+ * Default single-column layout: the header image scrolls as the first item above [content], its
+ * bottom edge fading into the page background when [showHeaderFade] is set (DSN-3131). The image is
+ * omitted while the full-page skeleton is shown.
  */
 @Composable
 private fun PortraitUpgradeAccountLayout(
     showFullSkeleton: Boolean,
     showOfferBanner: Boolean,
+    showHeaderFade: Boolean,
     lazyListState: LazyListState,
     innerPadding: PaddingValues,
     content: LazyListScope.() -> Unit,
@@ -449,12 +455,17 @@ private fun PortraitUpgradeAccountLayout(
     ) {
         if (!showFullSkeleton) {
             item("image_header") {
-                UpgradeAccountHeaderImage(
-                    showOfferBanner = showOfferBanner,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(HEADER_IMAGE_HEIGHT),
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    UpgradeAccountHeaderImage(
+                        showOfferBanner = showOfferBanner,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(HEADER_IMAGE_HEIGHT),
+                    )
+                    if (showHeaderFade) {
+                        HeaderImageFade(modifier = Modifier.align(Alignment.BottomCenter))
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

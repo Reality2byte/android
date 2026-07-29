@@ -79,7 +79,7 @@ class BannerWidgetViewModel @Inject constructor(
     private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? {
         if (monitorSubscriptionOfferBannerClosedUseCase().first()) return null
         return getRecommendedSubscriptionWithOfferUseCase()
-            ?.let { subscriptionOfferBannerMapper(it, Locale.getDefault()) }
+            ?.let { subscriptionOfferBannerMapper(it.subscription, Locale.getDefault()) }
     }
 
     /**

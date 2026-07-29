@@ -5,10 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import mega.privacy.android.analytics.test.AnalyticsTestExtension
 import mega.privacy.android.navigation.contract.NavigationHandler
+import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
 import mega.privacy.android.navigation.destination.WebSiteNavKey
 import mega.privacy.mobile.analytics.event.PwmSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.TransferItSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.VpnSmartBannerItemSelectedEvent
+import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -221,6 +223,17 @@ class BannerClickHandlerTest {
 
         assertTrue(analyticsExtension.events.contains(TransferItSmartBannerItemSelectedEvent))
         verify(navigationHandler).navigate(WebSiteNavKey(transferItUrl))
+    }
+
+    @Test
+    fun `test that handleBannerClick for the subscription offer banner opens the offer landing screen`() {
+        BannerClickHandler.handleBannerClick(
+            context,
+            navigationHandler,
+            SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL,
+        )
+
+        verify(navigationHandler).navigate(SubscriptionOfferNavKey)
     }
 
     @Test

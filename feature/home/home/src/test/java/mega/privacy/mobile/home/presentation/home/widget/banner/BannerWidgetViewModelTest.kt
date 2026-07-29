@@ -12,6 +12,7 @@ import mega.privacy.android.domain.entity.Currency
 import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.account.CurrencyAmount
 import mega.privacy.android.domain.entity.banner.PromotionalBanner
+import mega.privacy.android.domain.entity.billing.RecommendedSubscriptionOffer
 import mega.privacy.android.domain.usecase.banner.DismissBannerUseCase
 import mega.privacy.android.domain.usecase.banner.GetPromoBannersUseCase
 import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
@@ -118,7 +120,10 @@ class BannerWidgetViewModelTest {
     }
 
     private suspend fun stubOffer() {
-        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(offerSubscription)
+        val offer = mock<RecommendedSubscriptionOffer> {
+            on { subscription } doReturn offerSubscription
+        }
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(offer)
         whenever(subscriptionOfferBannerMapper(any(), any())).thenReturn(offerBanner)
     }
 

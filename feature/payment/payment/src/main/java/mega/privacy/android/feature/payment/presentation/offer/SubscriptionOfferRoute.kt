@@ -17,10 +17,12 @@ import mega.privacy.android.feature.payment.presentation.billing.BillingViewMode
  * is unavailable or the purchase completes.
  *
  * @param onBack closes the screen
+ * @param onViewAllPlans opens the full list of plans, shown when several plans carry the campaign
  */
 @Composable
 internal fun SubscriptionOfferRoute(
     onBack: () -> Unit,
+    onViewAllPlans: () -> Unit,
     viewModel: SubscriptionOfferViewModel = hiltViewModel(),
     billingViewModel: BillingViewModel = hiltViewModel(),
 ) {
@@ -56,5 +58,6 @@ internal fun SubscriptionOfferRoute(
             }
         },
         onDismiss = onBack,
+        onViewAllPlansClick = onViewAllPlans,
     )
 }

@@ -130,7 +130,7 @@ class MenuViewModel @Inject constructor(
     private suspend fun getSubscriptionOfferBanner(): SubscriptionOfferBannerUiModel? {
         if (monitorSubscriptionOfferMenuBannerClosedUseCase().first()) return null
         return getRecommendedSubscriptionWithOfferUseCase()
-            ?.let { subscriptionOfferBannerMapper(it, Locale.getDefault()) }
+            ?.let { subscriptionOfferBannerMapper(it.subscription, Locale.getDefault()) }
     }
 
     /**

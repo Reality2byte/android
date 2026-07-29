@@ -15,7 +15,7 @@ import javax.inject.Inject
 /**
  * ViewModel for the subscription offer landing screen. Loads the cheapest higher-tier plan that
  * carries an active mobile offer and exposes it as a [mega.privacy.android.feature.payment.model.LocalisedSubscription]
- * on the billing period the offer applies to.
+ * on the billing period the offer applies to, flagging whether the campaign discounts other plans too.
  */
 @HiltViewModel
 class SubscriptionOfferViewModel @Inject constructor(
@@ -36,13 +36,14 @@ class SubscriptionOfferViewModel @Inject constructor(
 
     private fun loadOffer() {
         viewModelScope.launch {
-            val subscription = runCatching { getRecommendedSubscriptionWithOfferUseCase() }
+            val offer = runCatching { getRecommendedSubscriptionWithOfferUseCase() }
                 .onFailure { Timber.e(it, "Failed to load the recommended offer") }
                 .getOrNull()
-            if (subscription == null) {
+            if (offer == null) {
                 _state.update { it.copy(isLoading = false) }
                 return@launch
             }
+            val subscription = offer.subscription
             val isMonthly = subscription.sku.endsWith(MONTHLY_SKU_SUFFIX)
             _state.update {
                 it.copy(
@@ -53,6 +54,7 @@ class SubscriptionOfferViewModel @Inject constructor(
                     ),
                     isMonthly = isMonthly,
                     offerValidUntil = subscription.offerValidUntil,
+                    hasMultipleOffers = offer.hasMultipleOffers,
                 )
             }
         }

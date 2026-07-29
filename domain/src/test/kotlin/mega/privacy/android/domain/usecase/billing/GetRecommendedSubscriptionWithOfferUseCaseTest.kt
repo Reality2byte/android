@@ -65,7 +65,7 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI, proII))
         val expected = stubMapping(proI, Skus.SKU_PRO_I_MONTH)
 
-        assertThat(underTest.invoke()).isEqualTo(expected)
+        assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
     }
 
     @Test
@@ -79,7 +79,7 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proIMonthly, proIYearly))
         val expected = stubMapping(proIYearly, Skus.SKU_PRO_I_YEAR)
 
-        assertThat(underTest.invoke()).isEqualTo(expected)
+        assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
     }
 
     @Test
@@ -101,7 +101,7 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
             )
             val expected = stubMapping(proIMonthly, Skus.SKU_PRO_I_MONTH)
 
-            assertThat(underTest.invoke()).isEqualTo(expected)
+            assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
         }
 
     @Test
@@ -147,7 +147,7 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         stub(currentPlan = AccountType.FREE, options = listOf(lite, proI))
         val expected = stubMapping(lite, Skus.SKU_PRO_LITE_MONTH)
 
-        assertThat(underTest.invoke()).isEqualTo(expected)
+        assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
     }
 
     @Test
@@ -173,15 +173,66 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
             subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
         val proI = subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
         stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
-        whenever(billingRepository.querySkus(any())).thenReturn(
-            listOf(
-                megaSku(Skus.SKU_PRO_LITE_MONTH, hasRealOffer = false),
-                megaSku(Skus.SKU_PRO_I_MONTH, hasRealOffer = false),
-            )
+        val productsWithoutOffers = listOf(
+            megaSku(Skus.SKU_PRO_LITE_MONTH, hasRealOffer = false),
+            megaSku(Skus.SKU_PRO_I_MONTH, hasRealOffer = false),
         )
+        whenever(billingRepository.querySkus(any())).thenReturn(productsWithoutOffers)
 
         assertThat(underTest.invoke()).isNull()
     }
+
+    @Test
+    fun `test that flags multiple offers when two plans have an offer`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+        val proII =
+            subscriptionOption(AccountType.PRO_II, Skus.SKU_PRO_II_MONTH, 1999, offer = true)
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI, proII))
+        stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+        assertThat(underTest.invoke()?.hasMultipleOffers).isTrue()
+    }
+
+    @Test
+    fun `test that flags multiple offers when the other discounted plan is not an upgrade`() =
+        runTest {
+            val lite =
+                subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = true)
+            val proI =
+                subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+            val proII =
+                subscriptionOption(AccountType.PRO_II, Skus.SKU_PRO_II_MONTH, 1999, offer = false)
+            stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI, proII))
+            stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+            assertThat(underTest.invoke()?.hasMultipleOffers).isTrue()
+        }
+
+    @Test
+    fun `test that does not flag multiple offers when only one plan has an offer`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+        stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+        assertThat(underTest.invoke()?.hasMultipleOffers).isFalse()
+    }
+
+    @Test
+    fun `test that does not flag multiple offers when both periods of one plan have an offer`() =
+        runTest {
+            val proIMonthly =
+                subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+            val proIYearly =
+                subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_YEAR, 9999, offer = true)
+            stub(currentPlan = AccountType.FREE, options = listOf(proIMonthly, proIYearly))
+            stubMapping(proIMonthly, Skus.SKU_PRO_I_MONTH)
+
+            assertThat(underTest.invoke()?.hasMultipleOffers).isFalse()
+        }
 
     private fun subscriptionOption(
         type: AccountType,
@@ -202,19 +253,10 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         whenever(billingRepository.querySkus(any())).thenReturn(products)
     }
 
-    private fun megaSku(sku: String, hasRealOffer: Boolean) = MegaSku(
-        sku = sku,
-        priceAmountMicros = 0L,
-        priceCurrencyCode = "EUR",
-        offers = if (hasRealOffer) listOf(offerDetail) else emptyList(),
-    )
-
-    private val offerDetail = OfferDetail(
-        offerId = "offer",
-        discountedPriceMonthly = null,
-        discountPercentage = null,
-        offerPeriod = null,
-    )
+    private fun megaSku(sku: String, hasRealOffer: Boolean) = mock<MegaSku> {
+        on { this.sku } doReturn sku
+        on { offers } doReturn if (hasRealOffer) listOf(mock<OfferDetail>()) else emptyList()
+    }
 
     /**
      * Stubs the local-pricing lookup and mapper for [option] so the use case resolves to a fresh

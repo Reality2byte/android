@@ -24,8 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -75,6 +73,9 @@ import kotlin.time.Duration.Companion.seconds
  * @param modifier
  * @param monthlyPriceText the per-month price shown above the yearly total (e.g. "€4.99/month"),
  * null for monthly plans
+ * @param viewAllPlansText label of the text button below the CTA that opens the full list of plans,
+ * null when only the promoted plan carries the campaign
+ * @param onViewAllPlansClick called when the view-all-plans text button is tapped
  */
 @Composable
 fun SubscriptionOfferScreenContent(
@@ -92,6 +93,8 @@ fun SubscriptionOfferScreenContent(
     onDismissClick: () -> Unit,
     modifier: Modifier = Modifier,
     monthlyPriceText: String? = null,
+    viewAllPlansText: String? = null,
+    onViewAllPlansClick: () -> Unit = {},
 ) {
     MegaScaffold(
         modifier = modifier
@@ -102,6 +105,8 @@ fun SubscriptionOfferScreenContent(
             BuyPlanBottomBar(
                 text = buyButtonText,
                 onClick = onBuyClick,
+                textOnlyButtonText = viewAllPlansText,
+                onTextOnlyButtonClick = onViewAllPlansClick,
                 modifier = Modifier.navigationBarsPadding(),
             )
         },
@@ -123,17 +128,8 @@ fun SubscriptionOfferScreenContent(
                         .height(BANNER_HEIGHT)
                         .testTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_BANNER),
                 )
-                Box(
-                    modifier = Modifier
-                        .padding(top = BANNER_HEIGHT - GRADIENT_HEIGHT)
-                        .fillMaxWidth()
-                        .height(GRADIENT_HEIGHT)
-                        .background(
-                            Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                GRADIENT_SOLID_STOP to DSTokens.colors.background.pageBackground,
-                            )
-                        ),
+                HeaderImageFade(
+                    modifier = Modifier.padding(top = BANNER_HEIGHT - HEADER_IMAGE_FADE_HEIGHT),
                 )
                 Column(
                     modifier = Modifier
@@ -238,19 +234,12 @@ private fun OfferCountdownSection(
 }
 
 private val BANNER_HEIGHT = 220.dp
-private val GRADIENT_HEIGHT = 86.dp
 
 /**
  * Header content overlaps the bottom of the banner artwork, replicating the Figma layout where the
  * title sits on the gradient fade.
  */
 private val HEADER_TOP = 160.dp
-
-/**
- * Gradient stop where the fade becomes fully opaque, replicating the Figma fade which reaches the
- * page background colour at ~73% of its height.
- */
-private const val GRADIENT_SOLID_STOP = 0.73f
 
 @CombinedThemePreviews
 @Composable
@@ -270,6 +259,29 @@ private fun SubscriptionOfferScreenContentPreview() {
             buyButtonText = "Get Pro I",
             onBuyClick = {},
             onDismissClick = {},
+        )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun SubscriptionOfferScreenContentMultipleOffersPreview() {
+    AndroidTheme(isSystemInDarkTheme()) {
+        SubscriptionOfferScreenContent(
+            campaignText = "Black Friday: 50% off",
+            validUntil = System.currentTimeMillis() / 1000L +
+                    28L * 24L * 3600L + 12L * 3600L + 90L,
+            validUntilText = "valid until July 11, 2026",
+            planName = "Pro I",
+            priceText = "€4.99/month",
+            originalPriceText = "€9.99",
+            discountDescriptionText = "Billed at €4.99/month for the first 12 months, €9.99/month after",
+            storageText = "2 TB cloud storage",
+            transferText = "2 TB transfer",
+            buyButtonText = "Get Pro I",
+            onBuyClick = {},
+            onDismissClick = {},
+            viewAllPlansText = "View all plans",
         )
     }
 }

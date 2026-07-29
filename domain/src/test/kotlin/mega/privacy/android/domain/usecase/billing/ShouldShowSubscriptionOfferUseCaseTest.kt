@@ -3,6 +3,7 @@ package mega.privacy.android.domain.usecase.billing
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.domain.entity.Subscription
+import mega.privacy.android.domain.entity.billing.RecommendedSubscriptionOffer
 import mega.privacy.android.domain.repository.BillingRepository
 import mega.privacy.android.domain.usecase.environment.GetCurrentTimeInMillisUseCase
 import org.junit.jupiter.api.BeforeAll
@@ -89,7 +90,10 @@ class ShouldShowSubscriptionOfferUseCaseTest {
         val subscription = mock<Subscription> {
             on { offerReshowInterval } doReturn reshowInterval
         }
-        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(subscription)
+        val offer = mock<RecommendedSubscriptionOffer> {
+            on { this.subscription } doReturn subscription
+        }
+        whenever(getRecommendedSubscriptionWithOfferUseCase()).thenReturn(offer)
         whenever(billingRepository.getSubscriptionOfferLastShownTime()).thenReturn(lastShownTime)
     }
 

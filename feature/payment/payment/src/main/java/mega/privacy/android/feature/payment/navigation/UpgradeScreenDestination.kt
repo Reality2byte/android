@@ -51,6 +51,11 @@ fun EntryProviderScope<NavKey>.upgradeScreens(
     ) {
         SubscriptionOfferRoute(
             onBack = navigationHandler::back,
+            onViewAllPlans = {
+                navigationHandler.navigate(
+                    UpgradeAccountNavKey(isUpgrade = true)
+                )
+            },
         )
     }
 }

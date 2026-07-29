@@ -23,6 +23,8 @@ class SubscriptionOfferScreenContentTest {
         validUntilText: String? = "valid until July 11, 2026",
         onBuyClick: () -> Unit = {},
         onDismissClick: () -> Unit = {},
+        viewAllPlansText: String? = null,
+        onViewAllPlansClick: () -> Unit = {},
     ) {
         composeRule.setContent {
             SubscriptionOfferScreenContent(
@@ -38,6 +40,8 @@ class SubscriptionOfferScreenContentTest {
                 buyButtonText = "Get Pro I",
                 onBuyClick = onBuyClick,
                 onDismissClick = onDismissClick,
+                viewAllPlansText = viewAllPlansText,
+                onViewAllPlansClick = onViewAllPlansClick,
             )
         }
     }
@@ -58,6 +62,12 @@ class SubscriptionOfferScreenContentTest {
         composeRule.onNodeWithText("Pro I").assertExists()
         composeRule.onNodeWithTag(TEST_TAG_BUY_BUTTON).assertExists()
         composeRule.onNodeWithText("Get Pro I").assertExists()
+    }
+
+    @Test
+    fun `test that SubscriptionOfferScreenContent fades the banner into the page background`() {
+        setContent()
+        composeRule.onNodeWithTag(TEST_TAG_HEADER_IMAGE_FADE).assertExists()
     }
 
     @Test
@@ -98,6 +108,27 @@ class SubscriptionOfferScreenContentTest {
         var clicks = 0
         setContent(onDismissClick = { clicks++ })
         composeRule.onNodeWithTag(TEST_TAG_SUBSCRIPTION_OFFER_SCREEN_DISMISS).performClick()
+        assertThat(clicks).isEqualTo(1)
+    }
+
+    @Test
+    fun `test that SubscriptionOfferScreenContent hides the view all plans button when text is null`() {
+        setContent()
+        composeRule.onNodeWithTag(TEST_TAG_BUY_PLAN_TEXT_ONLY_BUTTON).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that SubscriptionOfferScreenContent shows the view all plans button when text is set`() {
+        setContent(viewAllPlansText = "View all plans")
+        composeRule.onNodeWithTag(TEST_TAG_BUY_PLAN_TEXT_ONLY_BUTTON).assertIsDisplayed()
+        composeRule.onNodeWithText("View all plans").assertExists()
+    }
+
+    @Test
+    fun `test that SubscriptionOfferScreenContent view all plans button triggers onViewAllPlansClick`() {
+        var clicks = 0
+        setContent(viewAllPlansText = "View all plans", onViewAllPlansClick = { clicks++ })
+        composeRule.onNodeWithTag(TEST_TAG_BUY_PLAN_TEXT_ONLY_BUTTON).performClick()
         assertThat(clicks).isEqualTo(1)
     }
 }
