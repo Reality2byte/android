@@ -4,10 +4,12 @@ import mega.privacy.android.shared.resources.R as SharedR
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -42,7 +44,6 @@ import mega.privacy.android.shared.original.core.ui.theme.extensions.subtitle1me
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.feature.payment.presentation.cancelaccountplan.model.UICancellationSurveyAnswer
 import mega.privacy.android.shared.original.core.ui.utils.isScreenOrientationLandscape
-import mega.privacy.android.shared.original.core.ui.utils.isTablet
 
 @Composable
 internal fun CancelSubscriptionSurveyView(
@@ -60,170 +61,163 @@ internal fun CancelSubscriptionSurveyView(
     val scrollState = rememberScrollState()
     val selectedOptionString = selectedOptionResourceId?.let { stringResource(id = it) } ?: ""
 
-    val horizontalPadding = if (isTablet()) {
-        if (isScreenOrientationLandscape()) {
-            390.dp
-        } else {
-            190.dp
-        }
-    } else {
-        if (isScreenOrientationLandscape()) {
-            48.dp
-        } else {
-            24.dp
-        }
-    }
+    val horizontalPadding = if (isScreenOrientationLandscape()) 48.dp else 24.dp
 
     Column(
         modifier = Modifier
             .systemBarsPadding()
-            .fillMaxWidth()
-            .verticalScroll(scrollState)
-            .padding(
-                horizontal = horizontalPadding, vertical = 8.dp
-            ),
+            .fillMaxSize()
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MegaText(
-            text = stringResource(id = SharedR.string.account_cancel_subscription_survey_title),
-            textColor = TextColor.Primary,
-            style = MaterialTheme.typography.h6Medium,
-            textAlign = TextAlign.Center,
+        Column(
             modifier = Modifier
-                .padding(top = 30.dp)
-                .testTag(TITLE_TEST_TAG),
-        )
-        MegaText(
-            text = stringResource(id = SharedR.string.account_cancel_subscription_survey_cancellation_message),
-            textColor = TextColor.Secondary,
-            style = MaterialTheme.typography.subtitle1medium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 20.dp)
-                .testTag(SUBTITLE_TEST_TAG),
-        )
-
-        if (showError) {
-            PromptMessageBanner(
-                modifier = Modifier
-                    .padding(top = 20.dp)
-                    .testTag(PROMPT_MESSAGE_BANNER_TEST_TAG),
-                message = stringResource(
-                    id = SharedR.string.account_cancel_subscription_survey_no_reason_selected
-                )
-            )
-        }
-
-        SurveyOptions(
-            possibleCancellationReasons = possibleCancellationReasons,
-            selectedOptionId = selectedOptionId,
-            onItemClicked = { reason ->
-                selectedOptionId = reason.answerId
-                selectedOptionResourceId =
-                    if (selectedOptionId == UICancellationSurveyAnswer.Answer8.answerId) {
-                        null
-                    } else {
-                        reason.answerValue
-                    }
-                showError = false
-                othersErrorResourceId = null
-            },
-            modifier = Modifier
-                .padding(top = 20.dp)
-                .testTag(SURVEY_OPTIONS_GROUP_TEST_TAG)
-        )
-
-        if (selectedOptionId == possibleCancellationReasons.last().answerId) {
-            GenericDescriptionWithCharacterLimitTextField(
-                maxCharacterLimit = MAX_CHARACTER_LIMIT,
-                errorMessage = othersErrorResourceId?.let { stringResource(id = it) },
-                value = othersDescriptionText,
-                modifier = Modifier
-                    .padding(top = 10.dp)
-                    .testTag(CANCEL_SUBSCRIPTION_SURVEY_OTHER_TEXT_FIELD_TEST_TAG),
-                initiallyFocused = true,
-                onValueChange = {
-                    othersDescriptionText = it
-                    othersErrorResourceId = null
-                },
-                onClearText = {
-                    othersDescriptionText = ""
-                    othersErrorResourceId = null
-                }
-            )
-        }
-
-        Row(
-            modifier = Modifier
+                .widthIn(max = CONTENT_MAX_WIDTH.dp)
                 .fillMaxWidth()
-                .padding(top = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = horizontalPadding, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MegaCheckbox(
-                checked = allowContact,
-                onCheckedChange = { allowContact = it },
-                rounded = false,
+            MegaText(
+                text = stringResource(id = SharedR.string.account_cancel_subscription_survey_title),
+                textColor = TextColor.Primary,
+                style = MaterialTheme.typography.h6Medium,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .size(20.dp)
-                    .testTag(CANCEL_SUBSCRIPTION_SURVEY_ALLOW_CONTACT_CHECKBOX_TEST_TAG),
+                    .padding(top = 30.dp)
+                    .testTag(TITLE_TEST_TAG),
             )
             MegaText(
-                text = stringResource(id = SharedR.string.account_cancel_subscription_survey_allow_contact),
-                textColor = TextColor.Primary,
+                text = stringResource(id = SharedR.string.account_cancel_subscription_survey_cancellation_message),
+                textColor = TextColor.Secondary,
                 style = MaterialTheme.typography.subtitle1medium,
-                textAlign = TextAlign.Start,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .testTag(CANCEL_SUBSCRIPTION_SURVEY_ALLOW_CONTACT_TEXT_TEST_TAG),
-            )
-        }
-        Column {
-            RaisedDefaultMegaButton(
+                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(top = 20.dp)
-                    .fillMaxWidth()
-                    .testTag(CANCEL_SUBSCRIPTION_BUTTON_TEST_TAG),
-                text = stringResource(
-                    id = SharedR.string.account_cancel_subscription_survey_cancel_button
-                ),
-                onClick = {
-                    when (selectedOptionId) {
-                        NONE -> showError = true
-                        UICancellationSurveyAnswer.Answer8.answerId -> {
-                            showError = false
-                            othersErrorResourceId =
-                                if (othersDescriptionText.length < MIN_CHARACTER_LIMIT) {
-                                    getOtherErrorMessageResource(othersDescriptionText)
-                                } else {
-                                    null
-                                }
+                    .testTag(SUBTITLE_TEST_TAG),
+            )
 
-                            if (othersDescriptionText.length <= MAX_CHARACTER_LIMIT && othersErrorResourceId == null) {
+            if (showError) {
+                PromptMessageBanner(
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .testTag(PROMPT_MESSAGE_BANNER_TEST_TAG),
+                    message = stringResource(
+                        id = SharedR.string.account_cancel_subscription_survey_no_reason_selected
+                    )
+                )
+            }
+
+            SurveyOptions(
+                possibleCancellationReasons = possibleCancellationReasons,
+                selectedOptionId = selectedOptionId,
+                onItemClicked = { reason ->
+                    selectedOptionId = reason.answerId
+                    selectedOptionResourceId =
+                        if (selectedOptionId == UICancellationSurveyAnswer.Answer8.answerId) {
+                            null
+                        } else {
+                            reason.answerValue
+                        }
+                    showError = false
+                    othersErrorResourceId = null
+                },
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .testTag(SURVEY_OPTIONS_GROUP_TEST_TAG)
+            )
+
+            if (selectedOptionId == possibleCancellationReasons.last().answerId) {
+                GenericDescriptionWithCharacterLimitTextField(
+                    maxCharacterLimit = MAX_CHARACTER_LIMIT,
+                    errorMessage = othersErrorResourceId?.let { stringResource(id = it) },
+                    value = othersDescriptionText,
+                    modifier = Modifier
+                        .padding(top = 10.dp)
+                        .testTag(CANCEL_SUBSCRIPTION_SURVEY_OTHER_TEXT_FIELD_TEST_TAG),
+                    initiallyFocused = true,
+                    onValueChange = {
+                        othersDescriptionText = it
+                        othersErrorResourceId = null
+                    },
+                    onClearText = {
+                        othersDescriptionText = ""
+                        othersErrorResourceId = null
+                    }
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MegaCheckbox(
+                    checked = allowContact,
+                    onCheckedChange = { allowContact = it },
+                    rounded = false,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .testTag(CANCEL_SUBSCRIPTION_SURVEY_ALLOW_CONTACT_CHECKBOX_TEST_TAG),
+                )
+                MegaText(
+                    text = stringResource(id = SharedR.string.account_cancel_subscription_survey_allow_contact),
+                    textColor = TextColor.Primary,
+                    style = MaterialTheme.typography.subtitle1medium,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .testTag(CANCEL_SUBSCRIPTION_SURVEY_ALLOW_CONTACT_TEXT_TEST_TAG),
+                )
+            }
+            Column {
+                RaisedDefaultMegaButton(
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .fillMaxWidth()
+                        .testTag(CANCEL_SUBSCRIPTION_BUTTON_TEST_TAG),
+                    text = stringResource(
+                        id = SharedR.string.account_cancel_subscription_survey_cancel_button
+                    ),
+                    onClick = {
+                        when (selectedOptionId) {
+                            NONE -> showError = true
+                            UICancellationSurveyAnswer.Answer8.answerId -> {
+                                showError = false
+                                othersErrorResourceId =
+                                    if (othersDescriptionText.length < MIN_CHARACTER_LIMIT) {
+                                        getOtherErrorMessageResource(othersDescriptionText)
+                                    } else {
+                                        null
+                                    }
+
+                                if (othersDescriptionText.length <= MAX_CHARACTER_LIMIT && othersErrorResourceId == null) {
+                                    onCancelSubscriptionButtonClicked(
+                                        othersDescriptionText,
+                                        if (allowContact) 1 else 0
+                                    )
+                                }
+                            }
+
+                            else -> {
+                                showError = false
                                 onCancelSubscriptionButtonClicked(
-                                    othersDescriptionText,
+                                    "$selectedOptionId - $selectedOptionString",
                                     if (allowContact) 1 else 0
                                 )
                             }
                         }
-
-                        else -> {
-                            showError = false
-                            onCancelSubscriptionButtonClicked(
-                                "$selectedOptionId - $selectedOptionString",
-                                if (allowContact) 1 else 0
-                            )
-                        }
-                    }
-                },
-            )
-            TextMegaButton(
-                textId = SharedR.string.account_cancel_subscription_survey_do_not_cancel_button,
-                onClick = onDoNotCancelButtonClicked,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .testTag(DO_NOT_CANCELLATION_BUTTON_TEST_TAG),
-            )
+                    },
+                )
+                TextMegaButton(
+                    textId = SharedR.string.account_cancel_subscription_survey_do_not_cancel_button,
+                    onClick = onDoNotCancelButtonClicked,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .testTag(DO_NOT_CANCELLATION_BUTTON_TEST_TAG),
+                )
+            }
         }
     }
 }

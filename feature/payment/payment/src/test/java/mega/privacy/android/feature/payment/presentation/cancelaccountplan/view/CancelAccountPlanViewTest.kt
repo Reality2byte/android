@@ -3,9 +3,11 @@ package mega.privacy.android.feature.payment.presentation.cancelaccountplan.view
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.feature.payment.fromId
@@ -108,5 +110,27 @@ class CancelAccountPlanViewTest {
                 hasText(fromId(R.string.account_cancel_account_plan_continue_cancellation))
             ).assertHasClickAction()
 
+    }
+
+    @Test
+    @Config(qualifiers = "w484dp-h1048dp-large-hdpi")
+    fun `test that content fills the available width when the device reports a large screen layout`() {
+        composeTestRule.setContent {
+            CancelAccountPlanView(
+                uiState = CancelAccountPlanUiState(
+                    accountType = AccountType.PRO_I,
+                    isLoading = false
+                ),
+                accountUiState = AccountStorageUIState(),
+                formattedUsedStorage = "1.5 GB",
+                formattedBaseStorage = "",
+                onKeepPlanButtonClicked = { },
+                onContinueCancellationButtonClicked = { }
+            )
+        }
+        composeTestRule.onNodeWithTag(CANCEL_ACCOUNT_PLAN_VIEW_TEST_TAG)
+            .assertWidthIsAtLeast(400.dp)
+        composeTestRule.onNodeWithTag(CANCEL_ACCOUNT_PLAN_FEATURE_TABLE_TEST_TAG)
+            .assertWidthIsAtLeast(400.dp)
     }
 }

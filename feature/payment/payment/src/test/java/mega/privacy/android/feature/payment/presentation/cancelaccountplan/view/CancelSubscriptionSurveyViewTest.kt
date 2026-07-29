@@ -4,11 +4,13 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mega.privacy.android.feature.payment.fromId
 import mega.privacy.android.feature.payment.onNodeWithText
@@ -168,5 +170,20 @@ class CancelSubscriptionSurveyViewTest {
         composeTestRule.onNodeWithTag(CANCEL_SUBSCRIPTION_BUTTON_TEST_TAG)
             .performClick()
         verifyNoInteractions(cancelButtonClicked)
+    }
+
+    @Test
+    @Config(qualifiers = "w484dp-h1048dp-large-hdpi")
+    fun `test that content fills the available width when the device reports a large screen layout`() {
+        composeTestRule.setContent {
+            CancelSubscriptionSurveyView(
+                possibleCancellationReasons = possibleCancellationReasons,
+                onCancelSubscriptionButtonClicked = { _, _ -> },
+                onDoNotCancelButtonClicked = { }
+            )
+        }
+
+        composeTestRule.onNodeWithTag(SURVEY_OPTIONS_GROUP_TEST_TAG)
+            .assertWidthIsAtLeast(400.dp)
     }
 }

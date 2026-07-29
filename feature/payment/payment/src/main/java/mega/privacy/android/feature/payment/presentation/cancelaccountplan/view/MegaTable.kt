@@ -19,7 +19,7 @@ internal fun MegaTable(
     numOfColumn: Int,
     tableCells: List<TableCell>,
     modifier: Modifier = Modifier,
-    rowHeight: Dp = 50.dp,
+    minRowHeight: Dp = 50.dp,
     rowPadding: Dp = 8.dp,
 ) {
     Column(modifier = modifier) {
@@ -32,7 +32,7 @@ internal fun MegaTable(
                         if (index == 0) Modifier
                             .backgroundToken(BackgroundColor.Surface1) else Modifier
                     ),
-                rowHeight = rowHeight,
+                minRowHeight = minRowHeight,
                 rowPadding = rowPadding
             )
             MegaDivider(
