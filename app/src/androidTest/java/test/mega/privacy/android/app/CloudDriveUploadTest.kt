@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
@@ -17,17 +16,12 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import androidx.work.Configuration
-import androidx.work.testing.WorkManagerTestInitHelper
 import com.google.common.truth.Truth.assertThat
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
-import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.app.appstate.MegaActivity
-import mega.privacy.android.app.appstate.global.initialisation.GlobalInitialiser
-import mega.privacy.android.app.initializer.NotificationChannelsInitializer
+import mega.privacy.android.app.boot.TestAppBoot
 import mega.privacy.android.data.gateway.api.MegaApiGateway
 import mega.privacy.android.data.model.GlobalUpdate
 import mega.privacy.android.data.test.gateway.FakeMegaApiGateway
@@ -83,12 +77,6 @@ class CloudDriveUploadTest {
     lateinit var fakeMegaApi: FakeMegaApiGateway
 
     @Inject
-    lateinit var workerFactory: HiltWorkerFactory
-
-    @Inject
-    lateinit var globalInitialiser: GlobalInitialiser
-
-    @Inject
     lateinit var saveAccountCredentialsUseCase: SaveAccountCredentialsUseCase
 
     @Inject
@@ -122,29 +110,12 @@ class CloudDriveUploadTest {
             android.Manifest.permission.POST_NOTIFICATIONS,
         )
 
-        // App startup initializers no-op under the Hilt test application (the component does not
-        // exist when androidx.startup runs), so replicate the ones the tested flow needs now that
-        // the component is available.
-        Analytics.initialise(targetContext)
-
-        // Notification channels are required by UploadsWorker's foreground notification.
-        EntryPointAccessors.fromApplication(
-            targetContext,
-            NotificationChannelsInitializer.NotificationChannelsInitializerEntryPoint::class.java,
-        ).let { it.getNotificationManager().createNotificationChannelsCompat(it.getChannels().toList()) }
-
-        // Production triggers the app-start initialisers from MegaApplication's process
-        // lifecycle observer, which does not exist under the Hilt test application. The
-        // transfer-events monitor that persists upload progress is one of them.
-        globalInitialiser.onAppStart()
-
-        // The production Application provides the WorkManager configuration; the Hilt test
-        // application does not, so initialize it here so UploadsWorker (and the FCM service's
-        // injection graph) can resolve WorkManager.
-        WorkManagerTestInitHelper.initializeTestWorkManager(
-            targetContext,
-            Configuration.Builder().setWorkerFactory(workerFactory).build(),
-        )
+        // Boot the test process through the production initialiser units (MegaApplication's
+        // onCreate/onStart do not run under the Hilt test application). This covers WorkManager,
+        // Analytics, notification channels, the transfer-events monitor, and everything else the
+        // tested flow relies on, keeping the test on the production boot path. No units are
+        // excluded: all are safe in the test process.
+        TestAppBoot.runCoreInitializers()
 
         // The node list is loaded via getChildren(filter, ...); the filter is an opaque SDK
         // object, so resolve children through the fake node tree explicitly. The tree starts

@@ -92,13 +92,20 @@ suite can replace only the SDK while the rest of the app stays real:
   details fetched from the fake), drives the UI with UiAutomator, runs a real upload through
   the transfer chain, and simulates the SDK's post-upload node update.
 
-Notes for writing more of these: app startup initializers and `BootEventReceiver` no-op under
-the Hilt test application (their entry points don't exist yet at process start), so tests
-replicate what they need in `@Before` (Analytics, WorkManager, notification channels). Drive
-the UI with UiAutomator, not a Compose test rule — the compose rule's idle synchronization
-deadlocks against the production splash-gated composition. Cross-process system UI (the file
-picker) is stubbed with Espresso-Intents returning a MediaStore file; a file in the app's own
-private dir would be rejected by the upload pipeline's file preparation.
+Notes for writing more of these: `MegaApplication.onCreate`/`onStart` do not run under the Hilt
+test application, so the production boot initialisers are not triggered automatically. Boot the
+test process through them with `TestAppBoot.runCoreInitializers()`
+(`app/src/androidTest/.../boot/TestAppBoot.kt`) in `@Before`: it initialises test WorkManager and
+then runs the same app-create and app-start initialiser units as production via `GlobalInitialiser`
+(Analytics, notification channels, the transfer-events monitor, and the rest), keeping test and
+production boot converged. Pass an `exclude` set of unit names (`AppCreateInitialiser.name`) only
+for a unit a test demonstrably cannot tolerate, or `includeAppStart = false` to skip the app-start
+tier. Only genuinely device-level or harness concerns stay in `@Before` (planting Timber, granting
+POST_NOTIFICATIONS) alongside the scenario's own state seeding. Drive the UI with UiAutomator, not a
+Compose test rule — the compose rule's idle synchronization deadlocks against the production
+splash-gated composition. Cross-process system UI (the file picker) is stubbed with Espresso-Intents
+returning a MediaStore file; a file in the app's own private dir would be rejected by the upload
+pipeline's file preparation.
 
 ## Status
 

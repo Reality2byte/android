@@ -60,7 +60,7 @@ class ChatManagement @Inject constructor(
     private val isChatOpeningWithLinkUseCase: IsChatOpeningWithLinkUseCase,
 
     ) {
-    private val app: MegaApplication = getInstance()
+    private val app: MegaApplication by lazy { getInstance() }
     private var countDownTimerToEndCall: CountDownTimer? = null
 
     /**
