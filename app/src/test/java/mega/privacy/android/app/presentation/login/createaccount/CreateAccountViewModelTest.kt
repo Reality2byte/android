@@ -392,6 +392,28 @@ class CreateAccountViewModelTest {
             }
         }
 
+    @Test
+    fun `test that first name and last name errors are shown when create account is called with empty names`() =
+        runTest {
+            whenever(getPasswordStrengthUseCase(any())).thenReturn(PasswordStrength.GOOD)
+            whenever(isEmailValidUseCase(any())).thenReturn(true)
+
+            initViewModel()
+            initInputFields()
+            savedStateHandle[KEY_FIRST_NAME] = ""
+            savedStateHandle[KEY_LAST_NAME] = ""
+
+            underTest.createAccount()
+
+            verifyNoInteractions(createAccountUseCase)
+
+            underTest.uiState.test {
+                val item = awaitItem()
+                assertThat(item.isFirstNameValid).isFalse()
+                assertThat(item.isLastNameValid).isFalse()
+            }
+        }
+
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `test that create account is not invoked when password is invalid`(value: Boolean) =

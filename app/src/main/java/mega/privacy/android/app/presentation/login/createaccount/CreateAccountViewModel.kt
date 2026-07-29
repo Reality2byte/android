@@ -138,9 +138,9 @@ class CreateAccountViewModel @Inject constructor(
      * The validation logic considers a first name valid if it is not blank and does not exceed [NAME_CHAR_LIMIT].
      * If the length exceeds [NAME_CHAR_LIMIT], the UI state will indicate that the limit has been exceeded.
      *
-     * This function should be called whenever the first name input changes.
+     * @return `true` if the first name is valid.
      */
-    private fun updateFirstNameValidationState() {
+    private fun updateFirstNameValidationState(): Boolean {
         val firstName: String = savedStateHandle[KEY_FIRST_NAME] ?: ""
         val (isValid, isLengthExceeded) = checkFirstNameValidity(firstName)
         _uiState.update {
@@ -149,6 +149,7 @@ class CreateAccountViewModel @Inject constructor(
                 isFirstNameLengthExceeded = isLengthExceeded
             )
         }
+        return isValid
     }
 
     /**
@@ -161,9 +162,9 @@ class CreateAccountViewModel @Inject constructor(
      * The validation logic considers a last name valid if it is not blank and does not exceed [NAME_CHAR_LIMIT].
      * If the length exceeds [NAME_CHAR_LIMIT], the UI state will indicate that the limit has been exceeded.
      *
-     * This function should be called whenever the last name input changes.
+     * @return `true` if the last name is valid.
      */
-    private fun updateLastNameValidationState() {
+    private fun updateLastNameValidationState(): Boolean {
         val lastName: String = savedStateHandle[KEY_LAST_NAME] ?: ""
         val (isValid, isLengthExceeded) = checkLastNameValidity(lastName)
         _uiState.update {
@@ -172,6 +173,7 @@ class CreateAccountViewModel @Inject constructor(
                 isLastNameLengthExceeded = isLengthExceeded
             )
         }
+        return isValid
     }
 
     private fun isEmailValid(): Boolean {
@@ -185,18 +187,6 @@ class CreateAccountViewModel @Inject constructor(
             _uiState.update { it.copy(isEmailValid = isEmailValid, isEmailLengthExceeded = false) }
             isEmailValid
         }
-    }
-
-    private fun isFirstNameValid(): Boolean {
-        val firstName: String = savedStateHandle[KEY_FIRST_NAME] ?: ""
-        val (isValid, _) = checkFirstNameValidity(firstName)
-        return isValid
-    }
-
-    private fun isLastNameValid(): Boolean {
-        val lastName: String = savedStateHandle[KEY_LAST_NAME] ?: ""
-        val (isValid, _) = checkLastNameValidity(lastName)
-        return isValid
     }
 
     internal fun onPasswordInputChanged(password: String) = viewModelScope.launch {
@@ -343,8 +333,8 @@ class CreateAccountViewModel @Inject constructor(
      * @return validation state as [Boolean]
      */
     private suspend fun areAllInputsValid(): Boolean = listOf(
-        isFirstNameValid(),
-        isLastNameValid(),
+        updateFirstNameValidationState(),
+        updateLastNameValidationState(),
         isEmailValid(),
         isPasswordValid(),
         isConfirmPasswordValid(savedStateHandle[KEY_CONFIRM_PASSWORD])
