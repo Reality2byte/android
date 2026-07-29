@@ -184,4 +184,5 @@ private fun Context.shareLinksAsPlainText(text: String, subject: String?) {
 
 
 /** MEGA security help page opened from the "Separate link and key" learn-more link. */
-private const val SEPARATE_KEY_LEARN_MORE_URL = "https://mega.io/security"
+private const val SEPARATE_KEY_LEARN_MORE_URL =
+    "https://help.mega.io/security/data-protection/make-links-more-secure"

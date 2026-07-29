@@ -249,6 +249,13 @@ private fun LinkSettingsContent(
 ) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
+    // Enabling expiry with no date yet goes straight to the picker, so choosing a date does not
+    // need a second tap on the revealed field.
+    val onExpiryToggled = { enabled: Boolean ->
+        if (enabled && uiState.expiryDate == null) showDatePicker = true
+        onExpiryEnabled(enabled)
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -307,13 +314,13 @@ private fun LinkSettingsContent(
                 { ProBadge(Modifier.testTag(LINK_SETTINGS_EXPIRY_PRO_BADGE_TAG)) }
             } else null,
             enableClick = !uiState.isProFeatureLocked,
-            onClickListener = { onExpiryEnabled(!uiState.isExpiryEnabled) },
+            onClickListener = { onExpiryToggled(!uiState.isExpiryEnabled) },
             trailingElement = {
                 Toggle(
                     modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG),
                     isChecked = uiState.isExpiryEnabled,
                     isEnabled = !uiState.isProFeatureLocked,
-                    onCheckedChange = onExpiryEnabled,
+                    onCheckedChange = onExpiryToggled,
                 )
             },
         )

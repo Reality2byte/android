@@ -206,6 +206,44 @@ class LinkSettingsScreenTest {
     }
 
     @Test
+    fun `test that tapping the expiry toggle opens the date picker without a second tap`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_ok_only))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that tapping the expiry row opens the date picker without a second tap`() {
+        setContent(uiState = loaded)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_ROW_TAG).performClick()
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_ok_only))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that opening the screen with an existing expiry does not open the date picker`() {
+        setContent(uiState = loaded.copy(isExpiryEnabled = true, expiryDate = EXPIRY_MILLIS))
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_ok_only))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that turning the expiry toggle off does not open the date picker`() {
+        setContent(uiState = loaded.copy(isExpiryEnabled = true, expiryDate = EXPIRY_MILLIS))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_ok_only))
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun `test that the seeded expiry date is displayed in the expiry field`() {
         setContent(
             uiState = loaded.copy(isExpiryEnabled = true, expiryDate = EXPIRY_MILLIS)
