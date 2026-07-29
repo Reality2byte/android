@@ -3,6 +3,7 @@ package mega.privacy.android.feature.sharelink.presentation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -123,7 +124,9 @@ fun ShareLinkScreen(
                     val shareText =
                         pluralStringResource(sharedR.plurals.label_share_links, linkCount)
                     AnchoredButtonGroup(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding(),
                         buttonGroup = listOf(
                             {
                                 Button.PrimaryButton(
@@ -146,7 +149,9 @@ fun ShareLinkScreen(
                 }
 
                 ShareLinkUiState.CopyrightConsent -> AnchoredButtonGroup(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding(),
                     buttonGroup = listOf(
                         {
                             Button.PrimaryButton(
