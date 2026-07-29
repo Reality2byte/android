@@ -93,7 +93,6 @@ fun MainNavigationScaffold(
         NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
     }
 
-    // Order items based on preferredSlot
     val orderedItems = orderNavigationItems(items = mainNavItems, availableSlots = availableSlots)
     var isNavigationVisible by rememberSaveable { mutableStateOf(true) }
     val navUiController = remember {
@@ -238,18 +237,17 @@ private fun MegaNavigationSuite(
 
 
 /**
- * Orders navigation items based on their preferredSlot
- * - Ordered items are sorted by slot number and take the first available slots
- * - Last item is placed in the final slot
+ * Caps the navigation items to the available slots
+ * - Items keep their incoming order and take the first available slots
+ * - The [PreferredSlot.Last] item is pinned to the final slot
  */
 private fun orderNavigationItems(
     items: ImmutableSet<NavigationItem>,
     availableSlots: Int,
 ): List<NavigationItem> {
-    val orderedItems = items.filter { it.preferredSlot is PreferredSlot.Ordered }
-        .sortedBy { (it.preferredSlot as PreferredSlot.Ordered).slot }
+    val (lastItems, orderedItems) = items.partition { it.preferredSlot is PreferredSlot.Last }
 
-    val lastItem = items.find { it.preferredSlot is PreferredSlot.Last }
+    val lastItem = lastItems.firstOrNull()
 
     return if (lastItem != null) {
         orderedItems.take(availableSlots - 1) + lastItem

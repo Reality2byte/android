@@ -343,6 +343,67 @@ class MainNavigationScaffoldTest {
     }
 
     @Test
+    fun test_that_incoming_item_order_is_preserved_when_it_differs_from_preferred_slot_order() {
+        val navItems = listOf(
+            createMockNavItem(
+                android.R.string.paste,
+                Icons.Default.Star,
+                PreferredSlot.Ordered(5)
+            ),
+            createMockNavItem(android.R.string.cut, Icons.Default.Person, PreferredSlot.Ordered(4)),
+            createMockNavItem(
+                android.R.string.copy,
+                Icons.Default.Search,
+                PreferredSlot.Ordered(3)
+            ),
+            createMockNavItem(
+                android.R.string.cancel,
+                Icons.Default.Settings,
+                PreferredSlot.Ordered(2)
+            ),
+            createMockNavItem(android.R.string.ok, Icons.Default.Home, PreferredSlot.Ordered(1)),
+            createMockNavItem(
+                android.R.string.selectAll,
+                Icons.Default.Info,
+                PreferredSlot.Ordered(0)
+            ),
+            createMockNavItem(
+                android.R.string.dialog_alert_title,
+                Icons.Default.Menu,
+                PreferredSlot.Last
+            )
+        ).toImmutableSet()
+        val onDestinationClick: (Any) -> Unit = mock()
+        val isSelected: (Any) -> Boolean = { false }
+
+        composeTestRule.setContent {
+            MainNavigationScaffold(
+                mainNavItems = navItems,
+                onDestinationClick = onDestinationClick,
+                isSelected = isSelected,
+                mainNavItemIcon = { _, label, _ ->
+                    TestIcon(label)
+                },
+                navContent = {}
+            )
+        }
+
+        // The first four incoming items fill the slots regardless of their preferred slot numbers
+        composeTestRule.onNodeWithText(context.getString(android.R.string.paste))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(android.R.string.cut)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(android.R.string.copy)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(android.R.string.cancel))
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(android.R.string.dialog_alert_title))
+            .assertIsDisplayed()
+        // Items beyond the cap are dropped even though their preferred slot numbers are lower
+        composeTestRule.onNodeWithText(context.getString(android.R.string.ok)).assertDoesNotExist()
+        composeTestRule.onNodeWithText(context.getString(android.R.string.selectAll))
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun test_that_analytics_events_are_fired_when_navigation_items_are_selected() = runTest {
         val expected = mock<NavigationEventIdentifier>()
         val navItems = listOf(

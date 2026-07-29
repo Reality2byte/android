@@ -11,6 +11,7 @@ class MainNavItemOrderingTest {
     private val driveItem = navItem(id = "drive", preferredSlot = PreferredSlot.Ordered(1))
     private val mediaItem = navItem(id = "media", preferredSlot = PreferredSlot.Ordered(2))
     private val menuItem = navItem(id = "menu", preferredSlot = PreferredSlot.Last)
+    private val offlineItem = navItem(id = "offline", preferredSlot = PreferredSlot.None)
 
     private val allItems = listOf(mediaItem, menuItem, homeItem, driveItem)
 
@@ -40,6 +41,30 @@ class MainNavItemOrderingTest {
         val actual = allItems.orderedByUserPreference(listOf("menu", "drive", "home", "media"))
 
         assertThat(actual).containsExactly(driveItem, homeItem, mediaItem, menuItem).inOrder()
+    }
+
+    @Test
+    fun `test that sortedByPreferredSlot excludes items with no default slot`() {
+        val actual = (allItems + offlineItem).sortedByPreferredSlot()
+
+        assertThat(actual).containsExactly(homeItem, driveItem, mediaItem, menuItem).inOrder()
+    }
+
+    @Test
+    fun `test that orderedByUserPreference excludes items with no default slot when their id is not in the preference`() {
+        val actual = (allItems + offlineItem).orderedByUserPreference(listOf("media", "home"))
+
+        assertThat(actual).containsExactly(mediaItem, homeItem, driveItem, menuItem).inOrder()
+    }
+
+    @Test
+    fun `test that orderedByUserPreference includes items with no default slot when their id is in the preference`() {
+        val actual = (allItems + offlineItem)
+            .orderedByUserPreference(listOf("offline", "home"))
+
+        assertThat(actual)
+            .containsExactly(offlineItem, homeItem, driveItem, mediaItem, menuItem)
+            .inOrder()
     }
 
     private fun navItem(id: String, preferredSlot: PreferredSlot) = mock<MainNavItem> {

@@ -58,23 +58,33 @@ data class DefaultIconBadge(
     override val count = 1
 }
 
+/**
+ * Sorts the items by their default [PreferredSlot] order.
+ *
+ * [PreferredSlot.Ordered] items are sorted by slot number, followed by the [PreferredSlot.Last]
+ * item. [PreferredSlot.None] items have no default slot and are excluded.
+ */
 fun Iterable<MainNavItem>.sortedByPreferredSlot(): List<MainNavItem> {
-    return sortedWith(
-        compareBy { navItem ->
-            when (val slot = navItem.preferredSlot) {
-                is PreferredSlot.Ordered -> slot.slot
-                is PreferredSlot.Last -> Int.MAX_VALUE
+    return filterNot { it.preferredSlot is PreferredSlot.None }
+        .sortedWith(
+            compareBy { navItem ->
+                when (val slot = navItem.preferredSlot) {
+                    is PreferredSlot.Ordered -> slot.slot
+                    is PreferredSlot.Last -> Int.MAX_VALUE
+                    is PreferredSlot.None -> Int.MAX_VALUE
+                }
             }
-        }
-    )
+        )
 }
 
 /**
  * Orders the items according to a user-defined list of item ids.
  *
  * Items whose [MainNavItem.id] appears in [orderedIds] come first, following the order of
- * [orderedIds]. Any remaining items follow in [PreferredSlot] order. The item with
- * [PreferredSlot.Last] is always pinned to the very end, even if its id appears in [orderedIds].
+ * [orderedIds]. Any remaining items follow in [PreferredSlot] order, which excludes
+ * [PreferredSlot.None] items — they are only included when their id appears in [orderedIds].
+ * The item with [PreferredSlot.Last] is always pinned to the very end, even if its id appears
+ * in [orderedIds].
  *
  * @param orderedIds the user-defined ordering of item ids; ids not matching any item are ignored
  */

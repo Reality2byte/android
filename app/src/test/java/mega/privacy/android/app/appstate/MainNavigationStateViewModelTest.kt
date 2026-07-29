@@ -17,14 +17,19 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.Serializable
 import mega.privacy.android.app.appstate.content.mapper.ScreenPreferenceDestinationMapper
+import mega.privacy.android.app.appstate.content.navigation.MainNavigationBarReconciler
 import mega.privacy.android.app.appstate.content.navigation.MainNavigationStateViewModel
 import mega.privacy.android.app.appstate.content.navigation.NavigationResultManager
 import mega.privacy.android.app.appstate.content.navigation.model.MainNavState
 import mega.privacy.android.domain.entity.Feature
 import mega.privacy.android.domain.entity.navigation.Flagged
+import mega.privacy.android.domain.entity.preference.NavigationItemsPreference
 import mega.privacy.android.domain.entity.preference.StartScreenDestinationPreference
+import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.usecase.featureflag.GetEnabledFlaggedItemsUseCase
+import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
+import mega.privacy.android.domain.usecase.preference.MonitorNavigationItemsPreferenceUseCase
 import mega.privacy.android.domain.usecase.preference.MonitorStartScreenPreferenceDestinationUseCase
 import mega.privacy.android.navigation.contract.MainNavItem
 import mega.privacy.android.navigation.contract.PreferredSlot
@@ -47,6 +52,9 @@ class MainNavigationStateViewModelTest {
 
     private val monitorConnectivityUseCase = mock<MonitorConnectivityUseCase>()
     private val getEnabledFlaggedItemsUseCase = mock<GetEnabledFlaggedItemsUseCase>()
+    private val monitorNavigationItemsPreferenceUseCase =
+        mock<MonitorNavigationItemsPreferenceUseCase>()
+    private val getFeatureFlagValueUseCase = mock<GetFeatureFlagValueUseCase>()
     private val monitorStartScreenPreferenceDestinationUseCase =
         mock<MonitorStartScreenPreferenceDestinationUseCase>()
     private val screenPreferenceDestinationMapper = mock<ScreenPreferenceDestinationMapper>()
@@ -67,11 +75,15 @@ class MainNavigationStateViewModelTest {
     fun setUp() {
         reset(
             getEnabledFlaggedItemsUseCase,
+            monitorNavigationItemsPreferenceUseCase,
+            getFeatureFlagValueUseCase,
             monitorConnectivityUseCase,
             monitorStartScreenPreferenceDestinationUseCase,
             screenPreferenceDestinationMapper,
             navigationResultManager
         )
+        stubNavigationItemsPreference(preference = null)
+        stubCustomisableNavigationFlag(enabled = false)
     }
 
     @Test
@@ -420,12 +432,139 @@ class MainNavigationStateViewModelTest {
     }
 
 
+    @Test
+    fun `test that main nav items keep the default order when the customisation flag is disabled`() =
+        runTest {
+            stubConnectivity()
+            stubAllEnabledFlaggedItems()
+            stubEmptyStartScreenPreference()
+            stubNavigationItemsPreference(
+                NavigationItemsPreference(listOf("media", "home", "drive"))
+            )
+            stubCustomisableNavigationFlag(enabled = false)
+
+            initUnderTest(setOf(mediaItem(), menuItem(), homeItem(), driveItem()))
+
+            underTest.state
+                .filterIsInstance<MainNavState.Data>()
+                .test {
+                    val item = awaitItem()
+                    assertThat(item.mainNavItems.map { it.label }).containsExactly(
+                        android.R.string.ok,
+                        android.R.string.cancel,
+                        android.R.string.copy,
+                        android.R.string.paste,
+                    ).inOrder()
+                    assertThat(item.initialDestination).isEqualTo(defaultStartScreen)
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+
+    @Test
+    fun `test that main nav items follow the preference order when the customisation flag is enabled`() =
+        runTest {
+            stubConnectivity()
+            stubAllEnabledFlaggedItems()
+            stubEmptyStartScreenPreference()
+            stubNavigationItemsPreference(NavigationItemsPreference(listOf("media", "home")))
+            stubCustomisableNavigationFlag(enabled = true)
+
+            initUnderTest(setOf(mediaItem(), menuItem(), homeItem(), driveItem()))
+
+            underTest.state
+                .filterIsInstance<MainNavState.Data>()
+                .test {
+                    assertThat(awaitItem().mainNavItems.map { it.label }).containsExactly(
+                        android.R.string.copy,
+                        android.R.string.ok,
+                        android.R.string.paste,
+                    ).inOrder()
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+
+    @Test
+    fun `test that initial destination is the first preferred item destination when the customisation flag is enabled`() =
+        runTest {
+            stubConnectivity()
+            stubAllEnabledFlaggedItems()
+            stubEmptyStartScreenPreference()
+            stubNavigationItemsPreference(NavigationItemsPreference(listOf("media", "home")))
+            stubCustomisableNavigationFlag(enabled = true)
+
+            initUnderTest(setOf(mediaItem(), menuItem(), homeItem(), driveItem()))
+
+            underTest.state
+                .filterIsInstance<MainNavState.Data>()
+                .test {
+                    assertThat(awaitItem().initialDestination).isEqualTo(TestNavKey("media"))
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+
+    @Test
+    fun `test that main nav screens contain hidden item screens when the customisation flag is enabled`() =
+        runTest {
+            stubConnectivity()
+            stubAllEnabledFlaggedItems()
+            stubEmptyStartScreenPreference()
+            stubNavigationItemsPreference(NavigationItemsPreference(listOf("media", "home")))
+            stubCustomisableNavigationFlag(enabled = true)
+            val hiddenItem = driveItem()
+            val noSlotItem = navItem(
+                id = "offline",
+                label = android.R.string.cut,
+                preferredSlot = PreferredSlot.None,
+            )
+
+            initUnderTest(setOf(mediaItem(), menuItem(), homeItem(), hiddenItem, noSlotItem))
+
+            underTest.state
+                .filterIsInstance<MainNavState.Data>()
+                .test {
+                    val item = awaitItem()
+                    assertThat(item.mainNavScreens).hasSize(5)
+                    assertThat(item.mainNavScreens).contains(hiddenItem.screen)
+                    assertThat(item.mainNavScreens).contains(noSlotItem.screen)
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+
+    @Test
+    fun `test that the default bar and start screen are used when no preferred id matches an enabled item`() =
+        runTest {
+            stubConnectivity()
+            stubAllEnabledFlaggedItems()
+            stubEmptyStartScreenPreference()
+            stubNavigationItemsPreference(NavigationItemsPreference(listOf("unknown")))
+            stubCustomisableNavigationFlag(enabled = true)
+
+            initUnderTest(setOf(mediaItem(), menuItem(), homeItem(), driveItem()))
+
+            underTest.state
+                .filterIsInstance<MainNavState.Data>()
+                .test {
+                    val item = awaitItem()
+                    assertThat(item.mainNavItems.map { it.label }).containsExactly(
+                        android.R.string.ok,
+                        android.R.string.cancel,
+                        android.R.string.copy,
+                        android.R.string.paste,
+                    ).inOrder()
+                    assertThat(item.initialDestination).isEqualTo(defaultStartScreen)
+                    cancelAndIgnoreRemainingEvents()
+                }
+        }
+
     private fun initUnderTest(
         mainDestinations: Set<MainNavItem>,
     ) {
         underTest = MainNavigationStateViewModel(
             mainDestinations = mainDestinations,
             getEnabledFlaggedItemsUseCase = getEnabledFlaggedItemsUseCase,
+            monitorNavigationItemsPreferenceUseCase = monitorNavigationItemsPreferenceUseCase,
+            getFeatureFlagValueUseCase = getFeatureFlagValueUseCase,
+            mainNavigationBarReconciler = MainNavigationBarReconciler(),
             monitorConnectivityUseCase = monitorConnectivityUseCase,
             monitorStartScreenPreferenceDestinationUseCase = monitorStartScreenPreferenceDestinationUseCase,
             screenPreferenceDestinationMapper = screenPreferenceDestinationMapper,
@@ -481,7 +620,67 @@ class MainNavigationStateViewModelTest {
             on { invoke(any<Set<Any>>()) }.thenAnswer { flow { emit(it.arguments.first()) } }
         }
     }
+
+    private fun stubNavigationItemsPreference(preference: NavigationItemsPreference?) {
+        monitorNavigationItemsPreferenceUseCase.stub {
+            on { invoke() }.thenReturn(
+                flow {
+                    emit(preference)
+                    awaitCancellation()
+                }
+            )
+        }
+    }
+
+    private fun stubCustomisableNavigationFlag(enabled: Boolean) {
+        getFeatureFlagValueUseCase.stub {
+            onBlocking { invoke(ApiFeatures.CustomisableBottomNavigation) }.thenReturn(enabled)
+        }
+    }
+
+    private fun homeItem() = navItem(
+        id = "home",
+        label = android.R.string.ok,
+        preferredSlot = PreferredSlot.Ordered(0),
+    )
+
+    private fun driveItem() = navItem(
+        id = "drive",
+        label = android.R.string.cancel,
+        preferredSlot = PreferredSlot.Ordered(1),
+    )
+
+    private fun mediaItem() = navItem(
+        id = "media",
+        label = android.R.string.copy,
+        preferredSlot = PreferredSlot.Ordered(2),
+    )
+
+    private fun menuItem() = navItem(
+        id = "menu",
+        label = android.R.string.paste,
+        preferredSlot = PreferredSlot.Last,
+    )
+
+    private fun navItem(
+        id: String,
+        label: Int,
+        preferredSlot: PreferredSlot,
+    ) = mock<MainNavItem> {
+        on { this.id }.thenReturn(id)
+        on { destination }.thenReturn(TestNavKey(id))
+        on { this.preferredSlot }.thenReturn(preferredSlot)
+        on { availableOffline }.thenReturn(true)
+        on { this.label }.thenReturn(label)
+        on { analyticsEventIdentifier }.thenReturn(mock())
+        on { icon }.thenReturn(Icons.Default.Home)
+        // Capture id so each mock gets a distinct lambda instance
+        on { screen }.thenReturn({ _, _, _ -> id.hashCode() })
+    }
 }
 
 @Serializable
 private data object TestMainNavItemNavKey : MainNavItemNavKey
+
+@Serializable
+private data class TestNavKey(val id: String) : MainNavItemNavKey
