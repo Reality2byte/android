@@ -51,9 +51,9 @@ import mega.privacy.android.shared.resources.R as sharedR
  * @param uiState The current [ShareLinkUiState].
  * @param onBack Invoked when the Close action is tapped.
  * @param onOpenSettings Invoked when the settings (gear) action is tapped.
- * @param onShareLink Invoked with the shareable link text when the bottom "Share link" button is
- * tapped: the single link (the key-less link when the key is shared separately) or, for multiple
- * nodes, every link joined by newlines.
+ * @param onShareLink Invoked with the shareable text once the user has settled what to send: the
+ * single link on its own, or followed by its password or decryption key when the user opts to
+ * include it, or, for multiple nodes, every link joined by newlines.
  * @param onCopyLink Invoked when the copy icon on a link is tapped.
  * @param onCopyKey Invoked when the copy icon on the separate key card is tapped.
  * @param onCopyPassword Invoked when the copy icon on the password card is tapped.
@@ -84,6 +84,7 @@ fun ShareLinkScreen(
 ) {
     val linkCount = (uiState as? ShareLinkUiState.Data)?.handles?.size ?: 1
     var showSharePasswordDialog by rememberSaveable { mutableStateOf(false) }
+    var showShareKeyDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedOnceEffect(Unit) {
         Analytics.tracker.trackEvent(ShareLinkScreenEvent)
@@ -136,10 +137,14 @@ fun ShareLinkScreen(
                                     text = shareText,
                                     onClick = {
                                         Analytics.tracker.trackEvent(LinkShareButtonPressedEvent)
-                                        if (uiState.sharePassword != null) {
-                                            showSharePasswordDialog = true
-                                        } else {
-                                            onShareLink(uiState.shareableLinksText())
+                                        when {
+                                            uiState.sharePassword != null ->
+                                                showSharePasswordDialog = true
+
+                                            uiState.shareKey != null ->
+                                                showShareKeyDialog = true
+
+                                            else -> onShareLink(uiState.shareableLinksText())
                                         }
                                     },
                                 )
@@ -267,6 +272,35 @@ fun ShareLinkScreen(
             onDismiss = { showSharePasswordDialog = false },
         )
     }
+
+    val shareKey = data?.shareKey
+    if (showShareKeyDialog && data != null && shareKey != null) {
+        val linkAndKey = stringResource(
+            sharedR.string.album_get_link_share_link_with_key,
+            data.shareableLinksText(),
+            shareKey,
+        )
+        BasicDialog(
+            modifier = Modifier.testTag(SHARE_LINK_KEY_DIALOG_TAG),
+            title = stringResource(sharedR.string.album_get_link_share_link_dialog_title),
+            description = stringResource(sharedR.string.album_get_link_share_link_dialog_description),
+            positiveButtonText = stringResource(
+                sharedR.string.album_get_link_share_link_dialog_share_action_link_key
+            ),
+            onPositiveButtonClicked = {
+                showShareKeyDialog = false
+                onShareLink(linkAndKey)
+            },
+            negativeButtonText = stringResource(
+                sharedR.string.album_get_link_share_link_dialog_share_action_only_link
+            ),
+            onNegativeButtonClicked = {
+                showShareKeyDialog = false
+                onShareLink(data.shareableLinksText())
+            },
+            onDismiss = { showShareKeyDialog = false },
+        )
+    }
 }
 
 /**
@@ -295,3 +329,4 @@ internal const val SHARE_LINK_COPYRIGHT_TAG = "share_link_screen:copyright"
 internal const val SHARE_LINK_COPYRIGHT_AGREE_TAG = "share_link_screen:copyright_agree"
 internal const val SHARE_LINK_COPYRIGHT_DISAGREE_TAG = "share_link_screen:copyright_disagree"
 internal const val SHARE_LINK_PASSWORD_DIALOG_TAG = "share_link_screen:share_password_dialog"
+internal const val SHARE_LINK_KEY_DIALOG_TAG = "share_link_screen:share_key_dialog"

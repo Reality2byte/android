@@ -111,6 +111,8 @@ class ShareLinkScreenTest {
         linkWithPassword = "https://mega.nz/#P!encryptedLink",
     )
 
+    private val separateKeyData = data.copy(isKeySeparate = true)
+
     @Test
     fun `test that every shared node and one access banner are displayed in the multi-node state`() {
         setContent(uiState = multiNodeData)
@@ -398,16 +400,6 @@ class ShareLinkScreenTest {
     }
 
     @Test
-    fun `test that the share button shares the key-less link when the key is separate`() {
-        var shared: String? = null
-        setContent(uiState = data.copy(isKeySeparate = true), onShareLink = { shared = it })
-
-        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
-
-        assertThat(shared).isEqualTo(data.primary.linkWithoutKey)
-    }
-
-    @Test
     fun `test that the share button shares every link joined by newlines for multiple nodes`() {
         var shared: String? = null
         setContent(uiState = multiNodeData, onShareLink = { shared = it })
@@ -674,6 +666,78 @@ class ShareLinkScreenTest {
 
         composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DIALOG_TAG).assertDoesNotExist()
         assertThat(shared).isNotNull()
+    }
+
+    @Test
+    fun `test that tapping Share asks about the key when the key is shared separately`() {
+        var shared: String? = null
+        setContent(uiState = separateKeyData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.album_get_link_share_link_dialog_title)
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.album_get_link_share_link_dialog_description)
+        ).assertIsDisplayed()
+        assertThat(shared).isNull()
+    }
+
+    @Test
+    fun `test that choosing Share link and key on the key dialog shares both`() {
+        var shared: String? = null
+        setContent(uiState = separateKeyData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.album_get_link_share_link_dialog_share_action_link_key)
+        ).performClick()
+
+        assertThat(shared).isEqualTo(
+            context.getString(
+                sharedR.string.album_get_link_share_link_with_key,
+                separateKeyData.primary.linkWithoutKey,
+                separateKeyData.primary.key,
+            )
+        )
+    }
+
+    @Test
+    fun `test that choosing Share link only on the key dialog shares the key-less link`() {
+        var shared: String? = null
+        setContent(uiState = separateKeyData, onShareLink = { shared = it })
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.album_get_link_share_link_dialog_share_action_only_link)
+        ).performClick()
+
+        assertThat(shared).isEqualTo(separateKeyData.primary.linkWithoutKey)
+    }
+
+    @Test
+    fun `test that the key dialog is not shown in the multi-node flow`() {
+        var shared: String? = null
+        setContent(
+            uiState = multiNodeData.copy(isKeySeparate = true),
+            onShareLink = { shared = it },
+        )
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DIALOG_TAG).assertDoesNotExist()
+        assertThat(shared).isNotNull()
+    }
+
+    @Test
+    fun `test that tapping Share tracks the share event once before the key dialog opens`() {
+        setContent(uiState = separateKeyData)
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DIALOG_TAG).assertIsDisplayed()
+        assertThat(analyticsRule.events.count { it == LinkShareButtonPressedEvent }).isEqualTo(1)
     }
 
     private fun setContent(
