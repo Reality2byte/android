@@ -288,13 +288,18 @@ class MenuViewModel @Inject constructor(
         combine(
             uiState.map { it.name }.distinctUntilChanged(),
             monitorMyAvatarFile().onStart {
-                // emit from cache first and then from remote
                 emit(runCatching { getMyAvatarFileUseCase(isForceRefresh = false) }.getOrNull())
-                emit(runCatching { getMyAvatarFileUseCase(isForceRefresh = true) }.getOrNull())
+                runCatching { getMyAvatarFileUseCase(isForceRefresh = true) }.getOrNull()
+                    ?.let { emit(it) }
             }.catch { e ->
                 Timber.e(e, "Error monitoring avatar file: $e")
                 emit(null)
-            }, transform = { name, file ->
+            },
+            monitorAccountDetailUseCase()
+                .map { Unit }
+                .onStart { emit(Unit) }
+                .catch { emit(Unit) },
+            transform = { name, file, _ ->
                 if (!name.isNullOrEmpty()) {
                     val avatarColor =
                         runCatching { getMyAvatarColorUseCase() }.getOrDefault(0)

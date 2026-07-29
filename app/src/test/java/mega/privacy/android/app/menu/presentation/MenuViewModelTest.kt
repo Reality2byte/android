@@ -73,6 +73,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -421,7 +422,9 @@ class MenuViewModelTest {
             whenever(getMyAvatarFileUseCase(false)).thenReturn(avatarFile)
             whenever(getMyAvatarFileUseCase(true)).thenReturn(avatarFile)
             whenever(getMyAvatarColorUseCase()).thenReturn(-16711936)
-            whenever(avatarContentMapper(any(), any(), any(), any(), any())).thenReturn(expectedContent)
+            whenever(avatarContentMapper(any(), any(), any(), any(), any())).thenReturn(
+                expectedContent
+            )
 
             initUnderTest()
 
@@ -435,6 +438,9 @@ class MenuViewModelTest {
     @Test
     fun `test that avatar content mapper is invoked with correct parameters`() = runTest {
         stubDefaultDependencies()
+        monitorAccountDetailUseCase.stub {
+            on { invoke() }.thenReturn(flow { awaitCancellation() })
+        }
         val avatarFile = File("/path/to/avatar.jpg")
         val expectedContent = TextAvatarContent(
             avatarText = "J",
@@ -466,6 +472,54 @@ class MenuViewModelTest {
             18.sp,
             0,
         )
+    }
+
+    @Test
+    fun `test that avatar color is re-fetched when account detail emits`() = runTest {
+        stubDefaultDependencies()
+        val accountDetailFlow = MutableStateFlow(AccountDetail())
+        monitorAccountDetailUseCase.stub {
+            on { invoke() }.thenReturn(accountDetailFlow)
+        }
+        whenever(getUserFullNameUseCase(forceRefresh = true)).thenReturn("Test User")
+        val initialContent = TextAvatarContent(
+            avatarText = "T",
+            backgroundColor = 0,
+            showBorder = false,
+            textSize = 18.sp,
+        )
+        val updatedContent = TextAvatarContent(
+            avatarText = "T",
+            backgroundColor = -16711936,
+            showBorder = false,
+            textSize = 18.sp,
+        )
+        whenever(avatarContentMapper(any(), anyOrNull(), any(), any(), any())).thenReturn(
+            initialContent
+        )
+
+        initUnderTest()
+
+        underTest.uiState.test {
+            var state = awaitItem()
+            while (state.avatarContent == null) {
+                state = awaitItem()
+            }
+            assertThat(state.avatarContent).isEqualTo(initialContent)
+            whenever(getMyAvatarColorUseCase()).thenReturn(-16711936)
+            whenever(avatarContentMapper(any(), anyOrNull(), any(), any(), any())).thenReturn(
+                updatedContent
+            )
+            accountDetailFlow.emit(createAccountDetail())
+            // Skip intermediate states (e.g. setMenuItems reacting to the new accountType)
+            // until we see the avatarContent actually updated by the combine.
+            var updatedState = awaitItem()
+            while (updatedState.avatarContent != updatedContent) {
+                updatedState = awaitItem()
+            }
+            assertThat(updatedState.avatarContent).isEqualTo(updatedContent)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -532,6 +586,7 @@ class MenuViewModelTest {
         assertThat(state).isNotNull()
         assertThat(state.avatarContent).isNull()
     }
+
     @Test
     fun `test that account details are processed correctly and update subtitle flows`() = runTest {
         stubDefaultDependencies()
