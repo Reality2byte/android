@@ -48,7 +48,25 @@ Merge Request automatically.
 
 ## Steps
 
-### Step 0 — Create new branch (only if `--branch` was passed)
+### Step 0 — Offer a code review
+
+Before touching branches, commits, or the MR itself, ask the developer whether to self-review this
+branch with `/android-code-review`. This prompt **always** fires — there is no flag to suppress it —
+and declining is a legitimate, non-blocking answer.
+
+Prompt with `AskUserQuestion`:
+
+- **Question**: `Run /android-code-review on this branch before creating the MR?`
+- **Options** (the first option is pre-selected, so the default answer is yes):
+  - `Run review (recommended)` — review the branch before the MR is opened.
+  - `Skip review` — go straight to the MR.
+
+Record the answer and carry it to Step 1.5. Do **not** run the review here: at this point the
+working tree may still hold uncommitted changes, and `/android-code-review` reviews committed
+changes only. Step 1 commits and verifies signatures first, so running the review at Step 1.5
+covers exactly what will be pushed.
+
+### Step 0.2 — Create new branch (only if `--branch` was passed)
 
 If `--branch <value>` was provided, determine the branch name as follows:
 
@@ -76,7 +94,7 @@ git rev-parse --is-inside-work-tree && git worktree list --porcelain
 If the output of `git worktree list` shows that the current directory is a linked worktree (i.e. it is not the main worktree):
 
 1. Determine the branch name to use:
-   - If `--branch` was passed, use that name (already resolved in Step 0).
+   - If `--branch` was passed, use that name (already resolved in Step 0.2).
    - Otherwise, use the current worktree branch name stripped of any worktree-specific prefix/suffix, or ask the user for a branch name.
 2. From the **main worktree** directory, create the normal branch pointing at the same commit:
    ```bash
@@ -140,7 +158,42 @@ If **any commit** shows `N` or `B`:
   ```
   After re-signing, ask the user to re-run `/create-mr`.
 
-If all commits are signed (no `N` or `B`), continue to Step 2.
+If all commits are signed (no `N` or `B`), continue to Step 1.5.
+
+### Step 1.5 — Run the code review (only if opted in at Step 0)
+
+If the developer chose `Skip review` at Step 0, skip this step silently and continue to Step 2.
+
+Otherwise:
+
+1. Review against `origin/develop`, not local `develop`, which is often stale and would drag
+   already-merged commits into the diff:
+   ```bash
+   git fetch -q origin develop
+   ```
+   Then **follow `.claude/skills/android-code-review/SKILL.md` verbatim** with
+   `--base origin/develop`. That skill is the single source of truth for the review dimensions,
+   severity definitions, and report format — do not re-implement or summarise them here.
+2. Show the developer the full report.
+3. **Gate (advisory)**: count the 🔴 Critical and 🟠 Major findings — the two levels marked
+   *Blocks Merge: Yes* in that skill's severity table.
+   - If there are none (only 🟡 Minor / 🔵 Suggestion, or a clean report), continue to Step 2
+     without prompting.
+   - Otherwise prompt with `AskUserQuestion`:
+     - **Question**: `Code review found <N> blocking issue(s). How do you want to proceed?`
+     - **Options**:
+       - `Fix first (recommended)` — halt `/create-mr` so the developer can fix the findings and
+         re-run.
+       - `Create MR anyway` — continue to Step 2 and record the unresolved findings in the final
+         summary.
+       - `Create as draft` — continue to Step 2 and force `-o merge_request.draft` in Step 4,
+         regardless of whether `--draft` was passed.
+4. **Never block on a tooling failure.** If the review itself errors out, surface the error and
+   continue to Step 2 — this step is a convenience, not a hard gate.
+
+The report's `🌐 New Strings — Weblate Sync Required` section is informational only. Step 3.5
+remains the authority for the Weblate upload gate and the `Weblate strings resource` push label,
+so a string finding reported here must not be treated as a second gate.
 
 ### Step 2 — Gather branch info
 
@@ -292,7 +345,8 @@ Rules for building `DESCRIPTION`:
 - Replace every newline with the two-character sequence `\n`
 - Escape any single quotes in the text as `'"'"'`
 
-If `--draft` was passed, append `-o merge_request.draft` to the command.
+If `--draft` was passed, or the developer chose `Create as draft` at the Step 1.5 gate, append
+`-o merge_request.draft` to the command.
 
 Squash behaviour (in priority order):
 1. If `--squash` was passed → append `-o merge_request.squash`
@@ -313,6 +367,14 @@ The `merge_request.label` push option can be repeated to add multiple labels (e.
 
 - Display the generated MR description so the user can review it.
 - Extract and display the MR URL from the `git push` output.
+- Report the Step 1.5 outcome as a `Code review:` line in the summary, in the same style as the
+  `Jira:` / `Test Instruction:` lines of Step 6:
+
+  ```
+  Code review:       run — 0 blocking, 3 minor
+  Code review:       run — 2 blocking, created as draft
+  Code review:       skipped (developer declined)
+  ```
 
 ### Step 6 — Offer to update Jira (skip if `--no-jira`)
 
