@@ -726,9 +726,90 @@ class LinkSettingsViewModelTest {
         }
 
     @Test
-    fun `test that onSave persists both the separate key and the password when both change`() =
+    fun `test that enabling separate key clears the entered password and strength`() =
         runTest(extension.testDispatcher) {
             stubNode()
+            whenever(getPasswordStrengthUseCase(PASSWORD)).thenReturn(PasswordStrength.STRONG)
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onPasswordEnabled(true)
+                underTest.onPasswordChanged(PASSWORD)
+                awaitUntil { it.passwordStrength == PasswordStrength.STRONG }
+
+                underTest.onSeparateKeyEnabled(true)
+                val state = awaitUntil { it.isSeparateKeyEnabled }
+                assertThat(state.isPasswordEnabled).isFalse()
+                assertThat(state.password).isNull()
+                assertThat(state.passwordStrength).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that enabling separate key turns off an already set password and enables Save`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            stubExistingPassword()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onSeparateKeyEnabled(true)
+                val state = awaitUntil { it.isSeparateKeyEnabled }
+                assertThat(state.isPasswordEnabled).isFalse()
+                assertThat(state.password).isNull()
+                assertThat(state.isSaveEnabled).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that onSave removes the existing password from the cache when separate key is enabled`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            stubExistingPassword()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onSeparateKeyEnabled(true)
+                underTest.onSave()
+                awaitUntil { it.savedEvent == triggered }
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(separateKeyCache).set(NODE_HANDLE, true)
+            verify(passwordCache).set(NODE_HANDLE, null)
+            verifyNoInteractions(encryptLinkWithPasswordUseCase)
+        }
+
+    @Test
+    fun `test that enabling password turns off the separate key`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            stubCachedSeparateKey()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onPasswordEnabled(true)
+                val state = awaitUntil { it.isPasswordEnabled }
+                assertThat(state.isSeparateKeyEnabled).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that onSave clears the cached separate key when password is enabled`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            stubCachedSeparateKey()
             whenever(getPasswordStrengthUseCase(PASSWORD)).thenReturn(PasswordStrength.STRONG)
             whenever(encryptLinkWithPasswordUseCase(PUBLIC_LINK, PASSWORD)).thenReturn(ENCRYPTED_LINK)
             val underTest = createUnderTest()
@@ -736,7 +817,6 @@ class LinkSettingsViewModelTest {
 
             underTest.uiState.test {
                 awaitItem()
-                underTest.onSeparateKeyEnabled(true)
                 underTest.onPasswordEnabled(true)
                 underTest.onPasswordChanged(PASSWORD)
                 underTest.onSave()
@@ -744,8 +824,51 @@ class LinkSettingsViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
 
-            verify(separateKeyCache).set(NODE_HANDLE, true)
+            verify(separateKeyCache).set(NODE_HANDLE, false)
             verify(passwordCache).set(NODE_HANDLE, LinkPassword(PASSWORD, ENCRYPTED_LINK))
+        }
+
+    @Test
+    fun `test that separate key and password are never both enabled whichever is toggled last`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onSeparateKeyEnabled(true)
+                awaitUntil { it.isSeparateKeyEnabled }
+
+                underTest.onPasswordEnabled(true)
+                assertThat(awaitUntil { it.isPasswordEnabled }.isSeparateKeyEnabled).isFalse()
+
+                underTest.onSeparateKeyEnabled(true)
+                assertThat(awaitUntil { it.isSeparateKeyEnabled }.isPasswordEnabled).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that toggling separate key back off does not restore the password it cleared`() =
+        runTest(extension.testDispatcher) {
+            stubNode()
+            stubExistingPassword()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.uiState.test {
+                awaitItem()
+                underTest.onSeparateKeyEnabled(true)
+                awaitUntil { it.isSeparateKeyEnabled }
+
+                underTest.onSeparateKeyEnabled(false)
+                val state = awaitUntil { !it.isSeparateKeyEnabled }
+                assertThat(state.isPasswordEnabled).isFalse()
+                assertThat(state.password).isNull()
+                assertThat(state.isSaveEnabled).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

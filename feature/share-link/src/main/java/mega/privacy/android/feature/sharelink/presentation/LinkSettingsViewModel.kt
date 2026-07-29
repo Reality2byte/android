@@ -72,8 +72,24 @@ class LinkSettingsViewModel @AssistedInject constructor(
         cachedPassword?.password?.let(::computeStrength)
     }
 
-    fun onSeparateKeyEnabled(enabled: Boolean) =
-        update { it.copy(isSeparateKeyEnabled = enabled) }
+    /**
+     * Separate key and password protection are mutually exclusive: a password-protected link
+     * already encrypts the key, so enabling one clears the other. At most one of
+     * [LinkSettingsUiState.isSeparateKeyEnabled] and [LinkSettingsUiState.isPasswordEnabled] is
+     * ever true.
+     */
+    fun onSeparateKeyEnabled(enabled: Boolean) = update {
+        if (enabled) {
+            it.copy(
+                isSeparateKeyEnabled = true,
+                isPasswordEnabled = false,
+                password = null,
+                passwordStrength = null,
+            )
+        } else {
+            it.copy(isSeparateKeyEnabled = false)
+        }
+    }
 
     fun onExpiryEnabled(enabled: Boolean) =
         update { it.copy(isExpiryEnabled = enabled, expiryDate = if (enabled) it.expiryDate else null) }
@@ -81,12 +97,20 @@ class LinkSettingsViewModel @AssistedInject constructor(
     fun onExpiryDateChanged(expiryDate: Long) =
         update { it.copy(expiryDate = expiryDate) }
 
+    /** @see onSeparateKeyEnabled for the invariant this upholds from the other side. */
     fun onPasswordEnabled(enabled: Boolean) = update {
-        it.copy(
-            isPasswordEnabled = enabled,
-            password = if (enabled) it.password else null,
-            passwordStrength = if (enabled) it.passwordStrength else null,
-        )
+        if (enabled) {
+            it.copy(
+                isSeparateKeyEnabled = false,
+                isPasswordEnabled = true,
+            )
+        } else {
+            it.copy(
+                isPasswordEnabled = false,
+                password = null,
+                passwordStrength = null,
+            )
+        }
     }
 
     fun onPasswordChanged(password: String) {
