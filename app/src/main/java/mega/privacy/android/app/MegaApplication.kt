@@ -361,12 +361,6 @@ class MegaApplication : Application(), DefaultLifecycleObserver, Configuration.P
         var openChatId: Long = -1
 
         /**
-         * Is closed chat
-         */
-        @JvmStatic
-        var isClosedChat = true
-
-        /**
          * Is verify s m s showed
          */
         var isVerifySMSShowed = false
