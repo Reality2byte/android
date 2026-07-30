@@ -272,7 +272,7 @@ internal class ContactListViewModel @Inject constructor(
         if (chatApiGateway.getChatCall(chatId) != null) {
             Timber.d("There is a call, open it")
             CallUtil.openMeetingInProgress(
-                MegaApplication.getInstance().applicationContext,
+                context,
                 chatId,
                 true,
             )
@@ -293,7 +293,7 @@ internal class ContactListViewModel @Inject constructor(
                     }
 
                     CallUtil.openMeetingWithAudioOrVideo(
-                        MegaApplication.getInstance().applicationContext,
+                        context,
                         chatId,
                         hasLocalAudio,
                         hasLocalVideo,

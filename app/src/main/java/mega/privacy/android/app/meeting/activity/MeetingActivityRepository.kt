@@ -6,7 +6,6 @@ import android.util.Pair
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.main.controllers.ChatController
 import mega.privacy.android.app.meeting.gateway.RTCAudioManagerGateway
 import mega.privacy.android.app.meeting.listeners.IndividualCallVideoListener
@@ -163,7 +162,7 @@ class MeetingActivityRepository @Inject constructor(
             getRemoteAvatar()
             val username = CallUtil.getUserNameCall(peerId, chatController, megaChatApi).orEmpty()
             bitmap = CallUtil.getDefaultAvatarCall(
-                MegaApplication.getInstance().applicationContext,
+                context,
                 peerId,
                 username
             )

@@ -1,5 +1,6 @@
 package mega.privacy.android.app.presentation.chat.groupInfo
 
+import android.content.Context
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -127,6 +128,7 @@ class GroupChatInfoViewModelTest {
 
     private fun initializeViewModel() {
         underTest = GroupChatInfoViewModel(
+            applicationContext = mock<Context>(),
             setOpenInviteWithChatIdUseCase = setOpenInviteWithChatIdUseCase,
             monitorConnectivityUseCase = monitorConnectivityUseCase,
             startCallUseCase = startCallUseCase,

@@ -124,7 +124,7 @@ class InMeetingRepository @Inject constructor(
             getRemoteAvatar()
 
             avatar = CallUtil.getDefaultAvatarCall(
-                MegaApplication.getInstance().applicationContext,
+                context,
                 peerId,
                 CallUtil.getUserNameCall(peerId, chatController, megaChatApi).orEmpty()
             )
@@ -296,7 +296,7 @@ class InMeetingRepository @Inject constructor(
         if (bitmap == null) {
             getRemoteAvatar()
             bitmap = CallUtil.getDefaultAvatarCall(
-                MegaApplication.getInstance().applicationContext,
+                context,
                 peerId,
                 CallUtil.getUserNameCall(peerId, chatController, megaChatApi).orEmpty(),
             )

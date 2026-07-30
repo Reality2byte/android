@@ -1,8 +1,10 @@
 package mega.privacy.android.app.presentation.chat.groupInfo
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,7 +14,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import mega.privacy.android.app.components.ChatManagement
 import mega.privacy.android.app.presentation.chat.groupInfo.model.ArchiveChatResult
@@ -73,6 +74,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class GroupChatInfoViewModel @Inject constructor(
+    @ApplicationContext private val applicationContext: Context,
     private val setOpenInviteWithChatIdUseCase: SetOpenInviteWithChatIdUseCase,
     monitorConnectivityUseCase: MonitorConnectivityUseCase,
     private val startCallUseCase: StartCallUseCase,
@@ -373,7 +375,7 @@ class GroupChatInfoViewModel @Inject constructor(
         if (chatApiGateway.getChatCall(chatId) != null) {
             Timber.d("There is a call, open it")
             CallUtil.openMeetingInProgress(
-                MegaApplication.getInstance().applicationContext,
+                applicationContext,
                 chatId,
                 true,
             )
@@ -394,7 +396,7 @@ class GroupChatInfoViewModel @Inject constructor(
                     }
 
                     openMeetingWithAudioOrVideo(
-                        MegaApplication.getInstance().applicationContext,
+                        applicationContext,
                         chatId,
                         hasLocalAudio,
                         hasLocalVideo,

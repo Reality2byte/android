@@ -1211,7 +1211,7 @@ class MeetingActivityViewModel @Inject constructor(
                 chatRoom?.let { chat ->
                     Timber.d("The chat exists")
                     if (CallUtil.isStatusConnected(
-                            MegaApplication.getInstance().applicationContext,
+                            context,
                             chat.chatId
                         )
                     ) {
@@ -1221,7 +1221,7 @@ class MeetingActivityViewModel @Inject constructor(
                             chatCall?.let { call ->
                                 Timber.d("There is a call, open it")
                                 CallUtil.openMeetingInProgress(
-                                    MegaApplication.getInstance().applicationContext,
+                                    context,
                                     call.chatId,
                                     true,
                                 )

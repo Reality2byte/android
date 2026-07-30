@@ -1,5 +1,6 @@
 package mega.privacy.android.app.main.dialog.link
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth
@@ -71,6 +72,7 @@ internal class OpenLinkViewModelTest {
         isJoinMeeting: Boolean = false,
     ) {
         underTest = OpenLinkViewModel(
+            applicationContext = mock<Context>(),
             getUrlRegexPatternTypeUseCase = getUrlRegexPatternTypeUseCase,
             savedStateHandle = savedStateHandle,
             getHandleFromContactLinkUseCase = getHandleFromContactLinkUseCase,

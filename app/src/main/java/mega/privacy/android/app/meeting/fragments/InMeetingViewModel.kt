@@ -1840,7 +1840,7 @@ class InMeetingViewModel @Inject constructor(
             val email = inMeetingRepository.getEmailParticipant(
                 session.peerId,
                 GetUserEmailListener(
-                    MegaApplication.getInstance().applicationContext,
+                    context,
                     this@InMeetingViewModel
                 )
             )
@@ -2110,7 +2110,7 @@ class InMeetingViewModel @Inject constructor(
         alpha: Float,
         rotation: Float,
     ): GroupVideoListener {
-        val myTexture = TextureView(MegaApplication.getInstance().applicationContext)
+        val myTexture = TextureView(context)
         myTexture.layoutParams = RelativeLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -2946,14 +2946,14 @@ class InMeetingViewModel @Inject constructor(
      */
 
     fun shouldShowTips(): Boolean =
-        !MegaApplication.getInstance().applicationContext.defaultSharedPreferences
+        !context.defaultSharedPreferences
             .getBoolean(IS_SHOWED_TIPS, false)
 
     /**
      * Update whether or not to display tips
      */
     fun updateShowTips() {
-        MegaApplication.getInstance().applicationContext.defaultSharedPreferences.edit()
+        context.defaultSharedPreferences.edit()
             .putBoolean(IS_SHOWED_TIPS, true).apply()
     }
 

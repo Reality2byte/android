@@ -1,5 +1,6 @@
 package mega.privacy.android.app.main.dialog.link
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.components.ChatManagement
 import mega.privacy.android.app.meeting.gateway.RTCAudioManagerGateway
 import mega.privacy.android.app.usecase.chat.SetChatVideoInDeviceUseCase
@@ -38,6 +39,7 @@ import timber.log.Timber
 
 @HiltViewModel(assistedFactory = OpenLinkViewModel.Factory::class)
 internal class OpenLinkViewModel @AssistedInject constructor(
+    @ApplicationContext private val applicationContext: Context,
     private val getUrlRegexPatternTypeUseCase: GetUrlRegexPatternTypeUseCase,
     private val savedStateHandle: SavedStateHandle,
     private val getHandleFromContactLinkUseCase: GetHandleFromContactLinkUseCase,
@@ -269,7 +271,7 @@ internal class OpenLinkViewModel @AssistedInject constructor(
         chatManagement.setSpeakerStatus(call.chatId, call.hasLocalVideo)
         chatManagement.setRequestSentCall(call.callId, call.isOutgoing)
         CallUtil.openMeetingInProgress(
-            MegaApplication.getInstance().applicationContext,
+            applicationContext,
             call.chatId,
             true,
         )
