@@ -77,7 +77,7 @@ fun OfferBanner(
     onDismissClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AndroidTheme(isDark = false) {
+    AndroidTheme(isDark = false, useLegacyStatusBarColor = false) {
         OfferBannerContent(
             title = title,
             subtitle = subtitle,

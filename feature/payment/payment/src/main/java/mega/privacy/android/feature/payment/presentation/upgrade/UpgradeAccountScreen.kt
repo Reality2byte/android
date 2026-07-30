@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaScaffold
 import mega.android.core.ui.components.MegaText
@@ -111,7 +113,17 @@ fun UpgradeAccountScreen(
     val lazyListState = rememberLazyListState()
     val topBarHeightPx =
         with(LocalDensity.current) { 56.dp.roundToPx() + WindowInsets.statusBars.getTop(this) }
-    val headerHeightPx = with(LocalDensity.current) { HEADER_IMAGE_HEIGHT.roundToPx() }
+    val headerImageHeight = if (isSubscriptionRevampEnabled) {
+        REVAMP_HEADER_IMAGE_HEIGHT
+    } else {
+        HEADER_IMAGE_HEIGHT
+    }
+    val headerLayoutHeight = if (isSubscriptionRevampEnabled) {
+        headerImageHeight - REVAMP_HEADER_CONTENT_OVERLAP
+    } else {
+        headerImageHeight
+    }
+    val headerHeightPx = with(LocalDensity.current) { headerLayoutHeight.roundToPx() }
     val position by remember { derivedStateOf { lazyListState.firstVisibleItemIndex } }
     val itemOffset by remember { derivedStateOf { lazyListState.firstVisibleItemScrollOffset } }
     val currentHeaderHeightPx = headerHeightPx - itemOffset
@@ -399,6 +411,8 @@ fun UpgradeAccountScreen(
                 showFullSkeleton = showFullSkeleton,
                 showOfferBanner = showOfferBanner,
                 showHeaderFade = isSubscriptionRevampEnabled,
+                headerImageHeight = headerImageHeight,
+                headerLayoutHeight = headerLayoutHeight,
                 lazyListState = lazyListState,
                 innerPadding = innerPadding,
                 content = bodyContent,
@@ -432,8 +446,8 @@ private fun UpgradeAccountHeaderImage(
 }
 
 /**
- * Default single-column layout: the header image scrolls as the first item above [content], its
- * bottom edge fading into the page background when [showHeaderFade] is set (DSN-3131). The image is
+ * Default single-column layout: the header image scrolls as the first item above [content], taking
+ * only [headerLayoutHeight] of the list so [content] rises into the fade (DSN-3131). The image is
  * omitted while the full-page skeleton is shown.
  */
 @Composable
@@ -441,6 +455,8 @@ private fun PortraitUpgradeAccountLayout(
     showFullSkeleton: Boolean,
     showOfferBanner: Boolean,
     showHeaderFade: Boolean,
+    headerImageHeight: Dp,
+    headerLayoutHeight: Dp,
     lazyListState: LazyListState,
     innerPadding: PaddingValues,
     content: LazyListScope.() -> Unit,
@@ -455,18 +471,28 @@ private fun PortraitUpgradeAccountLayout(
     ) {
         if (!showFullSkeleton) {
             item("image_header") {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    UpgradeAccountHeaderImage(
-                        showOfferBanner = showOfferBanner,
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(headerLayoutHeight),
+                ) {
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(HEADER_IMAGE_HEIGHT),
-                    )
-                    if (showHeaderFade) {
-                        HeaderImageFade(modifier = Modifier.align(Alignment.BottomCenter))
+                            .requiredHeight(headerImageHeight),
+                    ) {
+                        UpgradeAccountHeaderImage(
+                            showOfferBanner = showOfferBanner,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        if (showHeaderFade) {
+                            HeaderImageFade(modifier = Modifier.align(Alignment.BottomCenter))
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                if (!showHeaderFade) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
         content()
@@ -733,6 +759,17 @@ private fun UpgradeAccountScreenRevampLandscapePreview(
  * Height of the header image when shown as the portrait top banner.
  */
 private val HEADER_IMAGE_HEIGHT = 180.dp
+
+/**
+ * Height of the portrait banner in the DSN-3131 frame.
+ */
+private val REVAMP_HEADER_IMAGE_HEIGHT = 222.dp
+
+/**
+ * How far the content rises into the banner: Figma puts the badge at y=212 and the content
+ * composables already carry 8dp of top padding.
+ */
+private val REVAMP_HEADER_CONTENT_OVERLAP = 18.dp
 
 /**
  * Left image panel width weight in the landscape revamp two-pane layout (matches the Figma
