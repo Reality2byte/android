@@ -33,7 +33,7 @@ data class CloudDriveNavKey(
  */
 @Serializable
 @Parcelize
-data object SharesNavKey : NavKey, Parcelable
+data object SharesNavKey : MainNavItemNavKey, Parcelable
 
 /**
  * Offline route args
@@ -45,7 +45,7 @@ data class OfflineNavKey(
     val nodeId: Int = -1,
     val path: String? = null,
     val highlightedFiles: String? = null,
-) : NoNodeNavKey, Parcelable
+) : NoNodeNavKey, MainNavItemNavKey, Parcelable
 
 @Serializable
 data class DriveSyncNavKey(
@@ -79,7 +79,7 @@ data class CloudDriveMediaDiscoveryNavKey(
  * Favourites route args
  */
 @Serializable
-data object FavouritesNavKey : NavKey
+data object FavouritesNavKey : MainNavItemNavKey
 
 /**
  * Audio section route args

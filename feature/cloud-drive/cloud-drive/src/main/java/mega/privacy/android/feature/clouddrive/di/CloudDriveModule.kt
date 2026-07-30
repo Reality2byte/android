@@ -8,6 +8,9 @@ import dagger.multibindings.IntoSet
 import mega.privacy.android.feature.clouddrive.navigation.CloudDriveDeepLinkHandler
 import mega.privacy.android.feature.clouddrive.navigation.CloudDriveFeatureDestination
 import mega.privacy.android.feature.clouddrive.navigation.DriveSyncNavItem
+import mega.privacy.android.feature.clouddrive.navigation.FavouritesNavItem
+import mega.privacy.android.feature.clouddrive.navigation.OfflineNavItem
+import mega.privacy.android.feature.clouddrive.navigation.SharesNavItem
 import mega.privacy.android.feature.clouddrive.presentation.shares.links.navigation.PasswordLinkDeepLinkHandler
 import mega.privacy.android.navigation.contract.FeatureDestination
 import mega.privacy.android.navigation.contract.MainNavItem
@@ -25,6 +28,18 @@ class CloudDriveModule {
     @Provides
     @IntoSet
     fun provideDriveSyncNavItem(): MainNavItem = DriveSyncNavItem()
+
+    @Provides
+    @IntoSet
+    fun provideOfflineNavItem(): MainNavItem = OfflineNavItem()
+
+    @Provides
+    @IntoSet
+    fun provideSharesNavItem(): MainNavItem = SharesNavItem()
+
+    @Provides
+    @IntoSet
+    fun provideFavouritesNavItem(): MainNavItem = FavouritesNavItem()
 
     @Provides
     @IntoSet

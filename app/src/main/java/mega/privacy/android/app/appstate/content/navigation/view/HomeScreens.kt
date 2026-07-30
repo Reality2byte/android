@@ -43,7 +43,6 @@ import mega.privacy.android.domain.entity.StorageState
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.TransferHandler
 import mega.privacy.android.navigation.contract.navOptions
-import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.contract.shared.LocalSharedViewModelStoreOwner
 import mega.privacy.android.navigation.contract.state.LocalNavigationRailVisible
 import mega.privacy.android.navigation.contract.state.LocalSelectionModeController
@@ -58,6 +57,7 @@ import mega.privacy.android.shared.ads.NewAdsContainer
 import mega.privacy.android.shared.original.core.ui.theme.extensions.conditional
 import mega.privacy.mobile.home.presentation.home.Home
 import mega.privacy.mobile.navigation.snowflake.MainNavigationScaffold
+import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -146,6 +146,9 @@ fun HomeScreens(
                     navigationResultManager = viewModel.navigationResultManager
                 )
             }
+            val topLevelDestinationClasses = remember(currentState.mainNavItems) {
+                currentState.mainNavItems.map { it.destination::class }.toSet()
+            }
             NewAdsContainer(
                 modifier = modifier.fillMaxSize(),
                 onNavigate = outerNavigationHandler::navigate,
@@ -198,6 +201,7 @@ fun HomeScreens(
                                     entryProvider = entryProvider({
                                         fallback(
                                             unknownKey = it,
+                                            topLevelDestinationClasses = topLevelDestinationClasses,
                                             outerNavigationHandler = outerNavigationHandler,
                                             innerNavigationHandler = innerNavigationHandler
                                         )
@@ -250,15 +254,22 @@ fun HomeScreens(
 @Serializable
 private class FallbackKey : NavKey
 
+/**
+ * Handles keys the main navigation graph has no entry for by forwarding them to the outer
+ * navigation graph, e.g. a destination of a disabled main nav item whose screen is registered
+ * as a feature destination. Destinations of the current navigation bar items are never
+ * forwarded, as the outer graph has no entries for them.
+ */
 private fun fallback(
     unknownKey: NavKey,
+    topLevelDestinationClasses: Set<KClass<out NavKey>>,
     outerNavigationHandler: NavigationHandler,
     innerNavigationHandler: NavigationHandler,
 ) = NavEntry<NavKey>(
     key = FallbackKey(),
 ) {
     LaunchedOnceEffect {
-        if (unknownKey !is MainNavItemNavKey) {
+        if (unknownKey::class !in topLevelDestinationClasses) {
             outerNavigationHandler.navigate(unknownKey)
         }
         innerNavigationHandler.back()

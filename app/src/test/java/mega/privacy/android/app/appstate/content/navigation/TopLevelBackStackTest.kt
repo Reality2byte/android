@@ -13,6 +13,7 @@ class TopLevelBackStackTest {
     private data object StartKey : MainNavItemNavKey
     private data object TopLevelKey1 : MainNavItemNavKey
     private data object TopLevelKey2 : MainNavItemNavKey
+    private data class ParameterisedTopLevelKey(val tab: String? = null) : MainNavItemNavKey
     private data object Destination1 : NavKey
     private data object Destination2 : NavKey
     private data object Destination3 : NavKey
@@ -339,6 +340,46 @@ class TopLevelBackStackTest {
         underTest.add(Destination1)
 
         assertThat(underTest.backStack).containsNoDuplicates()
+    }
+
+    @Test
+    fun `test that switchTopLevel reuses the stack of an equal parameterised key`() {
+        underTest.switchTopLevel(ParameterisedTopLevelKey())
+        underTest.add(Destination1)
+        underTest.switchTopLevel(StartKey)
+
+        underTest.switchTopLevel(ParameterisedTopLevelKey())
+
+        assertThat(underTest.topLevelBackStacks).hasSize(2)
+        assertThat(underTest.backStack).containsExactly(
+            StartKey,
+            ParameterisedTopLevelKey(),
+            Destination1,
+        ).inOrder()
+    }
+
+    @Test
+    fun `test that switchTopLevel creates a separate stack for a parameterised key with different arguments`() {
+        underTest.switchTopLevel(ParameterisedTopLevelKey())
+        underTest.add(Destination1)
+
+        underTest.switchTopLevel(ParameterisedTopLevelKey(tab = "other"))
+
+        assertThat(underTest.topLevelBackStacks).hasSize(3)
+        assertThat(underTest.backStack).containsExactly(
+            StartKey,
+            ParameterisedTopLevelKey(tab = "other"),
+        ).inOrder()
+    }
+
+    @Test
+    fun `test that removeLast returns to startKey from a parameterised top level with a single entry`() {
+        underTest.switchTopLevel(ParameterisedTopLevelKey())
+
+        underTest.removeLast()
+
+        assertThat(underTest.topLevelKey).isEqualTo(StartKey)
+        assertThat(underTest.backStack).containsExactly(StartKey)
     }
 
     @Test
