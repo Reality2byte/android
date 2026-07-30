@@ -4,6 +4,7 @@ import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
@@ -14,7 +15,9 @@ import mega.privacy.android.domain.entity.link.LinkAndKey
 import mega.privacy.android.domain.entity.PdfFileTypeInfo
 import mega.privacy.android.domain.entity.UnknownFileTypeInfo
 import mega.privacy.android.domain.entity.node.ExportedData
+import mega.privacy.android.domain.entity.node.NodeChanges
 import mega.privacy.android.domain.entity.node.NodeId
+import mega.privacy.android.domain.entity.node.NodeUpdate
 import mega.privacy.android.domain.entity.node.TypedFileNode
 import mega.privacy.android.domain.entity.node.TypedFolderNode
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
@@ -25,6 +28,7 @@ import mega.privacy.android.domain.usecase.ShouldShowCopyrightUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.link.SplitLinkAndKeyUseCase
 import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
+import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesUseCase
 import mega.privacy.android.feature.sharelink.session.LinkPassword
 import mega.privacy.android.feature.sharelink.session.ShareLinkPasswordCache
 import mega.privacy.android.feature.sharelink.session.ShareLinkSeparateKeyCache
@@ -39,6 +43,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
@@ -62,6 +67,8 @@ class ShareLinkViewModelTest {
     private val setShowCopyrightUseCase = mock<SetShowCopyrightUseCase>()
     private val passwordCache = mock<ShareLinkPasswordCache>()
     private val separateKeyCache = mock<ShareLinkSeparateKeyCache>()
+    private val monitorNodeUpdatesUseCase = mock<MonitorNodeUpdatesUseCase>()
+    private val nodeUpdates = MutableSharedFlow<NodeUpdate>()
 
     @BeforeEach
     fun setUp() {
@@ -70,6 +77,7 @@ class ShareLinkViewModelTest {
         whenever(fileTypeIconMapper(any(), any())).thenReturn(FILE_ICON_RES)
         whenever(passwordCache.monitor(any())).thenReturn(flowOf(null))
         whenever(separateKeyCache.monitor(any())).thenReturn(flowOf(false))
+        whenever(monitorNodeUpdatesUseCase()).thenReturn(nodeUpdates)
         whenever { hasSensitiveInheritedUseCase(any()) }.thenReturn(false)
         whenever { hasSensitiveDescendantUseCase(any()) }.thenReturn(false)
         whenever { shouldShowCopyrightUseCase() }.thenReturn(false)
@@ -87,6 +95,7 @@ class ShareLinkViewModelTest {
         hasSensitiveDescendantUseCase = hasSensitiveDescendantUseCase,
         shouldShowCopyrightUseCase = shouldShowCopyrightUseCase,
         setShowCopyrightUseCase = setShowCopyrightUseCase,
+        monitorNodeUpdatesUseCase = monitorNodeUpdatesUseCase,
         passwordCache = passwordCache,
         separateKeyCache = separateKeyCache,
     )
@@ -103,6 +112,7 @@ class ShareLinkViewModelTest {
             hasSensitiveDescendantUseCase,
             shouldShowCopyrightUseCase,
             setShowCopyrightUseCase,
+            monitorNodeUpdatesUseCase,
             passwordCache,
             separateKeyCache,
         )
@@ -700,6 +710,150 @@ class ShareLinkViewModelTest {
                 assertThat(node.isExpired).isTrue()
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    /** Emits a node update naming [NODE_HANDLE], as the SDK does after the link is re-exported. */
+    private suspend fun emitNodeUpdate() {
+        val changed = mock<TypedFileNode> { on { id } doReturn NodeId(NODE_HANDLE) }
+        nodeUpdates.emit(NodeUpdate(mapOf(changed to listOf(NodeChanges.Public_link))))
+    }
+
+    @Test
+    fun `test that a node update clears the expiry when it has been removed`() =
+        runTest {
+            val futureSeconds = (System.currentTimeMillis().milliseconds + 30.days).inWholeSeconds
+            stubExportedNode(expirationSeconds = futureSeconds)
+
+            underTest.uiState.test {
+                assertThat(awaitData().primary.expirationTime)
+                    .isEqualTo(futureSeconds.seconds.inWholeMilliseconds)
+
+                stubExportedNode(expirationSeconds = null)
+                emitNodeUpdate()
+
+                assertThat(awaitData().primary.expirationTime).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that a node update picks up a newly set expiry`() =
+        runTest {
+            stubExportedNode(expirationSeconds = null)
+
+            underTest.uiState.test {
+                assertThat(awaitData().primary.expirationTime).isNull()
+
+                val futureSeconds =
+                    (System.currentTimeMillis().milliseconds + 30.days).inWholeSeconds
+                stubExportedNode(expirationSeconds = futureSeconds)
+                emitNodeUpdate()
+
+                assertThat(awaitData().primary.expirationTime)
+                    .isEqualTo(futureSeconds.seconds.inWholeMilliseconds)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that a node update refreshes the file size and modification time`() = runTest {
+        val node = mock<TypedFileNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "report.pdf"
+            on { exportedData } doReturn ExportedData(LINK, 0L)
+            on { size } doReturn 100L
+            on { modificationTime } doReturn 1_000L
+            on { type } doReturn PdfFileTypeInfo
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+        whenever(splitLinkAndKeyUseCase(LINK)).thenReturn(LinkAndKey(LINK_WITHOUT_KEY, "key123"))
+
+        underTest.uiState.test {
+            val initial = awaitData().primary
+            assertThat(initial.sizeInBytes).isEqualTo(100L)
+            assertThat(initial.modificationTime).isEqualTo(1_000L)
+
+            val updatedNode = mock<TypedFileNode> {
+                on { id } doReturn NodeId(NODE_HANDLE)
+                on { name } doReturn "report.pdf"
+                on { exportedData } doReturn ExportedData(LINK, 0L)
+                on { size } doReturn 200L
+                on { modificationTime } doReturn 2_000L
+                on { type } doReturn PdfFileTypeInfo
+            }
+            whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(updatedNode)
+            emitNodeUpdate()
+
+            val refreshed = awaitData().primary
+            assertThat(refreshed.sizeInBytes).isEqualTo(200L)
+            assertThat(refreshed.modificationTime).isEqualTo(2_000L)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that a node update refreshes a folder's child counts`() = runTest {
+        val folder = mock<TypedFolderNode> {
+            on { id } doReturn NodeId(NODE_HANDLE)
+            on { name } doReturn "Documents"
+            on { exportedData } doReturn ExportedData(LINK, 0L)
+            on { childFolderCount } doReturn 2
+            on { childFileCount } doReturn 4
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(folder)
+        whenever(splitLinkAndKeyUseCase(LINK)).thenReturn(LinkAndKey(LINK_WITHOUT_KEY, "key123"))
+
+        underTest.uiState.test {
+            val initial = awaitData().primary
+            assertThat(initial.childFolderCount).isEqualTo(2)
+            assertThat(initial.childFileCount).isEqualTo(4)
+
+            val updatedFolder = mock<TypedFolderNode> {
+                on { id } doReturn NodeId(NODE_HANDLE)
+                on { name } doReturn "Documents"
+                on { exportedData } doReturn ExportedData(LINK, 0L)
+                on { childFolderCount } doReturn 5
+                on { childFileCount } doReturn 9
+            }
+            whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(updatedFolder)
+            emitNodeUpdate()
+
+            val refreshed = awaitData().primary
+            assertThat(refreshed.childFolderCount).isEqualTo(5)
+            assertThat(refreshed.childFileCount).isEqualTo(9)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that a node update for an unrelated node does not re-read the node`() =
+        runTest {
+            stubExportedNode(expirationSeconds = null)
+
+            underTest.uiState.test {
+                awaitData()
+                val unrelated = mock<TypedFileNode> { on { id } doReturn NodeId(SECOND_HANDLE) }
+                nodeUpdates.emit(NodeUpdate(mapOf(unrelated to listOf(NodeChanges.Public_link))))
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(getNodeByIdUseCase, times(1)).invoke(NodeId(NODE_HANDLE))
+        }
+
+    @Test
+    fun `test that the copyright consent is not shown again when a node update arrives`() =
+        runTest {
+            stubExportedNode(expirationSeconds = null)
+
+            underTest.uiState.test {
+                awaitData()
+                emitNodeUpdate()
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(shouldShowCopyrightUseCase, times(1)).invoke()
         }
 
     private companion object {

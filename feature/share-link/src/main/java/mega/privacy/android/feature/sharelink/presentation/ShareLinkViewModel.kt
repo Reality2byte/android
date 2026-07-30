@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -17,8 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import mega.privacy.android.core.coroutine.asUiStateFlow
-import mega.privacy.android.feature.sharelink.session.ShareLinkPasswordCache
-import mega.privacy.android.feature.sharelink.session.ShareLinkSeparateKeyCache
+import mega.privacy.android.domain.entity.node.ExportedData
 import mega.privacy.android.domain.entity.node.FileNode
 import mega.privacy.android.domain.entity.node.FolderNode
 import mega.privacy.android.domain.entity.node.NodeId
@@ -31,6 +33,9 @@ import mega.privacy.android.domain.usecase.ShouldShowCopyrightUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.link.SplitLinkAndKeyUseCase
 import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
+import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesUseCase
+import mega.privacy.android.feature.sharelink.session.ShareLinkPasswordCache
+import mega.privacy.android.feature.sharelink.session.ShareLinkSeparateKeyCache
 import mega.privacy.android.shared.nodes.extension.getIcon
 import mega.privacy.android.shared.nodes.mapper.FileTypeIconMapper
 import timber.log.Timber
@@ -58,6 +63,7 @@ class ShareLinkViewModel @AssistedInject constructor(
     private val hasSensitiveDescendantUseCase: HasSensitiveDescendantUseCase,
     private val shouldShowCopyrightUseCase: ShouldShowCopyrightUseCase,
     private val setShowCopyrightUseCase: SetShowCopyrightUseCase,
+    private val monitorNodeUpdatesUseCase: MonitorNodeUpdatesUseCase,
     private val passwordCache: ShareLinkPasswordCache,
     private val separateKeyCache: ShareLinkSeparateKeyCache,
 ) : ViewModel() {
@@ -154,9 +160,7 @@ class ShareLinkViewModel @AssistedInject constructor(
                     ?: exportedLinks[node.id.longValue]
                     ?: return@mapNotNull null
                 val (linkWithoutKey, key) = splitLinkAndKeyUseCase(link)
-                val expiryMillis = node.exportedData?.expirationTime
-                    ?.takeIf { it > 0 }
-                    ?.seconds?.inWholeMilliseconds
+                val expiryMillis = node.exportedData.expiryMillis()
                 ShareLinkNodeItem(
                     handle = node.id.longValue,
                     name = node.name,
@@ -176,13 +180,55 @@ class ShareLinkViewModel @AssistedInject constructor(
             when {
                 nodeLinks == null -> Unit // Sensitive-items warning cancelled; the screen navigates back.
                 nodeLinks.isEmpty() -> emit(ShareLinkUiState.Error)
-                else -> emit(ShareLinkUiState.Data(nodeLinks = nodeLinks, accountType = null))
+                else -> {
+                    emit(ShareLinkUiState.Data(nodeLinks = nodeLinks, accountType = null))
+                    emitAll(refreshedOnNodeUpdates(nodeLinks))
+                }
             }
         }.onFailure { throwable ->
             Timber.e(throwable, "Failed to load or create the share links")
             emit(ShareLinkUiState.Error)
         }
     }
+
+    /**
+     * Re-reads the nodes whenever the SDK reports a change to one of them, so an expiry saved on the
+     * Link settings screen — or changed on another client — shows here without reopening the screen.
+     *
+     * Only node-derived fields refresh: the copyright consent, hidden-items warning and export in
+     * [linkFlow] are one-shot and must not run again. The password and separate-key options need no
+     * equivalent, as they are session state combined into [uiState] as live flows.
+     */
+    private fun refreshedOnNodeUpdates(nodeLinks: List<ShareLinkNodeItem>): Flow<ShareLinkUiState> {
+        val handles = nodeLinks.mapTo(mutableSetOf()) { it.handle }
+        return monitorNodeUpdatesUseCase()
+            .filter { update -> update.changes.keys.any { it.id.longValue in handles } }
+            .map { nodeLinks.withUpdatedData() }
+            .distinctUntilChanged()
+            .map { ShareLinkUiState.Data(nodeLinks = it, accountType = null) }
+    }
+
+    /**
+     * Re-reads each node's expiry, keeping the item unchanged when the node cannot be read so a
+     * transient failure never blanks an expiry that is still set.
+     */
+    private suspend fun List<ShareLinkNodeItem>.withUpdatedData(): List<ShareLinkNodeItem> =
+        map { item ->
+            val node = runCatching { getNodeByIdUseCase(NodeId(item.handle)) }
+                .onFailure { Timber.e(it, "Failed to refresh node ${item.handle}") }
+                .getOrNull() ?: return@map item
+            item.copy(
+                expirationTime = node.exportedData.expiryMillis(),
+                sizeInBytes = (node as? FileNode)?.size,
+                modificationTime = (node as? FileNode)?.modificationTime,
+                childFolderCount = (node as? FolderNode)?.childFolderCount,
+                childFileCount = (node as? FolderNode)?.childFileCount,
+            )
+        }
+
+    /** The link expiry as an instant, or null when the link never expires. */
+    private fun ExportedData?.expiryMillis(): Long? =
+        this?.expirationTime?.takeIf { it > 0 }?.seconds?.inWholeMilliseconds
 
     /**
      * Determines whether the [nodes] about to be exported need a hidden/sensitive-items warning.

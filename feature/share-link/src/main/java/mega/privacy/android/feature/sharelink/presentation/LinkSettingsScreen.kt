@@ -93,7 +93,6 @@ import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 import java.util.Calendar
-import java.util.TimeZone
 
 /**
  * Revamped Link settings editor screen.
@@ -103,7 +102,7 @@ import java.util.TimeZone
  * @param onSeparateKeyEnabled Invoked when the "Separate link and key" toggle changes.
  * @param onLearnMore Invoked when the "Learn more" link under the separate-key row is tapped.
  * @param onExpiryEnabled Invoked when the "Set expiry date" toggle changes.
- * @param onExpiryDateChanged Invoked with the chosen expiry date, in UTC milliseconds.
+ * @param onExpiryDateChanged Invoked with the instant the chosen day ends locally, in milliseconds.
  * @param onPasswordEnabled Invoked when the "Set password" toggle changes.
  * @param onPasswordChanged Invoked when the revealed password field text changes.
  * @param onSave Invoked when the bottom "Save" button is tapped.
@@ -376,10 +375,10 @@ private fun LinkSettingsContent(
         MegaDatePickerDialog(
             confirmText = stringResource(sharedR.string.general_ok_only),
             dismissText = stringResource(sharedR.string.general_dialog_cancel_button),
-            initialSelectedTimeMillis = uiState.expiryDate,
+            initialSelectedTimeMillis = uiState.expiryDate?.let(::utcMidnightOfLocalDay),
             selectableDates = TodayOnwardSelectableDates,
             onDateSelected = {
-                onExpiryDateChanged(it)
+                onExpiryDateChanged(endOfLocalDay(it))
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
@@ -444,16 +443,8 @@ private object TodayOnwardSelectableDates : SelectableDates {
         utcTimeMillis >= todayStartUtcMillis()
 
     override fun isSelectableYear(year: Int): Boolean =
-        year >= Calendar.getInstance(UTC).get(Calendar.YEAR)
+        year >= Calendar.getInstance().get(Calendar.YEAR)
 }
-
-private fun todayStartUtcMillis(): Long =
-    Calendar.getInstance(UTC).apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
 @Composable
 private fun ProBadge(modifier: Modifier = Modifier) {

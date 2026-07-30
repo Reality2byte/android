@@ -14,7 +14,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.text.DateFormat
 import java.util.Date
-import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 class ShareLinkDetailsTest {
@@ -81,7 +80,7 @@ class ShareLinkDetailsTest {
 
         composeRule.onNodeWithTag(SHARE_LINK_EXPIRY_NOTICE_TAG).assertIsDisplayed()
         composeRule.onNodeWithText(
-            context.getString(sharedR.string.share_link_expires_on, formattedUtcDate(EXPIRY_MILLIS))
+            context.getString(sharedR.string.share_link_expires_on, formattedDate(EXPIRY_MILLIS))
         ).assertIsDisplayed()
         composeRule.onNodeWithTag(SHARE_LINK_EXPIRED_TAG).assertDoesNotExist()
     }
@@ -116,11 +115,9 @@ class ShareLinkDetailsTest {
         }
     }
 
-    // Mirrors the component's own UTC MEDIUM formatting so the assertion is locale-independent.
-    private fun formattedUtcDate(millis: Long): String =
-        DateFormat.getDateInstance(DateFormat.MEDIUM)
-            .apply { timeZone = TimeZone.getTimeZone("UTC") }
-            .format(Date(millis))
+    // Mirrors the component's own MEDIUM date formatting so the assertion is locale-independent.
+    private fun formattedDate(millis: Long): String =
+        DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(millis))
 
     private companion object {
         // A fixed, far-future instant so the rendered date never depends on the clock.

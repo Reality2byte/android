@@ -42,7 +42,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.text.DateFormat
 import java.util.Date
-import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 class LinkSettingsScreenTest {
@@ -249,7 +248,7 @@ class LinkSettingsScreenTest {
             uiState = loaded.copy(isExpiryEnabled = true, expiryDate = EXPIRY_MILLIS)
         )
 
-        composeRule.onNodeWithText(formattedUtcDate(EXPIRY_MILLIS)).assertIsDisplayed()
+        composeRule.onNodeWithText(formattedDate(EXPIRY_MILLIS)).assertIsDisplayed()
     }
 
     @Test
@@ -609,11 +608,9 @@ class LinkSettingsScreenTest {
         }
     }
 
-    // Mirrors the screen's own UTC MEDIUM formatting so the assertion is locale-independent.
-    private fun formattedUtcDate(millis: Long): String =
-        DateFormat.getDateInstance(DateFormat.MEDIUM)
-            .apply { timeZone = TimeZone.getTimeZone("UTC") }
-            .format(Date(millis))
+    // Mirrors the screen's own MEDIUM date formatting so the assertion is locale-independent.
+    private fun formattedDate(millis: Long): String =
+        DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(millis))
 
     private companion object {
         const val NAVIGATION_ICON = "Navigation Icon"
