@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.ChannelMixingAudioProcessor
 import androidx.media3.common.audio.ChannelMixingMatrix
 import androidx.media3.common.util.UnstableApi
+import mega.privacy.android.shared.resources.R as sharedR
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.TextColor
@@ -43,7 +45,7 @@ object VolumeTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Volume
     override val icon: ImageVector = Icons.AutoMirrored.Filled.VolumeUp
-    override val label: String = "Volume"
+    override val labelRes: Int = sharedR.string.video_editor_tool_volume
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {
         val volumeAction = action as? VolumeAction ?: return state
@@ -101,6 +103,13 @@ object VolumeTool : EditorTool {
                 )
                 MuteButton(
                     muted = muted,
+                    contentDescription = stringResource(
+                        if (muted) {
+                            sharedR.string.video_editor_unmute_button
+                        } else {
+                            sharedR.string.video_editor_mute_button
+                        },
+                    ),
                     // From mute → 100% (restore passthrough); from any other
                     // volume → mute. A two-step toggle.
                     onClick = { onAction(VolumeAction.SetVolume(if (muted) 1f else 0f)) },
@@ -111,7 +120,7 @@ object VolumeTool : EditorTool {
                 visible = state.volume.volume > 1.05f,
             ) {
                 MegaText(
-                    text = "Boost above 100% applies on export only.",
+                    text = stringResource(sharedR.string.video_editor_volume_boost_warning),
                     style = AppTheme.typography.bodySmall,
                     textColor = TextColor.Secondary,
                     textAlign = TextAlign.Center,

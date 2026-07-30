@@ -12,6 +12,7 @@ import androidx.media3.common.Effect
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.media3.effect.SpeedChangeEffect
 import mega.privacy.android.feature.videoeditor.components.SpeedSelector
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
@@ -34,7 +35,7 @@ object SpeedTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Speed
     override val icon: ImageVector = Icons.Filled.Speed
-    override val label: String = "Speed"
+    override val labelRes: Int = sharedR.string.video_editor_tool_speed
 
     private const val MIN_SPEED = 0.1f
     private const val MAX_SPEED = 10f

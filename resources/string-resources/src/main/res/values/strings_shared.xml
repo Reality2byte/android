@@ -716,7 +716,7 @@
     <!-- The additional security label in the ads free introduction screen -->
     <string name="payment_ads_free_intro_additional_security_label">MEGA&#160;Pass and MEGA&#160;VPN</string>
     <!-- The additional security description in the ads free introduction screen -->
-    <string name="payment_ads_free_intro_additional_security_description">Make your online life safer, faster, and easier with our password manager and high speed VPN</string>
+    <string name="payment_ads_free_intro_additional_security_description">Make your online life safer, faster, and easier with our password manager and high-speed VPN</string>
     <!-- The button text view pro plan in the ads free introduction screen -->
     <string name="payment_ads_free_intro_button_view_pro_plan">View Pro plans</string>
     <!-- Label for call option on settings -->
@@ -1052,8 +1052,6 @@
     <string name="file_link_expired_title">The file link you’re trying to access is no longer available</string>
     <!-- Bullet point shown when a file link is unavailable because the link has been disabled -->
     <string name="folder_link_unavailable_deleted">The folder has been deleted</string>
-    <!-- Message of the dialog shown when opening a link to content that is not available for the logged in account -->
-    <string name="deep_link_content_unavailable_dialog_message">The content you are trying to access is not available for this account.</string>
     <!-- Tooltip description for transfer section play action -->
     <string name="transfers_section_action_play">Play</string>
     <!-- Tooltip description for transfer section play action -->
@@ -1741,14 +1739,12 @@
     <string name="campaign_name_cyber_monday">Cyber Monday deal: %1$d%% off</string>
     <!-- campaign name for Special offer -->
     <string name="campaign_name_special_offer">Special offer: %1$d%% off</string>
-    <!-- Label for first time period in months full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of months. 
-    is a line break. -->
+    <!-- Label for first time period in months full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of months. is a line break. -->
     <plurals name="label_first_time_in_months_full">
         <item quantity="one">[B]%1$s[/B]\nFor the first month</item>
         <item quantity="other">[B]%1$s[/B]\nFor the first %2$d months</item>
     </plurals>
-    <!-- Label for first time period in years full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of years. 
-    is a line break. -->
+    <!-- Label for first time period in years full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of years. is a line break. -->
     <plurals name="label_first_time_in_years_full">
         <item quantity="one">[B]%1$s[/B]\nFor the first year</item>
         <item quantity="other">[B]%1$s[/B]\nFor the first %2$d years</item>
@@ -1785,11 +1781,9 @@
         <item quantity="one">Bonus expires in %1$d day</item>
         <item quantity="other">Bonus expires in %1$d days</item>
     </plurals>
-    <!-- Discount label for first month singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. 
-    is a line break before "For the first month". -->
+    <!-- Discount label for first month singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. is a line break before "For the first month". -->
     <string name="label_first_time_in_months_full_singular">[B]%1$s[/B]\nFor the first month</string>
-    <!-- Discount label for first year singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. 
-    is a line break before "For the first year". -->
+    <!-- Discount label for first year singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. is a line break before "For the first year". -->
     <string name="label_first_time_in_years_full_singular">[B]%1$s[/B]\nFor the first year</string>
     <!-- Hidden nodes description: control visibility feature with tag -->
     <string name="hidden_nodes_description_control_visibility_tag">Only you can reveal hidden files, either individually or by temporarily displaying hidden items from the [A]settings[/A].</string>
@@ -3057,11 +3051,11 @@
     <string name="email_confirmation_resend_button_countdown">Resend email in %1$s</string>
     <string name="document_scanner_prepare_title">Setting up document scanner</string>
     <string name="document_scanner_prepare_message">This only happens once. You can keep using your device while it downloads.</string>
-    <string name="document_scanner_prepare_error_title">Couldnt set up the document scanner</string>
+    <string name="document_scanner_prepare_error_title">Couldn’t set up the document scanner</string>
     <string name="document_scanner_prepare_error_transient_message">Check your connection and try again.</string>
     <string name="document_scanner_prepare_error_permanent_message">You can use the old scanner instead.</string>
     <string name="document_scanner_prepare_retry_button">Try again</string>
-    <string name="document_scanner_prepare_waiting_for_connection">Waiting for connection. The download resumes automatically once youre back online.</string>
+    <string name="document_scanner_prepare_waiting_for_connection">Waiting for connection. The download resumes automatically once you’re back online.</string>
     <string name="document_scanner_prepare_reconnecting">Reconnecting&#8230;</string>
     <!-- Share link revamp: title of the "Link access" info banner on the Share link screen -->
     <string name="share_link_access_banner_title">Link access</string>
@@ -3090,13 +3084,13 @@
     <!-- Create group chat: label of the encryption key rotation toggle -->
     <string name="create_group_chat_ekr_label">Encryption key rotation</string>
     <!-- Create group chat: explanation shown under the encryption key rotation toggle -->
-    <string name="create_group_chat_ekr_explanation">Encryption key rotation is slightly more secure, but doesn’t allow you to create a chat link and new participants won’t see past messages.</string>
+    <string name="create_group_chat_ekr_explanation">Encryption key rotation provides enhanced security, but doesn’t allow you to create a chat link and new participants won’t see past messages.</string>
     <!-- Create group chat: label of the get chat link toggle -->
     <string name="create_group_chat_get_chat_link_label">Get chat link</string>
     <!-- Create group chat: label of the toggle allowing non-host participants to add others -->
     <string name="create_group_chat_allow_add_participants_label">Allow non-hosts to add participants</string>
     <!-- Choose folders and files to pin to Home. Used both as the picker's top bar title and as the add button/link on the empty Pinned widget. -->
-    <string name="home_pinned_choose_files_and_folders">Choose files &amp; folders</string>
+    <string name="home_pinned_choose_files_and_folders">Choose files and folders</string>
     <!-- Title at the top of the redesigned subscription/upgrade page -->
     <string name="subscription_revamp_title">Upgrade to MEGA Pro</string>
     <!-- Title of the card highlighting the benefits of a Pro plan on the redesigned subscription page -->
@@ -3106,7 +3100,7 @@
     <!-- Transfer benefit on the redesigned subscription page. Placeholder is the highest transfer quota, e.g. "240 TB". -->
     <string name="subscription_revamp_why_go_pro_transfer">Enjoy up to %1$s transfer quota</string>
     <!-- VPN benefit on the redesigned subscription page -->
-    <string name="subscription_revamp_why_go_pro_vpn">Stay safe online with MEGA VPN</string>
+    <string name="subscription_revamp_why_go_pro_vpn">Stay private online with MEGA VPN</string>
     <!-- Password manager benefit on the redesigned subscription page -->
     <string name="subscription_revamp_why_go_pro_pass">Keep passwords safe with MEGA Pass</string>
     <!-- Help text on the current plan card when the subscription will renew. Placeholder is the renewal date, e.g. "8 July 2027". -->
@@ -3143,16 +3137,6 @@
     <string name="share_link_set_password">Set password</string>
     <!-- Share link revamp: subtitle explaining the "Set password" row -->
     <string name="share_link_password_subtitle">Limit access with a password</string>
-    <!-- Share link revamp: notice under the link showing the date it stops working. %1$s is a date, for example "Jan 11, 2026" -->
-    <string name="share_link_expires_on">Link expires on %1$s</string>
-    <!-- Share link revamp: warning under the link when its expiry date has already passed -->
-    <string name="share_link_expired">Link expired</string>
-    <!-- Share link revamp: title of the dialog asking whether to share the link password too -->
-    <string name="share_link_password_dialog_title">Link password</string>
-    <!-- Share link revamp: body of the dialog asking whether to share the link password too -->
-    <string name="share_link_password_dialog_message">Do you want to share the password for this link?</string>
-    <!-- Share link revamp: shared text when the user chooses to send the password with the link. %1$s is the link, %2$s is the password -->
-    <string name="share_link_with_password">Link: %1$s\n\nPassword: %2$s</string>
     <!-- Settings: title of the Sorting and view mode screen -->
     <string name="settings_sorting_and_view_mode_title">Sorting and view mode</string>
     <!-- Settings: title of the sorting preference option -->
@@ -3210,12 +3194,6 @@
         <item quantity="one">Minute</item>
         <item quantity="other">Minutes</item>
     </plurals>
-    <!-- Title of the subscription offer banner on the Home screen. %1$s is the campaign name (e.g. "Black Friday"), %2$d is the discount percentage. -->
-    <string name="home_offer_banner_title">%1$s · Get %2$d%% off</string>
-    <!-- Subtitle of the subscription offer banner on the Home screen. %1$s is the localised discounted monthly price (e.g. "€4.99"), %2$s is the plan name (e.g. "Pro I"). -->
-    <string name="home_offer_banner_subtitle">%1$s/month for %2$s</string>
-    <!-- Action button label on the Home screen subscription offer banner, opens the upgrade screen. -->
-    <string name="home_offer_banner_button">Grab deal</string>
     <!-- Title of the dialog shown when the discount offer countdown reaches zero while the user is on the subscription page -->
     <string name="subscription_offer_expired_dialog_title">This offer has ended</string>
     <!-- Body of the dialog shown when the discount offer countdown reaches zero, pointing the user at the currently available plans -->
@@ -3364,7 +3342,7 @@
     <!-- Title of the quota-warning upsell screen when transfer quota is running low (free or logged-out users) -->
     <string name="subscription_quota_transfer_low_title">Your transfer quota is running low</string>
     <!-- Title of the quota-warning upsell screen when a Pro user's transfer quota is running low. %1$d is the used percentage, e.g. "You've used 80% of your transfer quota" -->
-    <string name="subscription_quota_transfer_percentage_used_title">Youve used %1$d%% of your transfer quota</string>
+    <string name="subscription_quota_transfer_percentage_used_title">You’ve used %1$d%% of your transfer quota</string>
     <!-- Title of the quota-warning upsell screen when transfer quota has been exceeded -->
     <string name="subscription_quota_transfer_over_title">Transfer quota exceeded</string>
     <!-- Subtitle of the quota-warning upsell screen when transfer quota is running low during a download. Followed by a 'Learn more' link -->
@@ -3394,7 +3372,7 @@
     <!-- Transfer usage on the current plan card for Pro users, who have a fixed transfer quota. %1$s is the used amount, %2$s the total, e.g. '2.3 TB of 2.4 TB used' -->
     <string name="subscription_quota_current_plan_transfer_usage_with_total">%1$s of %2$s used</string>
     <!-- Subtitle of the quota-warning upsell screen when storage is over the limit and the user was trying to upload -->
-    <string name="subscription_quota_storage_over_upload_subtitle">Youve run out of storage space. Upgrade your plan to continue uploading</string>
+    <string name="subscription_quota_storage_over_upload_subtitle">You’ve run out of storage space. Upgrade your plan to continue uploading</string>
     <!-- Audio player: label for the mode-toggle button when the player is in podcast mode -->
     <string name="audio_player_podcast_mode_label">Podcast mode</string>
     <!-- Audio player: label for the mode-toggle button when the player is in music mode -->
@@ -3430,11 +3408,11 @@
     <!-- Human-readable file type shown for HEIC (.heic) image files -->
     <string name="file_type_name_heic_image">HEIC image</string>
     <!-- Human-readable file type shown for ZIP (.zip) archive files -->
-    <string name="file_type_name_zip_compressed">Zip compressed</string>
+    <string name="file_type_name_zip_compressed">ZIP compressed</string>
     <!-- Human-readable file type shown for PDF (.pdf) files -->
     <string name="file_type_name_pdf_document">PDF document</string>
     <!-- Human-readable file type shown for raw camera image files -->
-    <string name="file_type_name_raw">Raw image</string>
+    <string name="file_type_name_raw">RAW image</string>
     <!-- Human-readable file type shown for word-processing documents -->
     <string name="file_type_name_word">Word document</string>
     <!-- Human-readable file type shown for Microsoft Excel spreadsheets -->
@@ -3525,8 +3503,6 @@
     <string name="contact_info_chat_notifications">Chat notifications</string>
     <!-- Contact info: subtitle of the chat notifications row when notifications are muted until turned back on -->
     <string name="contact_info_notifications_muted">Off</string>
-    <!-- Contact info: subtitle of the chat notifications row when notifications are muted until a specific time; the placeholder is that time, e.g. "8:00 AM" -->
-    <string name="contact_info_notifications_muted_until">Muted until %1$s</string>
     <!-- Contact info: title of the row that opens the list of files shared in the chat with the contact -->
     <string name="contact_info_shared_files">Shared files</string>
     <!-- Contact info: title of the row that opens the manage chat history screen -->
@@ -3555,6 +3531,32 @@
         <item quantity="one">%1$d hour</item>
         <item quantity="other">%1$d hours</item>
     </plurals>
+    <!-- Add contacts picker (share flow): warning banner shown when the selection includes recipients whose credentials the user has not verified -->
+    <string name="add_contacts_unverified_contact_warning">Some of the contacts you’re sharing information with haven’t been verified by you. To ensure extra security, we recommend that you verify their credentials in Contacts. Tap on the three dots next to the contact you want to verify and tap Info.</string>
+    <!-- Audio player: title of the playback-speed bottom sheet -->
+    <string name="audio_player_playback_speed_title">Playback speed</string>
+    <!-- Warning banner shown in the file info screen when a file has been taken down -->
+    <string name="file_info_taken_down_file_warning">This file has been taken down in accordance with our takedown policy.</string>
+    <!-- Warning banner shown in the file info screen when a folder has been taken down -->
+    <string name="file_info_taken_down_folder_warning">This folder has been taken down in accordance with our takedown policy.</string>
+    <!-- Action button on the taken-down warning banner; opens the takedown guidance policy web page -->
+    <string name="file_info_taken_down_action">Takedown Guidance Policy</string>
+    <!-- Label of the toolbar action that opens the QR code scanner on the contact pickers -->
+    <string name="contacts_qr_scan_action">Scan QR code</string>
+    <!-- Contact info: subtitle of the chat notifications row when notifications are muted until a specific time; the placeholder is that time, e.g. "8:00 AM" -->
+    <string name="contact_info_notifications_muted_until">Muted until %1$s</string>
+    <!-- Share link revamp: access banner body shown when the link is password protected -->
+    <string name="share_link_access_password_description">Only people with the password can open the link</string>
+    <!-- Share link revamp: helper shown under a password protected link, next to a lock icon -->
+    <string name="share_link_password_protected_label">Password-protected</string>
+    <!-- Share link revamp: snackbar shown after the link password is copied to the clipboard -->
+    <string name="share_link_password_copied_snackbar">Password copied to clipboard</string>
+    <!-- Title of the subscription offer banner on the Home screen. %1$s is the campaign name (e.g. "Black Friday"), %2$d is the discount percentage. -->
+    <string name="home_offer_banner_title">%1$s · Get %2$d%% off</string>
+    <!-- Subtitle of the subscription offer banner on the Home screen. %1$s is the localised discounted monthly price (e.g. "€4.99"), %2$s is the plan name (e.g. "Pro I"). -->
+    <string name="home_offer_banner_subtitle">%1$s/month for %2$s</string>
+    <!-- Action button label on the Home screen subscription offer banner, opens the upgrade screen. -->
+    <string name="home_offer_banner_button">Grab deal</string>
     <!-- Contact info: positive button of the nickname dialog that saves the entered nickname -->
     <string name="contact_info_nickname_dialog_set_button">Set</string>
     <!-- Contact info: placeholder of the nickname dialog input field -->
@@ -3568,7 +3570,15 @@
     <!-- Contact info: message of the confirmation dialog shown before removing the contact -->
     <string name="contact_info_remove_contact_dialog_message">All data associated with the selected contact will be permanently lost.</string>
     <!-- Contact info: title of the dialog offering the durations to mute chat notifications for -->
-    <string name="contact_info_mute_notifications_dialog_title">Mute chat notifications for</string>
+    <string name="contact_info_mute_notifications_dialog_title">Mute chat notifications</string>
+    <!-- Contact info: option to mute chat notifications until this morning -->
+    <string name="contact_info_mute_option_until_this_morning">Until this morning</string>
+    <!-- Contact info: option to mute chat notifications until tomorrow morning -->
+    <string name="contact_info_mute_option_until_tomorrow_morning">Until tomorrow morning</string>
+    <!-- Contact info: option to mute chat notifications until the user turns them back on -->
+    <string name="contact_info_mute_option_until_turned_back_on">Until I turn them back on</string>
+    <!-- Contact info: snackbar message shown when creating the chat with the contact fails -->
+    <string name="contact_info_create_chat_error">An error occurred when creating the chat</string>
     <!-- Contact info: mute notifications duration option in minutes. %1$d is the number of minutes -->
     <plurals name="contact_info_mute_option_minutes">
         <item quantity="one">%1$d minute</item>
@@ -3579,38 +3589,76 @@
         <item quantity="one">%1$d hour</item>
         <item quantity="other">%1$d hours</item>
     </plurals>
-    <!-- Contact info: option to mute chat notifications until this morning -->
-    <string name="contact_info_mute_option_until_this_morning">Until this morning</string>
-    <!-- Contact info: option to mute chat notifications until tomorrow morning -->
-    <string name="contact_info_mute_option_until_tomorrow_morning">Until tomorrow morning</string>
-    <!-- Contact info: option to mute chat notifications until the user turns them back on -->
-    <string name="contact_info_mute_option_until_turned_back_on">Until I turn them back on</string>
-    <!-- Contact info: snackbar message shown when creating the chat with the contact fails -->
-    <string name="contact_info_create_chat_error">An error occurred when creating the chat</string>
-    <!-- Add contacts picker (share flow): warning banner shown when the selection includes recipients whose credentials the user has not verified -->
-    <string name="add_contacts_unverified_contact_warning">Some of the contacts you’re sharing information with haven’t been verified by you. To ensure extra security, we recommend that you verify their credentials in Contacts. Tap on the three dots next to the contact you want to verify and tap Info.</string>
-    <!-- Audio player: title of the playback-speed bottom sheet -->
-    <string name="audio_player_playback_speed_title">Playback Speed</string>
-    <!-- Warning banner shown in the file info screen when a file has been taken down -->
-    <string name="file_info_taken_down_file_warning">This file has been taken down in accordance with our takedown policy.</string>
-    <!-- Warning banner shown in the file info screen when a folder has been taken down -->
-    <string name="file_info_taken_down_folder_warning">This folder has been taken down in accordance with our takedown policy.</string>
-    <!-- Action button on the taken-down warning banner; opens the takedown guidance policy web page -->
-    <string name="file_info_taken_down_action">Takedown Guidance Policy</string>
-    <!-- Label of the toolbar action that opens the QR code scanner on the contact pickers -->
-    <string name="contacts_qr_scan_action">Scan QR code</string>
-    <!-- Share link revamp: access banner body shown when the link is password protected -->
-    <string name="share_link_access_password_description">Only people with the password can open the link</string>
-    <!-- Share link revamp: helper shown under a password protected link, next to a lock icon -->
-    <string name="share_link_password_protected_label">Password protected</string>
-    <!-- Share link revamp: snackbar shown after the link password is copied to the clipboard -->
-    <string name="share_link_password_copied_snackbar">Password copied to clipboard</string>
     <!--Title of the Meetings tab in the chat list-->
     <string name="chat_tab_meetings_title">Meetings</string>
+    <!-- Message of the dialog shown when opening a link to content that is not available for the logged in account -->
+    <string name="deep_link_content_unavailable_dialog_message">The content you are trying to access is not available for this account.</string>
+    <!-- Share link revamp: notice under the link showing the date it stops working. %1$s is a date, for example "Jan 11, 2026" -->
+    <string name="share_link_expires_on">Link expires on %1$s</string>
+    <!-- Share link revamp: warning under the link when its expiry date has already passed -->
+    <string name="share_link_expired">Link expired</string>
+    <!-- Share link revamp: title of the dialog asking whether to share the link password too -->
+    <string name="share_link_password_dialog_title">Share link password</string>
+    <!-- Share link revamp: body of the dialog asking whether to share the link password too -->
+    <string name="share_link_password_dialog_message">Do you want to share the password for this link?</string>
+    <!-- Share link revamp: shared text when the user chooses to send the password with the link. %1$s is the link, %2$s is the password -->
+    <string name="share_link_with_password">Link: %1$s\n\nPassword: %2$s</string>
     <!-- Title of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->
     <string name="subscription_quota_no_connection_title">Couldn’t connect</string>
     <!-- Description of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->
-    <string name="subscription_quota_no_connection_description">Try again later to check your storage and transfer usage, and upgrade your plan if needed.</string>
+    <string name="subscription_quota_no_connection_description">Check your storage and transfer details later, or try again</string>
     <!-- Label of the button that retries loading the quota-warning upsell screen -->
     <string name="subscription_quota_no_connection_retry_button">Try again</string>
+    <!-- Video editor: screen title shown in the top app bar -->
+    <string name="video_editor_screen_title">Edit video</string>
+    <!-- Video editor: top bar action that exports the edited video as a new file -->
+    <string name="video_editor_save_copy_button">Save copy</string>
+    <!-- Video editor: error shown when the source video cannot be loaded -->
+    <string name="video_editor_load_failed_message">Failed to load video</string>
+    <!-- Video editor: snackbar shown when exporting the edited video fails -->
+    <string name="video_editor_export_failed_message">Couldn’t save video</string>
+    <!-- Video editor: label of the tool tab that trims the video length -->
+    <string name="video_editor_tool_trim">Trim</string>
+    <!-- Video editor: label of the tool tab that crops the video frame -->
+    <string name="video_editor_tool_crop">Crop</string>
+    <!-- Video editor: label of the tool tab that rotates or flips the video -->
+    <string name="video_editor_tool_rotate">Rotate</string>
+    <!-- Video editor: label of the tool tab that changes the playback speed -->
+    <string name="video_editor_tool_speed">Speed</string>
+    <!-- Video editor: label of the tool tab that changes the audio volume -->
+    <string name="video_editor_tool_volume">Volume</string>
+    <!-- Video editor, rotate tool: button that rotates the video 90 degrees counterclockwise -->
+    <string name="video_editor_rotate_left">Left</string>
+    <!-- Video editor, rotate tool: button that rotates the video 90 degrees clockwise -->
+    <string name="video_editor_rotate_right">Right</string>
+    <!-- Video editor, rotate tool: button that mirrors the video horizontally -->
+    <string name="video_editor_rotate_flip">Flip</string>
+    <!-- Video editor, crop tool: aspect ratio option without a fixed ratio -->
+    <string name="video_editor_crop_free">Free</string>
+    <!-- Video editor, crop tool: aspect ratio option matching the source video -->
+    <string name="video_editor_crop_original">Original</string>
+    <!-- Video editor, volume tool: note shown when volume is set above 100% -->
+    <string name="video_editor_volume_boost_warning">Boost above 100% applies on export only.</string>
+    <!-- Video editor, volume tool: accessibility label of the button that mutes the audio -->
+    <string name="video_editor_mute_button">Mute</string>
+    <!-- Video editor, volume tool: accessibility label of the button that restores the audio -->
+    <string name="video_editor_unmute_button">Unmute</string>
+    <!-- Video editor: accessibility label of the button that starts playback -->
+    <string name="video_editor_play_button">Play</string>
+    <!-- Video editor: accessibility label of the button that pauses playback -->
+    <string name="video_editor_pause_button">Pause</string>
+    <!-- Video editor: accessibility label of the badge shown on the preview when audio is muted -->
+    <string name="video_editor_muted_badge">Muted</string>
+    <!-- Video editor: accessibility label of the button that applies the active tool's changes -->
+    <string name="video_editor_apply_button">Apply</string>
+    <!-- Video editor: shown when discarding video editor -->
+    <string name="video_editor_discard_cancel_button">Keep editing</string>
+    <!-- Video editor: title of the progress dialog shown while downloading the video before editing -->
+    <string name="video_editor_preparing_dialog_title">Preparing video</string>
+    <!-- Video editor: title of the progress dialog shown while the edited video is being exported -->
+    <string name="video_editor_saving_dialog_title">Saving copy</string>
+    <!-- Video editor: progress label shown in the export dialog while the video is encoding -->
+    <string name="video_editor_encoding_label">Encoding&#8230;</string>
+    <!-- Video editor: body of the confirmation dialog shown when leaving with unsaved edits -->
+    <string name="video_editor_discard_changes_description">If you leave now, your edits will be lost.</string>
 </resources>

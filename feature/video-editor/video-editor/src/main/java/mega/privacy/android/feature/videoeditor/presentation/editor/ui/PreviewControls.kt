@@ -25,6 +25,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -102,7 +104,13 @@ fun PreviewControls(
                 MegaIcon(
                     imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     tint = IconColor.OnColor,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    contentDescription = stringResource(
+                        if (isPlaying) {
+                            sharedR.string.video_editor_pause_button
+                        } else {
+                            sharedR.string.video_editor_play_button
+                        },
+                    ),
                     modifier = Modifier.size(20.dp),
                 )
             }

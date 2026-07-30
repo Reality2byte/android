@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +65,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.ui.PreviewSt
 import mega.privacy.android.feature.videoeditor.presentation.editor.ui.ToolActionBar
 import mega.privacy.android.feature.videoeditor.presentation.editor.ui.ToolDeck
 import mega.privacy.android.feature.videoeditor.presentation.screen.model.VideoEditorUiState
+import mega.privacy.android.shared.resources.R as sharedR
 import java.io.File
 
 /**
@@ -216,13 +218,13 @@ internal fun VideoEditorScreen(
                 ),
             ) {
                 MegaTopAppBar(
-                    title = "Edit video",
+                    title = stringResource(sharedR.string.video_editor_screen_title),
                     navigationType = AppBarNavigationType.Close(onCloseRequest),
                     trailingIcons = {
                         if (!isError) {
                             PrimaryFilledButtonM3XSmall(
                                 modifier = Modifier.padding(end = 16.dp),
-                                text = "Save copy",
+                                text = stringResource(sharedR.string.video_editor_save_copy_button),
                                 onClick = onSave,
                                 enabled = saveEnabled
                             )
@@ -234,7 +236,7 @@ internal fun VideoEditorScreen(
     ) { paddingValues ->
         if (isError) {
             EditorErrorState(
-                message = "Failed to load video", // TODO string resource
+                message = stringResource(sharedR.string.video_editor_load_failed_message),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
@@ -362,7 +364,7 @@ private fun BottomSlot(
         ToolTabUiItem(
             id = tool.id.value,
             icon = tool.icon,
-            label = tool.label,
+            label = stringResource(tool.labelRes),
             selected = state.activeTool == tool.id,
             applied = tool.isApplied(state),
         )
@@ -410,7 +412,7 @@ private fun BottomSlot(
                             )
                         }
                         ToolActionBar(
-                            toolLabel = tool.label,
+                            toolLabel = stringResource(tool.labelRes),
                             onCancel = { onAction(EditorAction.CancelTool) },
                             onApply = { onAction(EditorAction.ApplyTool) },
                         )

@@ -8,10 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.media3.effect.ScaleAndRotateTransformation
 import mega.privacy.android.feature.videoeditor.components.RotateTile
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
@@ -35,7 +37,7 @@ object RotateTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Rotate
     override val icon: ImageVector = Icons.Filled.Rotate90DegreesCw
-    override val label: String = "Rotate"
+    override val labelRes: Int = sharedR.string.video_editor_tool_rotate
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {
         val rotateAction = action as? RotateAction ?: return state
@@ -91,21 +93,21 @@ object RotateTool : EditorTool {
         ) {
             RotateTile(
                 icon = IconPack.Medium.Thin.Outline.RotateCcw,
-                label = "Left",
+                label = stringResource(sharedR.string.video_editor_rotate_left),
                 selected = false,
                 onClick = { onAction(RotateAction.RotateLeft) },
                 modifier = Modifier.weight(1f),
             )
             RotateTile(
                 icon = IconPack.Medium.Thin.Outline.RotateCw,
-                label = "Right",
+                label = stringResource(sharedR.string.video_editor_rotate_right),
                 selected = false,
                 onClick = { onAction(RotateAction.RotateRight) },
                 modifier = Modifier.weight(1f),
             )
             RotateTile(
                 icon = IconPack.Medium.Thin.Outline.FlipHorizontal,
-                label = "Flip",
+                label = stringResource(sharedR.string.video_editor_rotate_flip),
                 selected = state.rotate.flipHorizontal,
                 onClick = { onAction(RotateAction.ToggleFlipHorizontal) },
                 modifier = Modifier.weight(1f),

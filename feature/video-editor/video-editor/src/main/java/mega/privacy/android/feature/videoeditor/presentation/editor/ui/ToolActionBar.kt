@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaText
@@ -26,6 +27,7 @@ import mega.android.core.ui.components.surface.SurfaceColor
 import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.shared.resources.R as sharedR
 
 /**
  * Cancel / label / Apply bar shown beneath the active tool's panel. The surface
@@ -62,7 +64,7 @@ fun ToolActionBar(
                 MegaIcon(
                     imageVector = Icons.Filled.Close,
                     tint = IconColor.Primary,
-                    contentDescription = "Cancel",
+                    contentDescription = stringResource(sharedR.string.general_dialog_cancel_button),
                 )
             }
             MegaText(
@@ -82,7 +84,7 @@ fun ToolActionBar(
                 MegaIcon(
                     imageVector = Icons.Filled.Check,
                     tint = IconColor.Brand,
-                    contentDescription = "Apply",
+                    contentDescription = stringResource(sharedR.string.video_editor_apply_button),
                 )
             }
         }

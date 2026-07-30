@@ -10,10 +10,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Effect
 import androidx.media3.common.util.UnstableApi
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.media3.effect.Crop
 import mega.privacy.android.feature.videoeditor.components.AspectRatioChip
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
@@ -41,7 +43,7 @@ object CropTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Crop
     override val icon: ImageVector = Icons.Filled.Crop
-    override val label: String = "Crop"
+    override val labelRes: Int = sharedR.string.video_editor_tool_crop
 
     override val pauseOnEnter: Boolean = false
     override val resumeOnApply: Boolean = false
@@ -114,7 +116,7 @@ object CropTool : EditorTool {
         ) {
             CropPreset.entries.forEach { preset ->
                 AspectRatioChip(
-                    label = preset.displayName,
+                    label = preset.label(),
                     icon = preset.icon(),
                     selected = state.crop.selectedPreset == preset,
                     onClick = { onAction(CropAction.SetPreset(preset)) },
@@ -122,6 +124,14 @@ object CropTool : EditorTool {
             }
         }
     }
+}
+
+@Composable
+private fun CropPreset.label(): String = when (this) {
+    CropPreset.FREE -> stringResource(sharedR.string.video_editor_crop_free)
+    CropPreset.ORIGINAL -> stringResource(sharedR.string.video_editor_crop_original)
+    // Ratio labels ("1:1", "9:16", ...) are locale-neutral.
+    else -> displayName
 }
 
 private fun CropPreset.icon(): ImageVector = when (this) {

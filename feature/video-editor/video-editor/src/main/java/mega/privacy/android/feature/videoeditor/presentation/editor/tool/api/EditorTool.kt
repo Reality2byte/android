@@ -1,5 +1,6 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.api
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,8 +40,9 @@ interface EditorTool {
     /** Tab-row icon. */
     val icon: ImageVector
 
-    /** Display label (also used as fallback toolbar title). */
-    val label: String
+    /** Display label resource (also used as fallback toolbar title). */
+    @get:StringRes
+    val labelRes: Int
 
     /**
      * Apply a tool-specific action to the state. Tools should `as?`-narrow the

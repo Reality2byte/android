@@ -25,12 +25,14 @@ import mega.privacy.android.icon.pack.IconPack
  *
  * @param muted whether the volume is currently muted
  * @param onClick called when the button is tapped
+ * @param contentDescription accessibility label describing the button's action
  * @param modifier applied to the button
  */
 @Composable
 fun MuteButton(
     muted: Boolean,
     onClick: () -> Unit,
+    contentDescription: String?,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -48,7 +50,7 @@ fun MuteButton(
                 IconPack.Medium.Thin.Outline.VolumeOff
             },
             tint = IconColor.Primary,
-            contentDescription = if (muted) "Unmute" else "Mute",
+            contentDescription = contentDescription,
             modifier = Modifier.size(24.dp),
         )
     }
@@ -59,8 +61,8 @@ fun MuteButton(
 private fun MuteButtonPreview() {
     AndroidThemeForPreviews {
         Row {
-            MuteButton(muted = false, onClick = {})
-            MuteButton(muted = true, onClick = {})
+            MuteButton(muted = false, onClick = {}, contentDescription = "Mute")
+            MuteButton(muted = true, onClick = {}, contentDescription = "Unmute")
         }
     }
 }

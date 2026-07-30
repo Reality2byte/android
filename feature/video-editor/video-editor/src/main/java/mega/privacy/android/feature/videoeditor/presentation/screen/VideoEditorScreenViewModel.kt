@@ -268,7 +268,7 @@ internal class VideoEditorScreenViewModel @AssistedInject constructor(
 
     /** Called when the editor's export fails, to report it to the user. */
     fun onExportFailed() {
-        viewModelScope.launch { snackbarEventQueue.queueMessage(EXPORT_FAILURE_MESSAGE) }
+        viewModelScope.launch { snackbarEventQueue.queueMessage(sharedR.string.video_editor_export_failed_message) }
     }
 
     /** Clear the upload [TransferTriggerEvent] once the host has handed it to the transfer subsystem. */
@@ -291,7 +291,6 @@ internal class VideoEditorScreenViewModel @AssistedInject constructor(
         "${sourceName.substringBeforeLast('.')}$EXPORT_FILE_EXTENSION"
 
     private companion object {
-        const val EXPORT_FAILURE_MESSAGE = "Couldn't save video"
         const val EXPORT_FILE_EXTENSION = ".mp4"
     }
 }

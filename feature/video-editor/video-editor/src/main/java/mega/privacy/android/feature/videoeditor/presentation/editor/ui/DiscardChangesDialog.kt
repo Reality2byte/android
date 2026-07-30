@@ -23,10 +23,10 @@ internal fun DiscardChangesDialog(
     BasicDialog(
         modifier = modifier,
         title = stringResource(sharedR.string.general_dialog_title_discard_changes),
-        description = "If you leave now, your edits will be lost.", // TODO string resource
+        description = stringResource(sharedR.string.video_editor_discard_changes_description),
         positiveButtonText = stringResource(sharedR.string.general_dialog_discard_button),
         onPositiveButtonClicked = onDiscard,
-        negativeButtonText = stringResource(sharedR.string.general_dialog_cancel_button),
+        negativeButtonText = stringResource(sharedR.string.video_editor_discard_cancel_button),
         onNegativeButtonClicked = onDismiss,
         onDismiss = onDismiss,
     )

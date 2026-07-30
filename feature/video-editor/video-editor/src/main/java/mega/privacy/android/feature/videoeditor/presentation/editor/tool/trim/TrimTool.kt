@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.android.core.formatter.mapper.DurationInSecondsTextMapper
 import mega.privacy.android.feature.videoeditor.components.Filmstrip
 import mega.privacy.android.feature.videoeditor.presentation.editor.state.EditorState
@@ -34,7 +35,7 @@ object TrimTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Trim
     override val icon: ImageVector = Icons.Filled.ContentCut
-    override val label: String = "Trim"
+    override val labelRes: Int = sharedR.string.video_editor_tool_trim
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {
         val trimAction = action as? TrimAction ?: return state

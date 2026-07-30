@@ -486,7 +486,7 @@ class VideoEditorScreenViewModelTest {
         underTest.onExportSucceeded(mock<Uri> { on { path } doReturn null })
         advanceUntilIdle()
 
-        verifyBlocking(snackbarEventQueue) { queueMessage(eq("Couldn't save video")) }
+        verifyBlocking(snackbarEventQueue) { queueMessage(sharedR.string.video_editor_export_failed_message) }
     }
 
     @Test
@@ -529,6 +529,6 @@ class VideoEditorScreenViewModelTest {
         underTest.onExportFailed()
         advanceUntilIdle()
 
-        verifyBlocking(snackbarEventQueue) { queueMessage(eq("Couldn't save video")) }
+        verifyBlocking(snackbarEventQueue) { queueMessage(sharedR.string.video_editor_export_failed_message) }
     }
 }

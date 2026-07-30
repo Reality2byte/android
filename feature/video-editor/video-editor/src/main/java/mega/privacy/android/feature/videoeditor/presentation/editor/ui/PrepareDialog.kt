@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,8 +40,9 @@ fun PrepareVideoDialog(
 ) {
     val context = LocalContext.current
     BlockingProgressDialog(
-        title = "Preparing video",
+        title = stringResource(sharedR.string.video_editor_preparing_dialog_title),
         percent = percent,
+        cancelButtonText = stringResource(sharedR.string.general_dialog_cancel_button),
         onCancel = onCancel,
         modifier = modifier,
         description = fileName,

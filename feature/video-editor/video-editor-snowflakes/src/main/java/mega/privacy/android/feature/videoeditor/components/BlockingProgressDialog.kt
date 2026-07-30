@@ -59,6 +59,7 @@ import mega.android.core.ui.tokens.theme.DSTokens
 fun BlockingProgressDialog(
     title: String,
     percent: Int,
+    cancelButtonText: String,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
@@ -114,7 +115,7 @@ fun BlockingProgressDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 TextOnlyButtonM3(
-                    text = "Cancel",
+                    text = cancelButtonText,
                     onClick = onCancel,
                     modifier = Modifier.align(Alignment.End),
                 )
@@ -164,6 +165,7 @@ private fun ExportProgressDialogPreview() {
         BlockingProgressDialog(
             percent = 42,
             title = "Saving",
+            cancelButtonText = "Cancel",
             description = "Holiday in Queenstown.mp4",
             statusContent = { },
             onCancel = {},

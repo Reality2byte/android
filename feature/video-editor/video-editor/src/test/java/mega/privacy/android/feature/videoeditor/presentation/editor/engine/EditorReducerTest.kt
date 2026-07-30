@@ -214,7 +214,7 @@ class EditorReducerTest {
         override val id = FakeToolId
         override val icon: ImageVector =
             ImageVector.Builder("fake", 24.dp, 24.dp, 24f, 24f).build()
-        override val label = "Fake"
+        override val labelRes: Int = 0
 
         override fun reduce(state: EditorState, action: ToolAction): EditorState =
             (action as? FakeAction)?.let { state.copy(volume = VolumeState(it.volume)) } ?: state

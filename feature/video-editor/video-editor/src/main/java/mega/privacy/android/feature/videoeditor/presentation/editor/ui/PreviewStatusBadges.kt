@@ -14,6 +14,8 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaText
@@ -66,7 +68,7 @@ fun PreviewStatusBadges(
                 MegaIcon(
                     imageVector = Icons.AutoMirrored.Filled.VolumeOff,
                     tint = IconColor.OnColor,
-                    contentDescription = "Muted",
+                    contentDescription = stringResource(sharedR.string.video_editor_muted_badge),
                     modifier = Modifier.size(14.dp),
                 )
             }

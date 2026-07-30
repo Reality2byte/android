@@ -2,6 +2,8 @@ package mega.privacy.android.feature.videoeditor.presentation.editor.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import mega.privacy.android.shared.resources.R as sharedR
 import androidx.compose.ui.tooling.preview.Preview
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.theme.AndroidThemeForPreviews
@@ -26,14 +28,15 @@ fun ExportProgressDialog(
     modifier: Modifier = Modifier,
 ) {
     BlockingProgressDialog(
-        title = "Saving copy",
+        title = stringResource(sharedR.string.video_editor_saving_dialog_title),
         percent = percent,
+        cancelButtonText = stringResource(sharedR.string.general_dialog_cancel_button),
         onCancel = onCancel,
         modifier = modifier,
         description = fileName.takeIf { it.isNotBlank() },
     ) {
         MegaText(
-            text = "Encoding…",
+            text = stringResource(sharedR.string.video_editor_encoding_label),
             style = AppTheme.typography.bodySmall,
             textColor = TextColor.Secondary,
         )
