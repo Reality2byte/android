@@ -97,6 +97,54 @@ class LinkSettingsScreenTest {
     }
 
     @Test
+    fun `test that the separate-key toggle is disabled when a password is enabled`() {
+        setContent(uiState = loaded.copy(isPasswordEnabled = true, password = "s3cretPass"))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).assertIsNotEnabled()
+    }
+
+    @Test
+    fun `test that tapping the separate-key row does nothing when a password is enabled`() {
+        var enabled: Boolean? = null
+        setContent(
+            uiState = loaded.copy(isPasswordEnabled = true, password = "s3cretPass"),
+            onSeparateKeyEnabled = { enabled = it },
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_ROW_TAG).performClick()
+
+        assertThat(enabled).isNull()
+    }
+
+    @Test
+    fun `test that the separate-key toggle is enabled again once the password is turned off`() {
+        setContent(uiState = loaded.copy(isPasswordEnabled = false))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).assertIsEnabled()
+    }
+
+    @Test
+    fun `test that the password toggle stays enabled when the separate key is on`() {
+        setContent(uiState = loaded.copy(isSeparateKeyEnabled = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).assertIsEnabled()
+    }
+
+    @Test
+    fun `test that the separate-key Learn more link still works when a password is enabled`() {
+        var clicked = false
+        setContent(
+            uiState = loaded.copy(isPasswordEnabled = true, password = "s3cretPass"),
+            onLearnMore = { clicked = true },
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_LEARN_MORE_TAG, useUnmergedTree = true)
+            .performClick()
+
+        assertThat(clicked).isTrue()
+    }
+
+    @Test
     fun `test that tapping the expiry toggle invokes onExpiryEnabled`() {
         var enabled: Boolean? = null
         setContent(uiState = loaded, onExpiryEnabled = { enabled = it })

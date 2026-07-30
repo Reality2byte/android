@@ -260,6 +260,8 @@ private fun LinkSettingsContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
+        // A password-protected link already encrypts the key, so the option is unavailable while a
+        // password is set. The reverse is allowed: enabling a password clears the separate key.
         GenericListItem(
             modifier = Modifier.testTag(LINK_SETTINGS_SEPARATE_KEY_ROW_TAG),
             title = {
@@ -295,12 +297,13 @@ private fun LinkSettingsContent(
                     onAnnotationClick = { onLearnMore() },
                 )
             },
-            enableClick = true,
+            enableClick = !uiState.isPasswordEnabled,
             onClickListener = { onSeparateKeyEnabled(!uiState.isSeparateKeyEnabled) },
             trailingElement = {
                 Toggle(
                     modifier = Modifier.testTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG),
                     isChecked = uiState.isSeparateKeyEnabled,
+                    isEnabled = !uiState.isPasswordEnabled,
                     onCheckedChange = onSeparateKeyEnabled,
                 )
             },
