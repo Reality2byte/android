@@ -8,12 +8,18 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -37,6 +44,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import de.palm.composestateevents.triggered
+import kotlinx.coroutines.launch
 import mega.android.core.ui.components.LinkSpannedText
 import mega.android.core.ui.components.MegaScaffoldWithTopAppBarScrollBehavior
 import mega.android.core.ui.components.MegaText
@@ -174,10 +182,14 @@ fun LinkSettingsScreen(
         },
         bottomBar = {
             if (!uiState.isLoading) {
+                // safeDrawing takes the larger of the navigation bar and the keyboard, so Save
+                // rides above the keyboard without stacking both insets when it is open.
                 AnchoredButtonGroup(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding(),
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+                        ),
                     buttonGroup = listOf {
                         Button.PrimaryButton(
                             modifier = Modifier
@@ -247,6 +259,8 @@ private fun LinkSettingsContent(
     modifier: Modifier = Modifier,
 ) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    val passwordFieldPosition = remember { BringIntoViewRequester() }
+    val coroutineScope = rememberCoroutineScope()
 
     // Enabling expiry with no date yet goes straight to the picker, so choosing a date does not
     // need a second tap on the revealed field.
@@ -361,6 +375,7 @@ private fun LinkSettingsContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .bringIntoViewRequester(passwordFieldPosition)
                     .testTag(LINK_SETTINGS_PASSWORD_FIELD_TAG),
                 label = null,
                 placeholder = stringResource(sharedR.string.password_placeholder),
@@ -370,6 +385,13 @@ private fun LinkSettingsContent(
                 warningText = strengthLabel.takeIf { uiState.passwordStrength == PasswordStrength.WEAK },
                 errorText = strengthLabel.takeIf { uiState.passwordStrength == PasswordStrength.VERY_WEAK },
                 onValueChanged = onPasswordChanged,
+                // The field sits at the bottom of the screen, so on focus scroll it fully into
+                // view — its strength help text included — above the keyboard.
+                onFocusChanged = { focused ->
+                    if (focused) {
+                        coroutineScope.launch { passwordFieldPosition.bringIntoView() }
+                    }
+                },
             )
         }
     }
