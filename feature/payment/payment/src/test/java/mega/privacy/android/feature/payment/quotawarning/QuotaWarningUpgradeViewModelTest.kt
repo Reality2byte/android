@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
@@ -132,6 +133,29 @@ class QuotaWarningUpgradeViewModelTest {
             assertThat(state.storageUsedPercentage).isEqualTo(95)
             assertThat(state.transferUsed).isEqualTo(1 * BYTES_IN_GB)
             assertThat(state.transferUsedPercentage).isEqualTo(20)
+        }
+    }
+
+    @Test
+    fun `test that init requests both storage and transfer account details`() = runTest {
+        initViewModel()
+        advanceUntilIdle()
+
+        verifyBlocking(getSpecificAccountDetailUseCase) {
+            invoke(storage = true, transfer = true, pro = false)
+        }
+    }
+
+    @Test
+    fun `test that init still emits state when fetching account details fails`() = runTest {
+        wheneverBlocking { getSpecificAccountDetailUseCase(any(), any(), any()) }
+            .thenThrow(RuntimeException("offline"))
+
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem()).isNotNull()
         }
     }
 

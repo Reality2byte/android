@@ -67,11 +67,13 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
 
     private fun fetchLatestUsedInfo() {
         viewModelScope.launch {
-            getSpecificAccountDetailUseCase(
-                storage = false,
-                transfer = true,
-                pro = false
-            )
+            runCatching {
+                getSpecificAccountDetailUseCase(
+                    storage = true,
+                    transfer = true,
+                    pro = false
+                )
+            }.onFailure { Timber.e(it) }
         }
     }
 
