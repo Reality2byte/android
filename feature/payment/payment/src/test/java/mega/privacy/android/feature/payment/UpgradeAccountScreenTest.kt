@@ -45,6 +45,7 @@ import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_FEATUR
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_IMAGE_HEADER
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_LAZY_COLUMN
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_MONTHLY_CHIP
+import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_OFFER_EXPIRED_DIALOG
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_OFFER_HEADER_BADGE
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_REVAMP_PLAN_CARD
 import mega.privacy.android.feature.payment.presentation.upgrade.TEST_TAG_REVAMP_TITLE
@@ -711,6 +712,32 @@ class UpgradeAccountScreenTest {
         )
 
         composeRule.onNodeWithTag(TEST_TAG_OFFER_COUNTDOWN).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that offer expired dialog is not shown while the offer is still running`() {
+        setContent(
+            isSubscriptionRevampEnabled = true,
+            uiState = offerUiState().copy(
+                offerValidUntil = System.currentTimeMillis() / 1000L + 3600L,
+            ),
+        )
+
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_COUNTDOWN).assertExists()
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_EXPIRED_DIALOG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that offer expired dialog is not shown when the offer had already elapsed`() {
+        setContent(
+            isSubscriptionRevampEnabled = true,
+            uiState = offerUiState().copy(
+                offerValidUntil = System.currentTimeMillis() / 1000L - 3600L,
+            ),
+        )
+
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_COUNTDOWN).assertDoesNotExist()
+        composeRule.onNodeWithTag(TEST_TAG_OFFER_EXPIRED_DIALOG).assertDoesNotExist()
     }
 
     @Test

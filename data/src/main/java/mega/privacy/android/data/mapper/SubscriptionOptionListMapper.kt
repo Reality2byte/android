@@ -1,5 +1,6 @@
 package mega.privacy.android.data.mapper
 
+import mega.privacy.android.data.gateway.DeviceGateway
 import mega.privacy.android.domain.entity.SubscriptionOption
 import mega.privacy.android.domain.entity.account.CurrencyPoint
 import nz.mega.sdk.MegaRequest
@@ -11,6 +12,7 @@ import javax.inject.Inject
 internal class SubscriptionOptionListMapper @Inject constructor(
     private val currencyMapper: CurrencyMapper,
     private val accountTypeMapper: AccountTypeMapper,
+    private val deviceGateway: DeviceGateway,
 ) {
     /**
      * Invoke
@@ -18,8 +20,9 @@ internal class SubscriptionOptionListMapper @Inject constructor(
      * @return [List<SubscriptionOption>]
      */
     operator fun invoke(
-        request: MegaRequest
+        request: MegaRequest,
     ) = (0 until request.pricing.numProducts).map {
+        val offerValidUntil = request.pricing.getMobileOfferExpiryTimestamp(it)
         SubscriptionOption(
             sku = request.pricing.getAndroidID(it),
             accountType = accountTypeMapper(request.pricing.getProLevel(it)),
@@ -29,10 +32,10 @@ internal class SubscriptionOptionListMapper @Inject constructor(
             transfer = request.pricing.getGBTransfer(it),
             amount = CurrencyPoint.SystemCurrencyPoint(request.pricing.getAmount(it).toLong()),
             currency = currencyMapper(request.currency.currencyName.orEmpty()),
-            hasOffer = request.pricing.hasMobileOffers(it),
+            hasOffer = request.pricing.hasMobileOffers(it) &&
+                    (offerValidUntil <= 0 || offerValidUntil * 1000L > deviceGateway.now),
             discountName = request.pricing.getMobileOfferLabel(it),
-            offerValidUntil = request.pricing.getMobileOfferExpiryTimestamp(it)
-                .takeIf { expiry -> expiry > 0 },
+            offerValidUntil = offerValidUntil.takeIf { expiry -> expiry > 0 },
             offerFlags = request.pricing.getMobileOfferFlags(it)
                 .takeIf { flags -> flags > 0 },
             offerReshowInterval = request.pricing.getMobileOfferReshowInterval(it)

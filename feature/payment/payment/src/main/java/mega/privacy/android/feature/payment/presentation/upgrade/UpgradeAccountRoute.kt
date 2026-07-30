@@ -122,6 +122,7 @@ fun UpgradeAccountRoute(
                     megaNavigator.launchUrl(it, PRICING_PAGE_URL)
                 }
             },
+            onOfferExpired = chooseAccountViewModel::onOfferExpired,
             onBack = {
                 Analytics.tracker.trackEvent(BackButtonPressedEvent)
                 onBack()

@@ -10,16 +10,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.badge.Badge
 import mega.android.core.ui.components.badge.BadgeType
@@ -29,6 +27,7 @@ import mega.privacy.android.domain.entity.account.OfferPeriod
 import mega.privacy.android.feature.payment.components.BillingPeriodSelector
 import mega.privacy.android.feature.payment.components.OfferCountdown
 import mega.privacy.android.feature.payment.components.OfferPriceCard
+import mega.privacy.android.feature.payment.components.offerCountdownFlow
 import mega.privacy.android.feature.payment.components.upgradeAccountSkeleton
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.OfferHighlight
@@ -38,7 +37,8 @@ import mega.privacy.android.shared.resources.R as sharedR
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The [LocalisedSubscription]s that carry an active discount for [isMonthly] and are not the user's
@@ -94,6 +94,7 @@ internal fun LazyListScope.subscriptionOfferContent(
     onInAppCheckoutClick: (Subscription) -> Unit,
     onSubscriptionUnavailableLearnMoreClick: () -> Unit,
     onPricingPageClick: () -> Unit,
+    onOfferExpired: () -> Unit,
 ) {
     item("offer_header") {
         val subscription = offerSubscription.getSubscription(isMonthly)
@@ -105,6 +106,7 @@ internal fun LazyListScope.subscriptionOfferContent(
             ),
             offerValidUntil = uiState.offerValidUntil,
             locale = locale,
+            onExpired = onOfferExpired,
         )
     }
 
@@ -184,6 +186,7 @@ internal fun LazyListScope.subscriptionMultipleOfferContent(
     onInAppCheckoutClick: (Subscription) -> Unit,
     onSubscriptionUnavailableLearnMoreClick: () -> Unit,
     onPricingPageClick: () -> Unit,
+    onOfferExpired: () -> Unit,
 ) {
     item("offer_header") {
         val discountedSubscriptions = uiState.localisedSubscriptionsList
@@ -200,6 +203,7 @@ internal fun LazyListScope.subscriptionMultipleOfferContent(
             ),
             offerValidUntil = uiState.offerValidUntil,
             locale = locale,
+            onExpired = onOfferExpired,
         )
     }
 
@@ -268,6 +272,7 @@ private fun OfferHeader(
     campaignText: String,
     offerValidUntil: Long?,
     locale: Locale,
+    onExpired: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -292,28 +297,39 @@ private fun OfferHeader(
             textColor = TextColor.Primary,
             modifier = Modifier.testTag(TEST_TAG_OFFER_HEADER_CAMPAIGN),
         )
-        OfferCountdownSection(validUntil = offerValidUntil, locale = locale)
+        OfferCountdownSection(
+            validUntil = offerValidUntil,
+            locale = locale,
+            onExpired = onExpired,
+        )
     }
 }
 
 /**
- * Renders the offer countdown driven by [validUntil] (epoch seconds). Renders nothing while
- * [validUntil] is null or already elapsed; the remaining time is recomputed once a minute.
+ * Renders the offer countdown driven by [validUntil] (epoch seconds), ticked by [offerCountdownFlow].
+ * Renders nothing while [validUntil] is null or already elapsed.
+ *
+ * [onExpired] is called when the offer runs out while the page is open — [offerCountdownFlow] only
+ * completes once that happens. It is not called for an offer that had already elapsed when the page
+ * was opened.
  */
 @Composable
-private fun OfferCountdownSection(validUntil: Long?, locale: Locale) {
+private fun OfferCountdownSection(
+    validUntil: Long?,
+    locale: Locale,
+    onExpired: () -> Unit,
+) {
     if (validUntil == null) return
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(validUntil) {
-        while (true) {
-            now = System.currentTimeMillis()
-            if (validUntil * 1000L - now <= 0L) break
-            delay(30.seconds)
-        }
+    val initialRemaining = remember(validUntil) {
+        (validUntil * 1000L - System.currentTimeMillis()).coerceAtLeast(0L).milliseconds
     }
-    val remainingMillis = validUntil * 1000L - now
-    if (remainingMillis <= 0L) return
-    val totalMinutes = remainingMillis / 60_000L
+    val remaining by remember(validUntil) { offerCountdownFlow(validUntil) }
+        .collectAsState(initial = initialRemaining)
+    LaunchedEffect(remaining, initialRemaining) {
+        if (Duration.ZERO in remaining..<initialRemaining) onExpired()
+    }
+    if (remaining <= Duration.ZERO) return
+    val totalMinutes = remaining.inWholeMinutes
     val days = totalMinutes / (60L * 24L)
     val hours = totalMinutes / 60L % 24L
     val minutes = totalMinutes % 60L

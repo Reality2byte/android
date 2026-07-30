@@ -48,6 +48,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.wheneverBlocking
@@ -100,7 +101,6 @@ class UpgradeAccountViewModelTest {
 
     private fun initViewModel(isUpgradeAccount: Boolean = true) {
         underTest = UpgradeAccountViewModel(
-            getPricing = getPricing,
             getSubscriptionsUseCase = getSubscriptionsUseCase,
             localisedSubscriptionMapper = localisedSubscriptionMapper,
             getRecommendedSubscriptionUseCase = getRecommendedSubscriptionUseCase,
@@ -111,18 +111,6 @@ class UpgradeAccountViewModelTest {
             getCurrentTimeInMillisUseCase = getCurrentTimeInMillisUseCase,
             isUpgradeAccount = isUpgradeAccount,
         )
-    }
-
-    @Test
-    fun `test that exception when get pricing is not propagated`() = runTest {
-        whenever(getPricing(any())).thenAnswer { throw MegaException(1, "It's broken") }
-
-        with(underTest) {
-            refreshPricing()
-            state.map { it.product }.test {
-                Truth.assertThat(awaitItem()).isEqualTo(emptyList<Product>())
-            }
-        }
     }
 
     @Test
@@ -877,6 +865,33 @@ class UpgradeAccountViewModelTest {
         wheneverBlocking { getFeatureFlagValueUseCase(any()) }.thenReturn(false)
         whenever(getFeatureFlagValueUseCase(ApiFeatures.AgeSignalsCheckEnabled)).thenReturn(false)
         initViewModel(isUpgradeAccount = false)
+        underTest.state.map { it.offerValidUntil }.test {
+            Truth.assertThat(awaitItem()).isNull()
+        }
+    }
+
+    @Test
+    fun `test that onOfferExpired reloads the subscriptions`() = runTest {
+        val offerSubscription = subscriptionProIMonthly.copy(
+            offerValidUntil = 1_787_464_050L,
+            discountedAmountMonthly = CurrencyAmount(5.99f, Currency("EUR")),
+        )
+        whenever(getPricing(any())).thenReturn(Pricing(emptyList()))
+        whenever(getSubscriptionsUseCase()).thenReturn(
+            Subscriptions(listOf(offerSubscription), emptyList())
+        )
+        wheneverBlocking { getFeatureFlagValueUseCase(any()) }.thenReturn(false)
+        whenever(getFeatureFlagValueUseCase(ApiFeatures.AgeSignalsCheckEnabled)).thenReturn(false)
+        initViewModel(isUpgradeAccount = false)
+        advanceUntilIdle()
+
+        whenever(getSubscriptionsUseCase()).thenReturn(
+            Subscriptions(listOf(subscriptionProIMonthly), emptyList())
+        )
+        underTest.onOfferExpired()
+        advanceUntilIdle()
+
+        verify(getSubscriptionsUseCase, times(2)).invoke()
         underTest.state.map { it.offerValidUntil }.test {
             Truth.assertThat(awaitItem()).isNull()
         }

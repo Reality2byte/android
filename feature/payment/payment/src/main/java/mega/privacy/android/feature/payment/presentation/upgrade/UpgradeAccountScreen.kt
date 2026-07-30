@@ -55,6 +55,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import mega.android.core.ui.components.MegaScaffold
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.snackbar.MegaSnackbar
@@ -100,9 +102,19 @@ fun UpgradeAccountScreen(
     isSubscriptionRevampEnabled: Boolean = false,
     onSubscriptionUnavailableLearnMoreClick: () -> Unit = {},
     onPricingPageClick: () -> Unit = {},
+    onOfferExpired: () -> Unit = {},
 ) {
     var chosenPlan by rememberSaveable { mutableStateOf<AccountType?>(null) }
     var isMonthly by rememberSaveable { mutableStateOf(false) }
+    var showOfferExpiredDialog by rememberSaveable { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val onOfferCountdownExpired = {
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            onOfferExpired()
+        } else {
+            showOfferExpiredDialog = true
+        }
+    }
     val context = LocalContext.current
     val resources = LocalResources.current
     val locale = LocalLocale.current.platformLocale
@@ -292,6 +304,7 @@ fun UpgradeAccountScreen(
                             onInAppCheckoutClick = onInAppCheckoutClick,
                             onSubscriptionUnavailableLearnMoreClick = onSubscriptionUnavailableLearnMoreClick,
                             onPricingPageClick = onPricingPageClick,
+                            onOfferExpired = onOfferCountdownExpired,
                         )
 
                         is OfferHighlight.Multiple -> subscriptionMultipleOfferContent(
@@ -304,6 +317,7 @@ fun UpgradeAccountScreen(
                             onInAppCheckoutClick = onInAppCheckoutClick,
                             onSubscriptionUnavailableLearnMoreClick = onSubscriptionUnavailableLearnMoreClick,
                             onPricingPageClick = onPricingPageClick,
+                            onOfferExpired = onOfferCountdownExpired,
                         )
 
                         OfferHighlight.None -> subscriptionRevampContent(
@@ -418,6 +432,15 @@ fun UpgradeAccountScreen(
                 content = bodyContent,
             )
         }
+    }
+
+    if (showOfferExpiredDialog) {
+        OfferExpiredDialog(
+            onDismiss = {
+                showOfferExpiredDialog = false
+                onOfferExpired()
+            },
+        )
     }
 }
 

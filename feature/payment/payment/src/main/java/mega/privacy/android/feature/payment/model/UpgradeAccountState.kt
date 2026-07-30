@@ -31,7 +31,6 @@ import kotlin.time.Duration.Companion.seconds
  */
 data class UpgradeAccountState(
     val localisedSubscriptionsList: List<LocalisedSubscription> = emptyList(),
-    val product: List<Product> = emptyList(),
     val cheapestSubscriptionAvailable: LocalisedSubscription? = null,
     val currentSubscriptionPlan: AccountType? = null,
     val subscriptionCycle: AccountSubscriptionCycle = AccountSubscriptionCycle.UNKNOWN,

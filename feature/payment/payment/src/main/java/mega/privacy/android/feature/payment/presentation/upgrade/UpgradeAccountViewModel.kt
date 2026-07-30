@@ -16,10 +16,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.account.AccountLevelDetail
-import mega.privacy.android.domain.entity.billing.Pricing
 import mega.privacy.android.domain.exception.LocalPricingNotAvailableException
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
-import mega.privacy.android.domain.usecase.GetPricing
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.agesignal.AgeSignalUseCase
 import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionUseCase
@@ -48,7 +46,6 @@ import kotlin.time.Duration.Companion.seconds
  */
 @HiltViewModel(assistedFactory = UpgradeAccountViewModel.Factory::class)
 class UpgradeAccountViewModel @AssistedInject constructor(
-    private val getPricing: GetPricing,
     private val getSubscriptionsUseCase: GetSubscriptionsUseCase,
     private val localisedSubscriptionMapper: LocalisedSubscriptionMapper,
     private val getRecommendedSubscriptionUseCase: GetRecommendedSubscriptionUseCase,
@@ -95,7 +92,6 @@ class UpgradeAccountViewModel @AssistedInject constructor(
         } else {
             viewModelScope.launch { refreshRecommendedSubscription() }
         }
-        refreshPricing()
     }
 
     private fun loadSubscriptions() {
@@ -146,6 +142,14 @@ class UpgradeAccountViewModel @AssistedInject constructor(
             .filter { it.hasOffer }
             .mapNotNull { it.offerValidUntil }
             .maxOrNull()
+
+    /**
+     * Reloads the plans after the discount campaign has ended: the discounted prices still on screen
+     * belong to an offer that is over, so the subscriptions have to be fetched again.
+     */
+    fun onOfferExpired() {
+        loadSubscriptions()
+    }
 
     /**
      * Load current subscription plan information.
@@ -233,21 +237,6 @@ class UpgradeAccountViewModel @AssistedInject constructor(
         if (proExpirationTime == null || cycle != AccountSubscriptionCycle.UNKNOWN) return false
         val remaining = (proExpirationTime - getCurrentTimeInMillisUseCase() / 1000).seconds
         return remaining > Duration.ZERO && remaining <= EXPIRING_SOON_THRESHOLD
-    }
-
-    /**
-     * Asks for pricing if needed.
-     */
-    fun refreshPricing() {
-        viewModelScope.launch {
-            val pricing = runCatching { getPricing(false) }.getOrElse {
-                Timber.w(it, "Returning empty pricing as get pricing failed.")
-                Pricing(emptyList())
-            }
-            _state.update {
-                it.copy(product = pricing.products)
-            }
-        }
     }
 
     @AssistedFactory

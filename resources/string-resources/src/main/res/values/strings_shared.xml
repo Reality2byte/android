@@ -3216,6 +3216,12 @@
     <string name="home_offer_banner_subtitle">%1$s/month for %2$s</string>
     <!-- Action button label on the Home screen subscription offer banner, opens the upgrade screen. -->
     <string name="home_offer_banner_button">Grab deal</string>
+    <!-- Title of the dialog shown when the discount offer countdown reaches zero while the user is on the subscription page -->
+    <string name="subscription_offer_expired_dialog_title">This offer has ended</string>
+    <!-- Body of the dialog shown when the discount offer countdown reaches zero, pointing the user at the currently available plans -->
+    <string name="subscription_offer_expired_dialog_description">This deal is no longer available. Check our current plans to find one that suits you.</string>
+    <!-- Button that closes the expired-offer dialog and reloads the subscription page with the currently available plans -->
+    <string name="subscription_offer_expired_dialog_button">View plans</string>
     <!-- Password strength label shown below a password field when the password is very weak -->
     <string name="password_strength_very_weak">Very weak password</string>
     <!-- Password strength label shown below a password field when the password is weak -->
