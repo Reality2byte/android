@@ -58,8 +58,6 @@ import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.domain.entity.uri.UriPath
 import mega.privacy.android.feature.contact.add.model.AddContactUiState
-import mega.privacy.android.feature.contact.add.model.ScannedContactDialog
-import mega.privacy.android.feature.contact.add.model.ScannedContactInviteFeedback
 import mega.privacy.android.feature.contact.components.ContactListLoadingView
 import mega.privacy.android.feature.contact.picker.ContactSelectionState
 import mega.privacy.android.feature.contact.picker.ManualEmailEntrySection
@@ -67,6 +65,8 @@ import mega.privacy.android.feature.contact.picker.ManualEmailSubmitResult
 import mega.privacy.android.feature.contact.picker.PhoneContactsSection
 import mega.privacy.android.feature.contact.picker.ContactPickMode
 import mega.privacy.android.feature.contact.picker.PickPhoneContactContract
+import mega.privacy.android.feature.contact.picker.ScannedContactDialog
+import mega.privacy.android.feature.contact.picker.ScannedContactInviteFeedback
 import mega.privacy.android.feature.contact.picker.rememberContactSelectionState
 import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.icon.pack.R as iconPackR
