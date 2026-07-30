@@ -1,6 +1,9 @@
 package mega.privacy.android.feature.sharelink.presentation.component
 
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -42,18 +45,34 @@ class ShareLinkDetailsTest {
     }
 
     @Test
-    fun `test that the key card is hidden when no key is provided`() {
+    fun `test that the key row is hidden when no key is provided`() {
         setContent()
 
         composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG).assertDoesNotExist()
     }
 
     @Test
-    fun `test that the key card and value are displayed when a key is provided`() {
+    fun `test that the key row and value are displayed when a key is provided`() {
         setContent(key = "decryptionKey")
 
         composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG).assertIsDisplayed()
         composeRule.onNodeWithText("decryptionKey").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the key row is rendered inside the link card`() {
+        setContent(key = "decryptionKey")
+
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG, useUnmergedTree = true)
+            .assert(hasAnyAncestor(hasTestTag(SHARE_LINK_DETAILS_TAG)))
+    }
+
+    @Test
+    fun `test that the password row stays outside the link card`() {
+        setContent(maskedPassword = "••••")
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DETAILS_TAG, useUnmergedTree = true)
+            .assert(hasAnyAncestor(hasTestTag(SHARE_LINK_DETAILS_TAG)).not())
     }
 
     @Test
@@ -100,6 +119,7 @@ class ShareLinkDetailsTest {
         onCopyLink: () -> Unit = {},
         key: String? = null,
         onCopyKey: () -> Unit = {},
+        maskedPassword: String? = null,
         expirationTime: Long? = null,
         isExpired: Boolean = false,
     ) {
@@ -109,6 +129,7 @@ class ShareLinkDetailsTest {
                 onCopyLink = onCopyLink,
                 key = key,
                 onCopyKey = onCopyKey,
+                maskedPassword = maskedPassword,
                 expirationTime = expirationTime,
                 isExpired = isExpired,
             )
