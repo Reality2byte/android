@@ -38,7 +38,10 @@ import mega.android.core.ui.components.LinkSpannedText
 import mega.android.core.ui.components.MegaScaffold
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.button.AnchoredButtonGroup
+import mega.android.core.ui.components.button.SecondaryFilledButton
 import mega.android.core.ui.components.button.SecondaryNavigationIconButton
+import mega.android.core.ui.components.state.EmptyStateView
+import mega.android.core.ui.components.text.SpannableText
 import mega.android.core.ui.model.Button
 import mega.android.core.ui.model.MegaSpanStyle
 import mega.android.core.ui.model.SpanIndicator
@@ -75,6 +78,7 @@ import java.util.Locale
  * @param onLearnMoreClick called when the "Learn more" link (transfer scenario) is tapped
  * @param onContactSupportClick called when the "Contact support" button (highest-plan scenario) is tapped
  * @param onManagePlanClick called when the inline "mega.io" link (highest-plan scenario) is tapped
+ * @param onRetryClick called when the error state's "Try again" button is tapped
  * @param onClose called when the close button is tapped
  */
 @Composable
@@ -87,6 +91,7 @@ fun QuotaWarningUpgradeScreen(
     onLearnMoreClick: () -> Unit,
     onContactSupportClick: () -> Unit,
     onManagePlanClick: () -> Unit,
+    onRetryClick: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -143,6 +148,8 @@ fun QuotaWarningUpgradeScreen(
         subtitleHasLink = message.subtitleHasLink,
         isHighestPlan = uiState.isHighestPlan,
         isLoading = uiState.isLoading,
+        isConnected = uiState.isConnected,
+        hasLoadError = uiState.hasLoadError,
         currentCard = currentCard,
         recommended = recommended,
         onUpgradeClick = onUpgradeClick,
@@ -150,6 +157,7 @@ fun QuotaWarningUpgradeScreen(
         onLearnMoreClick = onLearnMoreClick,
         onContactSupportClick = onContactSupportClick,
         onManagePlanClick = onManagePlanClick,
+        onRetryClick = onRetryClick,
         onClose = onClose,
         modifier = modifier,
     )
@@ -164,6 +172,8 @@ private fun QuotaWarningUpgradeContent(
     subtitleHasLink: Boolean,
     isHighestPlan: Boolean,
     isLoading: Boolean,
+    isConnected: Boolean,
+    hasLoadError: Boolean,
     currentCard: CurrentCardData,
     recommended: RecommendedCardData?,
     onUpgradeClick: (Subscription) -> Unit,
@@ -171,9 +181,11 @@ private fun QuotaWarningUpgradeContent(
     onLearnMoreClick: () -> Unit,
     onContactSupportClick: () -> Unit,
     onManagePlanClick: () -> Unit,
+    onRetryClick: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val hasError = !isConnected || hasLoadError
     MegaScaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -196,7 +208,7 @@ private fun QuotaWarningUpgradeContent(
             }
         },
         bottomBar = {
-            if (!isLoading) {
+            if (!hasError && !isLoading) {
                 QuotaWarningBottomBar(
                     recommended = recommended,
                     isHighestPlan = isHighestPlan,
@@ -207,10 +219,15 @@ private fun QuotaWarningUpgradeContent(
             }
         },
     ) { innerPadding ->
-        if (isLoading) {
-            QuotaWarningLoadingContent(modifier = Modifier.padding(innerPadding))
-        } else {
-            QuotaWarningDataContent(
+        when {
+            hasError -> QuotaWarningErrorContent(
+                onRetryClick = onRetryClick,
+                modifier = Modifier.padding(innerPadding),
+            )
+
+            isLoading -> QuotaWarningLoadingContent(modifier = Modifier.padding(innerPadding))
+
+            else -> QuotaWarningDataContent(
                 illustrationRes = illustrationRes,
                 title = title,
                 subtitle = subtitle,
@@ -223,6 +240,32 @@ private fun QuotaWarningUpgradeContent(
                 modifier = Modifier.padding(innerPadding),
             )
         }
+    }
+}
+
+@Composable
+private fun QuotaWarningErrorContent(
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        EmptyStateView(
+            modifier = Modifier
+                .widthIn(max = CONTENT_MAX_WIDTH.dp)
+                .testTag(TEST_TAG_QUOTA_WARNING_ERROR),
+            imagePainter = painterResource(IconPackR.drawable.ic_no_cloud),
+            title = stringResource(sharedR.string.subscription_quota_no_connection_title),
+            description = SpannableText(
+                text = stringResource(sharedR.string.subscription_quota_no_connection_description),
+            ),
+            primaryAction = {
+                SecondaryFilledButton(
+                    modifier = Modifier.testTag(TEST_TAG_QUOTA_WARNING_RETRY),
+                    text = stringResource(sharedR.string.subscription_quota_no_connection_retry_button),
+                    onClick = onRetryClick,
+                )
+            },
+        )
     }
 }
 
@@ -664,6 +707,16 @@ const val TEST_TAG_QUOTA_WARNING_CONTACT_SUPPORT = "quota_warning:contact_suppor
  */
 const val TEST_TAG_QUOTA_WARNING_SKELETON = "quota_warning:skeleton"
 
+/**
+ * Test tag for the quota-warning screen error state
+ */
+const val TEST_TAG_QUOTA_WARNING_ERROR = "quota_warning:error"
+
+/**
+ * Test tag for the quota-warning screen retry button
+ */
+const val TEST_TAG_QUOTA_WARNING_RETRY = "quota_warning:retry"
+
 @CombinedThemePreviews
 @Composable
 private fun QuotaWarningUpgradeContentPreview(
@@ -678,6 +731,8 @@ private fun QuotaWarningUpgradeContentPreview(
             subtitleHasLink = preview.subtitleHasLink,
             isHighestPlan = preview.isHighestPlan,
             isLoading = preview.isLoading,
+            isConnected = preview.isConnected,
+            hasLoadError = preview.hasLoadError,
             currentCard = preview.currentCard,
             recommended = preview.recommended,
             onUpgradeClick = {},
@@ -685,6 +740,7 @@ private fun QuotaWarningUpgradeContentPreview(
             onLearnMoreClick = {},
             onContactSupportClick = {},
             onManagePlanClick = {},
+            onRetryClick = {},
             onClose = {},
         )
     }
@@ -702,6 +758,8 @@ private fun QuotaWarningUpgradeContentLandscapePreview() {
             subtitleHasLink = false,
             isHighestPlan = false,
             isLoading = false,
+            isConnected = true,
+            hasLoadError = false,
             currentCard = CurrentCardData(
                 planName = "Free",
                 currentPlanLabel = "Current plan",
@@ -725,8 +783,17 @@ private fun QuotaWarningUpgradeContentLandscapePreview() {
             onLearnMoreClick = {},
             onContactSupportClick = {},
             onManagePlanClick = {},
+            onRetryClick = {},
             onClose = {},
         )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun QuotaWarningErrorContentPreview() {
+    AndroidTheme(isSystemInDarkTheme()) {
+        QuotaWarningErrorContent(onRetryClick = {})
     }
 }
 
@@ -739,6 +806,8 @@ private data class QuotaWarningPreviewState(
     val recommended: RecommendedCardData?,
     val subtitleHasLink: Boolean = false,
     val isHighestPlan: Boolean = false,
+    val isConnected: Boolean = true,
+    val hasLoadError: Boolean = false,
 )
 
 private class QuotaWarningPreviewProvider : PreviewParameterProvider<QuotaWarningPreviewState> {

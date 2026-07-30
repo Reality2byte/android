@@ -78,6 +78,7 @@ fun QuotaWarningUpgradeRoute(
                 megaNavigator.launchUrl(it, MANAGE_PLAN_URL, appendNoPlansParam = false)
             }
         },
+        onRetryClick = viewModel::onRetry,
         onClose = onBack,
     )
 }

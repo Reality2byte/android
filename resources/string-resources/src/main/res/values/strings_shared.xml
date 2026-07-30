@@ -3601,4 +3601,10 @@
     <string name="share_link_password_copied_snackbar">Password copied to clipboard</string>
     <!--Title of the Meetings tab in the chat list-->
     <string name="chat_tab_meetings_title">Meetings</string>
+    <!-- Title of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->
+    <string name="subscription_quota_no_connection_title">Couldn’t connect</string>
+    <!-- Description of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->
+    <string name="subscription_quota_no_connection_description">Try again later to check your storage and transfer usage, and upgrade your plan if needed.</string>
+    <!-- Label of the button that retries loading the quota-warning upsell screen -->
+    <string name="subscription_quota_no_connection_retry_button">Try again</string>
 </resources>

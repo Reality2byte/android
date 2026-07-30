@@ -2,6 +2,7 @@ package mega.privacy.android.feature.payment.quotawarning
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -21,10 +22,12 @@ import mega.privacy.android.domain.entity.account.AccountSubscriptionDetail
 import mega.privacy.android.domain.entity.account.AccountTransferDetail
 import mega.privacy.android.domain.entity.account.CurrencyAmount
 import mega.privacy.android.domain.entity.payment.Subscriptions
+import mega.privacy.android.domain.usecase.account.GetSpecificAccountDetailUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.account.MonitorStorageStateUseCase
 import mega.privacy.android.domain.usecase.billing.GetSubscriptionsUseCase
 import mega.privacy.android.domain.usecase.contact.GetCurrentUserEmail
+import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
 import mega.privacy.android.domain.usecase.transfers.overquota.MonitorTransferOverQuotaUseCase
 import mega.privacy.android.feature.payment.model.mapper.LocalisedPriceCurrencyCodeStringMapper
 import mega.privacy.android.feature.payment.model.mapper.LocalisedSubscriptionMapper
@@ -33,8 +36,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verifyBlocking
 import org.mockito.kotlin.whenever
 import org.mockito.kotlin.wheneverBlocking
 
@@ -50,6 +56,8 @@ class QuotaWarningUpgradeViewModelTest {
     private val monitorTransferOverQuotaUseCase = mock<MonitorTransferOverQuotaUseCase>()
     private val getSubscriptionsUseCase = mock<GetSubscriptionsUseCase>()
     private val getCurrentUserEmail = mock<GetCurrentUserEmail>()
+    private val monitorConnectivityUseCase = mock<MonitorConnectivityUseCase>()
+    private val getSpecificAccountDetailUseCase = mock<GetSpecificAccountDetailUseCase>()
     private val localisedPriceCurrencyCodeStringMapper =
         mock<LocalisedPriceCurrencyCodeStringMapper>()
     private val formattedSizeMapper = mock<FormattedSizeMapper>()
@@ -64,12 +72,15 @@ class QuotaWarningUpgradeViewModelTest {
             monitorTransferOverQuotaUseCase,
             getSubscriptionsUseCase,
             getCurrentUserEmail,
+            monitorConnectivityUseCase,
+            getSpecificAccountDetailUseCase,
             localisedPriceCurrencyCodeStringMapper,
             formattedSizeMapper,
         )
         whenever(monitorAccountDetailUseCase()).thenReturn(emptyFlow())
         whenever(monitorStorageStateUseCase()).thenReturn(emptyFlow())
         whenever(monitorTransferOverQuotaUseCase()).thenReturn(emptyFlow())
+        whenever(monitorConnectivityUseCase()).thenReturn(flowOf(true))
         wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(Subscriptions(emptyList(), emptyList()))
         wheneverBlocking { getCurrentUserEmail() }.thenReturn(null)
     }
@@ -81,6 +92,8 @@ class QuotaWarningUpgradeViewModelTest {
             monitorTransferOverQuotaUseCase = monitorTransferOverQuotaUseCase,
             getSubscriptionsUseCase = getSubscriptionsUseCase,
             getCurrentUserEmail = getCurrentUserEmail,
+            monitorConnectivityUseCase = monitorConnectivityUseCase,
+            getSpecificAccountDetailUseCase = getSpecificAccountDetailUseCase,
             localisedSubscriptionMapper = localisedSubscriptionMapper,
         )
     }
@@ -406,6 +419,116 @@ class QuotaWarningUpgradeViewModelTest {
             assertThat(state.storageUsed).isEqualTo(19 * BYTES_IN_GB)
         }
     }
+
+    @Test
+    fun `test that isConnected is false when there is no connection`() = runTest {
+        whenever(monitorConnectivityUseCase()).thenReturn(flowOf(false))
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem().isConnected).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that isConnected follows connectivity changes`() = runTest {
+        whenever(monitorConnectivityUseCase()).thenReturn(flowOf(false, true))
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem().isConnected).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that hasLoadError is true when the subscriptions fetch fails`() = runTest {
+        wheneverBlocking { getSubscriptionsUseCase() }.thenThrow(RuntimeException("failed"))
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem().hasLoadError).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that hasLoadError is false when the subscriptions fetch succeeds`() = runTest {
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem().hasLoadError).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that a second onRetry while the first is running does not fetch again`() = runTest {
+        initViewModel()
+        advanceUntilIdle()
+        reset(getSubscriptionsUseCase)
+        // Hold the fetch suspended so the second tap lands while the first retry is still active.
+        val gate = CompletableDeferred<Subscriptions>()
+        wheneverBlocking { getSubscriptionsUseCase() }.doSuspendableAnswer { gate.await() }
+
+        underTest.onRetry()
+        underTest.onRetry()
+        gate.complete(Subscriptions(emptyList(), emptyList()))
+        advanceUntilIdle()
+
+        verifyBlocking(getSubscriptionsUseCase, times(1)) { invoke() }
+    }
+
+    @Test
+    fun `test that onRetry recommends a plan when the initial subscriptions fetch failed`() =
+        runTest {
+            val proI = subscription(AccountType.PRO_I, storage = 400)
+            val detail = accountDetail(storageUsed = 250 * BYTES_IN_GB)
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenThrow(RuntimeException("offline"))
+            initViewModel()
+            advanceUntilIdle()
+            assertThat(underTest.state.value.recommendedSubscription).isNull()
+
+            reset(getSubscriptionsUseCase)
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+                Subscriptions(monthlySubscriptions = listOf(proI), yearlySubscriptions = emptyList())
+            )
+            underTest.onRetry()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.recommendedSubscription?.accountType).isEqualTo(AccountType.PRO_I)
+                assertThat(state.hasLoadError).isFalse()
+            }
+        }
+
+    @Test
+    fun `test that a failed onRetry replaces the loaded subscriptions with the error state`() =
+        runTest {
+            val proI = subscription(AccountType.PRO_I, storage = 400)
+            val detail = accountDetail(storageUsed = 250 * BYTES_IN_GB)
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+                Subscriptions(monthlySubscriptions = listOf(proI), yearlySubscriptions = emptyList())
+            )
+            initViewModel()
+            advanceUntilIdle()
+            assertThat(underTest.state.value.recommendedSubscription).isNotNull()
+
+            reset(getSubscriptionsUseCase)
+            wheneverBlocking { getSubscriptionsUseCase() }.thenThrow(RuntimeException("offline"))
+            underTest.onRetry()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.hasLoadError).isTrue()
+                assertThat(state.recommendedSubscription).isNull()
+            }
+        }
 
     private fun accountDetail(
         storageUsed: Long,

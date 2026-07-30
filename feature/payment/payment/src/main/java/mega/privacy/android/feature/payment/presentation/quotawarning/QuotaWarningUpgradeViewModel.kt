@@ -3,20 +3,25 @@ package mega.privacy.android.feature.payment.presentation.quotawarning
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.AccountType
+import mega.privacy.android.domain.entity.account.AccountDetail
 import mega.privacy.android.domain.entity.account.AccountLevelDetail
 import mega.privacy.android.domain.entity.payment.Subscriptions
+import mega.privacy.android.domain.usecase.account.GetSpecificAccountDetailUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.account.MonitorStorageStateUseCase
 import mega.privacy.android.domain.usecase.billing.GetSubscriptionsUseCase
 import mega.privacy.android.domain.usecase.contact.GetCurrentUserEmail
+import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
 import mega.privacy.android.domain.usecase.transfers.overquota.MonitorTransferOverQuotaUseCase
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.mapper.LocalisedSubscriptionMapper
@@ -34,7 +39,9 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
     private val monitorTransferOverQuotaUseCase: MonitorTransferOverQuotaUseCase,
     private val getSubscriptionsUseCase: GetSubscriptionsUseCase,
     private val getCurrentUserEmail: GetCurrentUserEmail,
+    private val monitorConnectivityUseCase: MonitorConnectivityUseCase,
     private val localisedSubscriptionMapper: LocalisedSubscriptionMapper,
+    private val getSpecificAccountDetailUseCase: GetSpecificAccountDetailUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(QuotaWarningUpgradeState())
@@ -44,20 +51,65 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
      */
     val state = _state.asStateFlow()
 
+    /** Plans fetch outcome, null until the first attempt finishes. */
+    private val subscriptionsResult = MutableStateFlow<Result<Subscriptions>?>(null)
+
+    /** In-flight retry, so a second tap on "Try again" is ignored rather than starting a fetch. */
+    private var retryJob: Job? = null
+
     init {
+        monitorConnectivity()
         fetchEmail()
         monitorAccountDetail()
         monitorQuotaState()
+        fetchLatestUsedInfo()
+    }
+
+    private fun fetchLatestUsedInfo() {
+        viewModelScope.launch {
+            getSpecificAccountDetailUseCase(
+                storage = false,
+                transfer = true,
+                pro = false
+            )
+        }
+    }
+
+    /**
+     * Refetches the screen's data, for the error state's "Try again" action. Ignored while an
+     * earlier retry is still running, so repeated taps do not start a fetch each.
+     */
+    fun onRetry() {
+        if (retryJob?.isActive == true) return
+        retryJob = viewModelScope.launch {
+            fetchSubscriptions()
+            if (_state.value.email == null) {
+                loadEmail()
+            }
+        }
+    }
+
+    private fun monitorConnectivity() {
+        viewModelScope.launch {
+            monitorConnectivityUseCase()
+                .distinctUntilChanged()
+                .catch { Timber.e(it) }
+                .collect { isConnected ->
+                    _state.update { it.copy(isConnected = isConnected) }
+                }
+        }
     }
 
     private fun fetchEmail() {
-        viewModelScope.launch {
-            val email = runCatching { getCurrentUserEmail() }.getOrElse {
-                Timber.e(it)
-                null
-            }
-            _state.update { it.copy(email = email) }
+        viewModelScope.launch { loadEmail() }
+    }
+
+    private suspend fun loadEmail() {
+        val email = runCatching { getCurrentUserEmail() }.getOrElse {
+            Timber.e(it)
+            null
         }
+        _state.update { it.copy(email = email) }
     }
 
     private fun monitorQuotaState() {
@@ -80,46 +132,51 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
 
     private fun monitorAccountDetail() {
         viewModelScope.launch {
-            val subscriptions = runCatching { getSubscriptionsUseCase() }.getOrElse {
-                Timber.e(it)
-                null
-            }
-            monitorAccountDetailUseCase()
+            fetchSubscriptions()
+            combine(
+                monitorAccountDetailUseCase(),
+                subscriptionsResult,
+            ) { detail, result -> detail to result }
                 .catch { Timber.e(it) }
-                .collect { detail ->
-                    val levelDetail = detail.levelDetail
-                    val storageDetail = detail.storageDetail
-                    val storageUsed = storageDetail?.usedStorage
-                    val isHighestPlan = isHighestPlan(
-                        currentPlan = levelDetail?.accountType,
-                        totalStorage = storageDetail?.totalStorage,
-                        subscriptions = subscriptions,
-                    )
-                    _state.update {
-                        it.copy(
-                            currentPlan = levelDetail?.accountType,
-                            subscriptionCycle = levelDetail
-                                ?.let(::resolveCurrentPlanCycle)
-                                ?: AccountSubscriptionCycle.UNKNOWN,
-                            storageUsed = storageUsed,
-                            storageTotal = storageDetail?.totalStorage,
-                            storageUsedPercentage = storageDetail?.usedPercentage ?: 0,
-                            transferUsed = detail.transferDetail?.usedTransfer,
-                            transferTotal = detail.transferDetail?.totalTransfer,
-                            transferUsedPercentage = detail.transferDetail?.usedTransferPercentage
-                                ?: 0,
-                            recommendedSubscription = if (isHighestPlan) {
-                                null
-                            } else {
-                                subscriptions?.let { subs ->
-                                    recommendedSubscription(storageUsed, subs)
-                                }
-                            },
-                            isHighestPlan = isHighestPlan,
-                            isLoading = it.isLoading && storageDetail == null,
-                        )
-                    }
-                }
+                .collect { (detail, result) -> updateAccountDetail(detail, result?.getOrNull()) }
+        }
+    }
+
+    private suspend fun fetchSubscriptions() {
+        val result = runCatching { getSubscriptionsUseCase() }.onFailure { Timber.e(it) }
+        subscriptionsResult.update { result }
+        _state.update { it.copy(hasLoadError = result.isFailure) }
+    }
+
+    private fun updateAccountDetail(detail: AccountDetail, subscriptions: Subscriptions?) {
+        val levelDetail = detail.levelDetail
+        val storageDetail = detail.storageDetail
+        val storageUsed = storageDetail?.usedStorage
+        val isHighestPlan = isHighestPlan(
+            currentPlan = levelDetail?.accountType,
+            totalStorage = storageDetail?.totalStorage,
+            subscriptions = subscriptions,
+        )
+        _state.update {
+            it.copy(
+                currentPlan = levelDetail?.accountType,
+                subscriptionCycle = levelDetail
+                    ?.let(::resolveCurrentPlanCycle)
+                    ?: AccountSubscriptionCycle.UNKNOWN,
+                storageUsed = storageUsed,
+                storageTotal = storageDetail?.totalStorage,
+                storageUsedPercentage = storageDetail?.usedPercentage ?: 0,
+                transferUsed = detail.transferDetail?.usedTransfer,
+                transferTotal = detail.transferDetail?.totalTransfer,
+                transferUsedPercentage = detail.transferDetail?.usedTransferPercentage ?: 0,
+                recommendedSubscription = if (isHighestPlan) {
+                    null
+                } else {
+                    subscriptions?.let { subs -> recommendedSubscription(storageUsed, subs) }
+                },
+                isHighestPlan = isHighestPlan,
+                isLoading = it.isLoading && storageDetail == null,
+            )
         }
     }
 

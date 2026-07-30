@@ -22,6 +22,9 @@ import mega.privacy.android.feature.payment.model.LocalisedSubscription
  * @property isHighestPlan whether the user is already on the highest available plan, so no upgrade is offered
  * @property email the current user's email, used to pre-fill the custom-plan support request
  * @property isLoading whether the recommended plan is still being resolved
+ * @property isConnected whether the device has an internet connection
+ * @property hasLoadError whether fetching the available plans failed; stays false while a fetch is
+ * still in flight, so [isLoading] keeps the skeleton up instead
  */
 data class QuotaWarningUpgradeState(
     val currentPlan: AccountType? = null,
@@ -38,4 +41,6 @@ data class QuotaWarningUpgradeState(
     val isHighestPlan: Boolean = false,
     val email: String? = null,
     val isLoading: Boolean = true,
+    val isConnected: Boolean = true,
+    val hasLoadError: Boolean = false,
 )
