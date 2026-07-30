@@ -81,15 +81,11 @@ fun ShareLinkDetails(
                 .testTag(SHARE_LINK_DETAILS_TAG),
         ) {
             Column {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ShareLinkDetailRow(
+                    label = stringResource(sharedR.string.album_get_link_link_section_title),
+                    value = link,
+                    onCopy = onCopyLink,
                 ) {
-                    ShareLinkDetailRow(
-                        label = stringResource(sharedR.string.album_get_link_link_section_title),
-                        value = link,
-                        onCopy = onCopyLink,
-                    )
                     when {
                         isExpired -> HelpTextError(
                             modifier = Modifier.testTag(SHARE_LINK_EXPIRED_TAG),
@@ -128,9 +124,7 @@ fun ShareLinkDetails(
                 if (key != null) {
                     SubtleDivider()
                     ShareLinkDetailRow(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .testTag(SHARE_LINK_KEY_DETAILS_TAG),
+                        modifier = Modifier.testTag(SHARE_LINK_KEY_DETAILS_TAG),
                         label = stringResource(sharedR.string.album_get_link_decryption_key_section_title),
                         value = key,
                         onCopy = onCopyKey,
@@ -148,7 +142,6 @@ fun ShareLinkDetails(
                     .testTag(SHARE_LINK_PASSWORD_DETAILS_TAG),
             ) {
                 ShareLinkDetailRow(
-                    modifier = Modifier.padding(16.dp),
                     label = stringResource(sharedR.string.password_text),
                     value = maskedPassword,
                     onCopy = onCopyPassword,

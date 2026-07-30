@@ -30,7 +30,7 @@ class ShareLinkDetailRowTest {
         var copied = false
         setContent(onCopy = { copied = true })
 
-        composeRule.onNodeWithTag(SHARE_LINK_DETAIL_ROW_COPY_TAG).performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_DETAIL_ROW_COPY_TAG, useUnmergedTree = true).performClick()
 
         assertThat(copied).isTrue()
     }

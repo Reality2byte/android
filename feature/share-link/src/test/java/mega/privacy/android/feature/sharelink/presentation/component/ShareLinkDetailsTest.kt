@@ -39,7 +39,7 @@ class ShareLinkDetailsTest {
         var copied = false
         setContent(onCopyLink = { copied = true })
 
-        composeRule.onNodeWithTag(SHARE_LINK_DETAIL_ROW_COPY_TAG).performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_DETAIL_ROW_COPY_TAG, useUnmergedTree = true).performClick()
 
         assertThat(copied).isTrue()
     }
@@ -57,6 +57,28 @@ class ShareLinkDetailsTest {
 
         composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG).assertIsDisplayed()
         composeRule.onNodeWithText("decryptionKey").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that tapping the expiry notice copies the link`() {
+        var copied = false
+        setContent(expirationTime = EXPIRY_MILLIS, onCopyLink = { copied = true })
+
+        composeRule.onNodeWithTag(SHARE_LINK_EXPIRY_NOTICE_TAG, useUnmergedTree = true)
+            .performClick()
+
+        assertThat(copied).isTrue()
+    }
+
+    @Test
+    fun `test that tapping the password-protected helper copies the link`() {
+        var copied = false
+        setContent(passwordProtected = true, onCopyLink = { copied = true })
+
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_PROTECTED_TAG, useUnmergedTree = true)
+            .performClick()
+
+        assertThat(copied).isTrue()
     }
 
     @Test
@@ -80,7 +102,7 @@ class ShareLinkDetailsTest {
         var copied = false
         setContent(key = "decryptionKey", onCopyKey = { copied = true })
 
-        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG).performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG, useUnmergedTree = true).performClick()
 
         assertThat(copied).isTrue()
     }
@@ -97,7 +119,8 @@ class ShareLinkDetailsTest {
     fun `test that the expiry notice shows the formatted date for a link that has not expired`() {
         setContent(expirationTime = EXPIRY_MILLIS, isExpired = false)
 
-        composeRule.onNodeWithTag(SHARE_LINK_EXPIRY_NOTICE_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_EXPIRY_NOTICE_TAG, useUnmergedTree = true)
+            .assertIsDisplayed()
         composeRule.onNodeWithText(
             context.getString(sharedR.string.share_link_expires_on, formattedDate(EXPIRY_MILLIS))
         ).assertIsDisplayed()
@@ -108,7 +131,8 @@ class ShareLinkDetailsTest {
     fun `test that the expired warning replaces the expiry notice for an expired link`() {
         setContent(expirationTime = EXPIRY_MILLIS, isExpired = true)
 
-        composeRule.onNodeWithTag(SHARE_LINK_EXPIRED_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_EXPIRED_TAG, useUnmergedTree = true)
+            .assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(sharedR.string.share_link_expired))
             .assertIsDisplayed()
         composeRule.onNodeWithTag(SHARE_LINK_EXPIRY_NOTICE_TAG).assertDoesNotExist()
@@ -120,6 +144,7 @@ class ShareLinkDetailsTest {
         key: String? = null,
         onCopyKey: () -> Unit = {},
         maskedPassword: String? = null,
+        passwordProtected: Boolean = false,
         expirationTime: Long? = null,
         isExpired: Boolean = false,
     ) {
@@ -130,6 +155,7 @@ class ShareLinkDetailsTest {
                 key = key,
                 onCopyKey = onCopyKey,
                 maskedPassword = maskedPassword,
+                passwordProtected = passwordProtected,
                 expirationTime = expirationTime,
                 isExpired = isExpired,
             )

@@ -307,7 +307,7 @@ class ShareLinkScreenTest {
         var copied = false
         setContent(uiState = data.copy(isKeySeparate = true), onCopyKey = { copied = true })
 
-        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG, useUnmergedTree = true).performScrollTo().performClick()
 
         assertThat(copied).isTrue()
     }
@@ -317,10 +317,59 @@ class ShareLinkScreenTest {
         val clipboard = FakeClipboard()
         setContent(uiState = data.copy(isKeySeparate = true), clipboard = clipboard)
 
-        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_COPY_TAG, useUnmergedTree = true).performScrollTo().performClick()
         composeRule.waitForIdle()
 
         assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text).isEqualTo(data.primary.key)
+    }
+
+    @Test
+    fun `test that tapping the link value copies the link to the clipboard`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = data, clipboard = clipboard)
+
+        composeRule.onNodeWithText(data.primary.link).performClick()
+        composeRule.waitForIdle()
+
+        assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text).isEqualTo(data.primary.link)
+    }
+
+    @Test
+    fun `test that tapping the key value copies the key to the clipboard`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = data.copy(isKeySeparate = true), clipboard = clipboard)
+
+        composeRule.onNodeWithText("decryptionKey").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text).isEqualTo(data.primary.key)
+    }
+
+    @Test
+    fun `test that tapping the masked password value copies the real password`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = passwordData, clipboard = clipboard)
+
+        composeRule.onNodeWithText("•".repeat(passwordData.password.orEmpty().length))
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+
+        assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text)
+            .isEqualTo(passwordData.password)
+    }
+
+    @Test
+    fun `test that tapping the link label copies the link to the clipboard`() {
+        val clipboard = FakeClipboard()
+        setContent(uiState = data, clipboard = clipboard)
+
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.album_get_link_link_section_title)
+        ).performClick()
+        composeRule.waitForIdle()
+
+        assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text).isEqualTo(data.primary.link)
     }
 
     @Test
@@ -453,7 +502,7 @@ class ShareLinkScreenTest {
         var copied = false
         setContent(uiState = passwordData, onCopyPassword = { copied = true })
 
-        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG, useUnmergedTree = true).performScrollTo().performClick()
 
         assertThat(copied).isTrue()
     }
@@ -463,7 +512,7 @@ class ShareLinkScreenTest {
         val clipboard = FakeClipboard()
         setContent(uiState = passwordData, clipboard = clipboard)
 
-        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG, useUnmergedTree = true).performScrollTo().performClick()
         composeRule.waitForIdle()
 
         assertThat(clipboard.clipEntry?.clipData?.getItemAt(0)?.text)
@@ -475,7 +524,7 @@ class ShareLinkScreenTest {
         val clipboard = FakeClipboard()
         setContent(uiState = passwordData, clipboard = clipboard)
 
-        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG).performScrollTo().performClick()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_COPY_TAG, useUnmergedTree = true).performScrollTo().performClick()
         composeRule.waitForIdle()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
