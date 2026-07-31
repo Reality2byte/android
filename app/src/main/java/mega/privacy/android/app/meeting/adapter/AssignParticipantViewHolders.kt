@@ -6,7 +6,6 @@ import mega.privacy.android.core.R as CoreUiR
 import mega.privacy.android.app.databinding.ItemParticipantChatListBinding
 import mega.privacy.android.app.databinding.ItemSelectedParticipantBinding
 import mega.privacy.android.app.meeting.activity.MeetingActivityViewModel
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.utils.Util
 
 /**
@@ -28,7 +27,7 @@ class AssignParticipantViewHolder(
         binding.participantListNameRl.setPadding(
             0,
             0,
-            Util.scaleWidthPx(16, MegaApplication.getInstance().resources.displayMetrics),
+            Util.scaleWidthPx(16, itemView.context.applicationContext.resources.displayMetrics),
             0
         )
 

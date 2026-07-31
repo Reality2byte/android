@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import mega.privacy.android.app.activities.OverDiskQuotaPaywallActivity
 import mega.privacy.android.app.activities.contract.SendToChatActivityContract
@@ -75,7 +74,7 @@ private fun NodeAttachmentView(
                 is NodeAttachmentEvent.AttachNode -> viewModel.getNodesToAttach(event.nodeIds)
                 NodeAttachmentEvent.ShowOverDiskQuotaPaywall -> {
                     val intent = Intent(
-                        MegaApplication.getInstance().applicationContext,
+                        context.applicationContext,
                         OverDiskQuotaPaywallActivity::class.java
                     )
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK

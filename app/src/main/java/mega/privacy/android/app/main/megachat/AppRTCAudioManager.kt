@@ -252,7 +252,7 @@ class AppRTCAudioManager @Inject constructor(
                 AudioManager.STREAM_VOICE_CALL
             ), 0
         )
-        val res = getInstance().baseContext.resources
+        val res = apprtcContext.resources
         val afd = res.openRawResourceFd(R.raw.outgoing_voice_video_call)
         if (mediaPlayer != null) {
             stopSound()
@@ -298,7 +298,7 @@ class AppRTCAudioManager @Inject constructor(
         mediaPlayer?.setAudioStreamType(AudioManager.STREAM_RING)
         mediaPlayer?.isLooping = true
         try {
-            mediaPlayer?.setDataSource(getInstance().baseContext, ringtoneUri)
+            mediaPlayer?.setDataSource(apprtcContext, ringtoneUri)
             Timber.d("Preparing mediaPlayer")
             mediaPlayer?.prepare()
         } catch (e: IOException) {

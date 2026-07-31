@@ -15,7 +15,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import mega.privacy.android.app.arch.extensions.collectFlow
 import mega.privacy.android.app.components.PositionDividerItemDecoration
@@ -172,7 +171,7 @@ class MakeModeratorFragment : MeetingBaseFragment() {
             SelectedParticipantsAdapter(sharedModel, deleteCallback)
 
         itemDecoration =
-            PositionDividerItemDecoration(context, MegaApplication.getInstance().resources.displayMetrics)
+            PositionDividerItemDecoration(context, requireContext().applicationContext.resources.displayMetrics)
         itemDecoration.setDrawAllDividers(true)
 
         binding.participantList.apply {

@@ -1470,7 +1470,7 @@ class InMeetingFragment : MeetingBaseFragment(), BottomFloatingPanelListener, Sn
                 if (shouldBeShown) {
                     setBackgroundColor(
                         ContextCompat.getColor(
-                            MegaApplication.getInstance().applicationContext,
+                            requireContext().applicationContext,
                             R.color.dark_grey_alpha_070
                         )
                     )
@@ -1493,7 +1493,7 @@ class InMeetingFragment : MeetingBaseFragment(), BottomFloatingPanelListener, Sn
                 if (shouldBeShown) {
                     setBackgroundColor(
                         ContextCompat.getColor(
-                            MegaApplication.getInstance().applicationContext,
+                            requireContext().applicationContext,
                             android.R.color.transparent
                         )
                     )

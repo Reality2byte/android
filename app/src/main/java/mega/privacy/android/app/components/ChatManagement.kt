@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.CountDownTimer
 import androidx.preference.PreferenceManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mega.privacy.android.app.MegaApplication
@@ -58,8 +59,8 @@ class ChatManagement @Inject constructor(
     private val setChatOpeningWithLinkUseCase: SetChatOpeningWithLinkUseCase,
     private val removeChatOpeningWithLinkUseCase: RemoveChatOpeningWithLinkUseCase,
     private val isChatOpeningWithLinkUseCase: IsChatOpeningWithLinkUseCase,
-
-    ) {
+    @ApplicationContext private val appContext: Context,
+) {
     private val app: MegaApplication by lazy { getInstance() }
     private var countDownTimerToEndCall: CountDownTimer? = null
 
@@ -528,7 +529,7 @@ class ChatManagement @Inject constructor(
      * @param chatId Chat ID
      */
     fun removeValues(chatId: Long) {
-        PreferenceManager.getDefaultSharedPreferences(getInstance().applicationContext).edit()
+        PreferenceManager.getDefaultSharedPreferences(appContext).edit()
             .remove(
                 Constants.KEY_IS_SHOWED_WARNING_MESSAGE + chatId
             ).apply()

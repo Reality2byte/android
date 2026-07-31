@@ -11,7 +11,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import mega.privacy.android.app.databinding.ItemParticipantVideoBinding
 import mega.privacy.android.app.meeting.MegaSurfaceRenderer
@@ -840,7 +839,7 @@ class VideoMeetingViewHolder(
                 val cornerRadius = TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP,
                     ROUNDED_CORNERS_RADIUS,
-                    MegaApplication.getInstance().resources.displayMetrics
+                    itemView.context.applicationContext.resources.displayMetrics
                 ).toInt()
 
                 outline.setRoundRect(0, 0, view.width, view.height, cornerRadius.toFloat())
