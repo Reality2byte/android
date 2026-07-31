@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -139,7 +141,21 @@ fun SearchShellScaffold(
             when {
                 state.isPreSearch -> {
                     if (state.tags.isNotEmpty() || state.recentSearches.isNotEmpty()) {
+                        val listState = rememberLazyListState()
+                        val hasTags = state.tags.isNotEmpty()
+                        var isTagsRevealed by rememberSaveable { mutableStateOf(false) }
+                        // Late-loaded tags land above the viewport (the list anchors to the
+                        // first visible item's key); reveal them once if still near the top
+                        LaunchedEffect(hasTags) {
+                            if (hasTags && !isTagsRevealed) {
+                                isTagsRevealed = true
+                                if (listState.firstVisibleItemIndex <= 1) {
+                                    listState.scrollToItem(0)
+                                }
+                            }
+                        }
                         LazyColumn(
+                            state = listState,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .imePadding(),

@@ -184,7 +184,7 @@ class SearchViewModel @AssistedInject constructor(
                 is SearchFilterResult.Type -> state.copy(typeFilterOption = result.option)
                 is SearchFilterResult.DateModified -> state.copy(dateModifiedFilterOption = result.option)
                 is SearchFilterResult.DateAdded -> state.copy(dateAddedFilterOption = result.option)
-            }
+            }.copy(nodesLoadingState = NodesLoadingState.Loading)
         }
         launchSearch(_uiState.value.searchText)
     }
@@ -220,7 +220,7 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     private suspend fun performSearch(query: String, tag: String?) {
-        if (query.isEmpty() && tag == null) {
+        if (query.isEmpty() && tag == null && !_uiState.value.hasActiveFilters) {
             _uiState.update { state ->
                 state.copy(
                     items = emptyList(),
@@ -287,9 +287,9 @@ class SearchViewModel @AssistedInject constructor(
             )
         } else {
             base.copy(
-                description = query,
+                description = query.takeIf { it.isNotEmpty() },
                 tag = query.removePrefix("#").takeIf {
-                    args.nodeSourceType != NodeSourceType.RUBBISH_BIN
+                    query.isNotEmpty() && args.nodeSourceType != NodeSourceType.RUBBISH_BIN
                 },
             )
         }

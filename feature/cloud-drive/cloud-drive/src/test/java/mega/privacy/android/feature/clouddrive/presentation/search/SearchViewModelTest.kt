@@ -1367,6 +1367,60 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun `test that SelectFilter action performs search instantly when query is empty`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.IMAGES)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("photo.jpg")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(
+                SearchUiAction.SelectFilter(SearchFilterResult.Type(TypeFilterOption.Images))
+            )
+            advanceUntilIdle()
+
+            verify(searchUseCase, atLeast(1)).invoke(
+                parentHandle = any(),
+                nodeSourceType = any(),
+                searchParameters = argThat { params ->
+                    params.query.isEmpty() && params.description == null && params.tag == null
+                },
+            )
+            verify(saveRecentSearchUseCase, never()).invoke(any())
+            assertThat(underTest.uiState.value.isPreSearch).isFalse()
+            assertThat(underTest.uiState.value.items).hasSize(1)
+        }
+
+    @Test
+    fun `test that clearing the last filter with empty query returns to pre-search state`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.IMAGES)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("photo.jpg")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(
+                SearchUiAction.SelectFilter(SearchFilterResult.Type(TypeFilterOption.Images))
+            )
+            advanceUntilIdle()
+            assertThat(underTest.uiState.value.isPreSearch).isFalse()
+
+            underTest.processAction(SearchUiAction.SelectFilter(SearchFilterResult.Type(null)))
+            advanceUntilIdle()
+
+            with(underTest.uiState.value) {
+                assertThat(isPreSearch).isTrue()
+                assertThat(items).isEmpty()
+            }
+        }
+
+    @Test
     fun `test that a new search cancels the search in flight when triggered from another path`() =
         runTest {
             whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)

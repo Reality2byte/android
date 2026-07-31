@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -111,6 +114,37 @@ class SearchShellScaffoldTest {
     }
 
     private fun getString(resId: Int) = composeRule.activity.getString(resId)
+
+    @Test
+    fun `test that tags section is visible when tags load after recent searches`() {
+        var shellState by mutableStateOf(
+            SearchShellState(
+                isPreSearch = true,
+                recentSearches = List(30) { "query$it" },
+                isRecentSearchesLoading = false,
+            )
+        )
+        composeRule.setContent {
+            AndroidThemeForPreviews {
+                SearchShellScaffold(
+                    state = shellState,
+                    landingContent = emptyContent,
+                    emptyContent = emptyContent,
+                    onSearchTextChange = {},
+                    onBack = {},
+                    onRecentSearchSelected = {},
+                    onClearRecentSearches = {},
+                    resultsContent = { ResultsPlaceholder() },
+                )
+            }
+        }
+        composeRule.onNodeWithTag(SEARCH_SHELL_TAGS_TAG).assertDoesNotExist()
+
+        shellState = shellState.copy(tags = TAGS)
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag(SEARCH_SHELL_TAGS_TAG).assertIsDisplayed()
+    }
 
     @Test
     fun `test that tags are not displayed after a search is performed`() {

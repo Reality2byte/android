@@ -95,10 +95,16 @@ data class SearchUiState(
     val isInSelectionMode = selectedItemsCount > 0
 
     /**
+     * True if any type or date filter is active
+     */
+    val hasActiveFilters = typeFilterOption != null || dateModifiedFilterOption != null ||
+            dateAddedFilterOption != null
+
+    /**
      * True if there are no visible items and not loading
      */
     val isEmpty = visibleItemsCount == 0 && !isLoading &&
-            (searchedQuery.isNotEmpty() || tagFilterOption != null)
+            (searchedQuery.isNotEmpty() || tagFilterOption != null || hasActiveFilters)
 
     /**
      * True when no search has been performed yet
