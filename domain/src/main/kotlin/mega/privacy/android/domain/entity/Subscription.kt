@@ -6,6 +6,7 @@ import mega.privacy.android.domain.entity.account.OfferPeriod
 /**
  * Subscription
  *
+ * @property sku             Google Play product identifier for the subscription option
  * @property accountType     Account type (PRO I, PRO II, PRO III, PRO LITE, etc.)
  * @property handle          Subscription option handle
  * @property storage         Amount of storage of the subscription option
@@ -17,7 +18,9 @@ import mega.privacy.android.domain.entity.account.OfferPeriod
  * @property offerPeriod     Period of the offer (Day, Month, or Year)
  * @property discountName    Localised campaign name from the SDK, or null/empty when none
  * @property offerValidUntil Mobile offer expiry timestamp in seconds (utqa "mo.e"), or null when the offer has no expiry
- * @property offerFlags      Mobile offer flags bitmask from the SDK, or null when the offer carries no flags
+ * @property offerFlags      Mobile offer flags bitmask (utqa "mo.f") from the SDK, or null when the
+ * offer carries no flags. Bit 0 opts the campaign in to being advertised on the mobile promotion
+ * surfaces (Home banner, menu banner, offer landing screen); absent flags mean opted out
  * @property offerReshowInterval Time in seconds that must pass before the mobile offer may be shown
  * again (utqa "mo.r"), or null when the offer must not be shown again
  */

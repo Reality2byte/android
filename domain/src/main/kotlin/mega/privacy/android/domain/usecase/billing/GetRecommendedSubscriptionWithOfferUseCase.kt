@@ -1,5 +1,6 @@
 package mega.privacy.android.domain.usecase.billing
 
+import mega.privacy.android.domain.entity.SubscriptionOption
 import mega.privacy.android.domain.entity.account.Skus
 import mega.privacy.android.domain.entity.account.subscriptionSkuLevel
 import mega.privacy.android.domain.entity.billing.RecommendedSubscriptionOffer
@@ -16,6 +17,11 @@ import javax.inject.Inject
  * considered, so the dialog never promotes the current tier (any billing period) or a downgrade; the
  * cheapest such plan that has an offer is returned. All billing periods are considered, so a
  * yearly-only offer is still found. Returns null when no higher-tier plan has an offer.
+ *
+ * An offer is only promoted when its flags bitmask opts in via [MOBILE_OFFER_VISIBLE_FLAG]; offers
+ * without that bit, and offers carrying no flags at all, are discounted silently. They still apply
+ * their discount on the upgrade screen, they are just never advertised on the Home banner, the menu
+ * banner, or the offer landing screen.
  *
  * [RecommendedSubscriptionOffer.hasMultipleOffers] reports whether the campaign discounts more than
  * one plan, regardless of tier, so the dialog can link to the full list of plans.
@@ -50,7 +56,10 @@ class GetRecommendedSubscriptionWithOfferUseCase @Inject constructor(
         val products = billingRepository.querySkus(skus).associateBy { it.sku }
 
         val plansWithOffer = availablePlans
-            .filter { it.hasOffer && products[it.sku]?.offers.orEmpty().isNotEmpty() }
+            .filter {
+                it.hasOffer && it.isOfferVisible &&
+                        products[it.sku]?.offers.orEmpty().isNotEmpty()
+            }
 
         val offerPlan = plansWithOffer
             .firstOrNull { it.sku.subscriptionSkuLevel > currentLevel }
@@ -63,3 +72,12 @@ class GetRecommendedSubscriptionWithOfferUseCase @Inject constructor(
         )
     }
 }
+
+/**
+ * Bit 0 of the mobile offer flags bitmask (utqa "mo.f"): the campaign opts in to being advertised
+ * on the mobile promotion surfaces. Absent flags are treated as opted out.
+ */
+private const val MOBILE_OFFER_VISIBLE_FLAG = 1L
+
+private val SubscriptionOption.isOfferVisible: Boolean
+    get() = (offerFlags ?: 0L) and MOBILE_OFFER_VISIBLE_FLAG != 0L

@@ -15,7 +15,9 @@ import mega.privacy.android.domain.entity.account.CurrencyPoint
  * @property hasOffer        Flag to indicate if the subscription option has a mobile offer
  * @property discountName    Localised campaign name for an active discount, or null/empty when none
  * @property offerValidUntil Mobile offer expiry timestamp in seconds (utqa "mo.e"), or null when the offer has no expiry
- * @property offerFlags      Mobile offer flags bitmask from the SDK, or null when the offer carries no flags
+ * @property offerFlags      Mobile offer flags bitmask (utqa "mo.f") from the SDK, or null when the
+ * offer carries no flags. Bit 0 opts the campaign in to being advertised on the mobile promotion
+ * surfaces (Home banner, menu banner, offer landing screen); absent flags mean opted out
  * @property offerReshowInterval Time in seconds that must pass before the mobile offer may be shown
  * again (utqa "mo.r"), or null when the offer must not be shown again
  */

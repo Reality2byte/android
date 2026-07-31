@@ -183,6 +183,112 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
     }
 
     @Test
+    fun `test that returns null when the offer flags do not opt in to being advertised`() =
+        runTest {
+            val lite = subscriptionOption(
+                AccountType.PRO_LITE,
+                Skus.SKU_PRO_LITE_MONTH,
+                499,
+                offer = false,
+            )
+            val proI = subscriptionOption(
+                AccountType.PRO_I,
+                Skus.SKU_PRO_I_MONTH,
+                999,
+                offer = true,
+                offerFlags = OTHER_FLAG,
+            )
+            stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+
+            assertThat(underTest.invoke()).isNull()
+        }
+
+    @Test
+    fun `test that returns null when the offer carries no flags`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(
+            AccountType.PRO_I,
+            Skus.SKU_PRO_I_MONTH,
+            999,
+            offer = true,
+            offerFlags = null,
+        )
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+
+        assertThat(underTest.invoke()).isNull()
+    }
+
+    @Test
+    fun `test that returns null when the offer flags are empty`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(
+            AccountType.PRO_I,
+            Skus.SKU_PRO_I_MONTH,
+            999,
+            offer = true,
+            offerFlags = NO_FLAGS,
+        )
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+
+        assertThat(underTest.invoke()).isNull()
+    }
+
+    @Test
+    fun `test that returns the plan when the visible bit is set alongside other flags`() = runTest {
+        val lite =
+            subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+        val proI = subscriptionOption(
+            AccountType.PRO_I,
+            Skus.SKU_PRO_I_MONTH,
+            999,
+            offer = true,
+            offerFlags = VISIBLE_FLAG or OTHER_FLAG,
+        )
+        stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI))
+        val expected = stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+        assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
+    }
+
+    @Test
+    fun `test that skips a hidden offer and returns the next advertised plan`() = runTest {
+        val lite = subscriptionOption(
+            AccountType.PRO_LITE,
+            Skus.SKU_PRO_LITE_MONTH,
+            499,
+            offer = true,
+            offerFlags = OTHER_FLAG,
+        )
+        val proI = subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+        stub(currentPlan = AccountType.FREE, options = listOf(lite, proI))
+        val expected = stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+        assertThat(underTest.invoke()?.subscription).isEqualTo(expected)
+    }
+
+    @Test
+    fun `test that does not flag multiple offers when the other discounted plan is hidden`() =
+        runTest {
+            val lite =
+                subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
+            val proI =
+                subscriptionOption(AccountType.PRO_I, Skus.SKU_PRO_I_MONTH, 999, offer = true)
+            val proII = subscriptionOption(
+                AccountType.PRO_II,
+                Skus.SKU_PRO_II_MONTH,
+                1999,
+                offer = true,
+                offerFlags = OTHER_FLAG,
+            )
+            stub(currentPlan = AccountType.PRO_LITE, options = listOf(lite, proI, proII))
+            stubMapping(proI, Skus.SKU_PRO_I_MONTH)
+
+            assertThat(underTest.invoke()?.hasMultipleOffers).isFalse()
+        }
+
+    @Test
     fun `test that flags multiple offers when two plans have an offer`() = runTest {
         val lite =
             subscriptionOption(AccountType.PRO_LITE, Skus.SKU_PRO_LITE_MONTH, 499, offer = false)
@@ -239,11 +345,13 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         sku: String,
         amount: Long,
         offer: Boolean,
+        offerFlags: Long? = VISIBLE_FLAG,
     ) = mock<SubscriptionOption> {
         on { accountType } doReturn type
         on { this.sku } doReturn sku
         on { this.amount } doReturn CurrencyPoint.SystemCurrencyPoint(amount)
         on { hasOffer } doReturn offer
+        on { this.offerFlags } doReturn offerFlags
     }
 
     private suspend fun stub(currentPlan: AccountType, options: List<SubscriptionOption>) {
@@ -268,5 +376,11 @@ class GetRecommendedSubscriptionWithOfferUseCaseTest {
         whenever(getLocalPricingUseCase(sku)).thenReturn(localPricing)
         whenever(subscriptionMapper(option, localPricing)).thenReturn(subscription)
         return subscription
+    }
+
+    private companion object {
+        private const val VISIBLE_FLAG = 0b0001L
+        private const val OTHER_FLAG = 0b0010L
+        private const val NO_FLAGS = 0L
     }
 }
