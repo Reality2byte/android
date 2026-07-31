@@ -44,6 +44,7 @@ import mega.privacy.android.app.presentation.settings.SettingsDeepLinkHandler
 import mega.privacy.android.app.presentation.settings.exportrecoverykey.ExportRecoveryKeyDeepLinkHandler
 import mega.privacy.android.app.presentation.storage.OverQuotaDialogDestinations
 import mega.privacy.android.app.presentation.transfers.navigation.TransfersFeatureDestination
+import mega.privacy.android.app.presentation.transfers.navigation.TransfersNavItem
 import mega.privacy.android.app.presentation.transfers.transferoverquota.view.dialog.TransferOverQuotaDialogDestinations
 import mega.privacy.android.app.presentation.twofactorauthentication.Enable2FADialogDestinations
 import mega.privacy.android.app.presentation.whatsnew.WhatsNewDialogDestinations
@@ -122,6 +123,10 @@ internal class AppModule {
     @Provides
     @IntoSet
     fun provideTransferFeatureDestinations(): FeatureDestination = TransfersFeatureDestination()
+
+    @Provides
+    @IntoSet
+    fun provideTransfersNavItem(): MainNavItem = TransfersNavItem()
 
     @Provides
     @IntoSet

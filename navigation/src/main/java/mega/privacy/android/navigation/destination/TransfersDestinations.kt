@@ -3,6 +3,7 @@ package mega.privacy.android.navigation.destination
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.contract.navkey.NoNodeNavKey
 
 /**
@@ -12,7 +13,7 @@ import mega.privacy.android.navigation.contract.navkey.NoNodeNavKey
  */
 @Serializable
 @Parcelize
-data class TransfersNavKey(val tab: Tab? = null) : NoNodeNavKey, Parcelable {
+data class TransfersNavKey(val tab: Tab? = null) : MainNavItemNavKey, NoNodeNavKey, Parcelable {
 
     /**
      * Identifies a tab in the transfers section
