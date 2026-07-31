@@ -16,11 +16,13 @@ import de.palm.composestateevents.EventEffect
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.navigation.ExtraConstant.TYPE_TEXT_PLAIN
+import mega.privacy.android.navigation.payment.UpgradeAccountSource
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.contract.queue.snackbar.rememberSnackBarQueue
 import mega.privacy.android.navigation.destination.GetLinkNavKey
 import mega.privacy.android.navigation.destination.LinkSettingsNavKey
+import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
 import mega.privacy.android.navigation.destination.ShareLinkNavKey
 import mega.privacy.android.shared.resources.R as sharedR
 
@@ -157,6 +159,11 @@ fun EntryProviderScope<NavKey>.linkSettingsScreen(
             onPasswordEnabled = viewModel::onPasswordEnabled,
             onPasswordChanged = viewModel::onPasswordChanged,
             onSave = viewModel::onSave,
+            onUpgrade = {
+                navigationHandler.navigate(
+                    UpgradeAccountNavKey(source = UpgradeAccountSource.UNKNOWN)
+                )
+            },
         )
     }
 }

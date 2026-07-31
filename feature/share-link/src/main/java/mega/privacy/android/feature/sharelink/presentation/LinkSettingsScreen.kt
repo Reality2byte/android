@@ -54,6 +54,9 @@ import mega.android.core.ui.components.button.AnchoredButtonGroup
 import mega.android.core.ui.components.datepicker.MegaDatePickerDialog
 import mega.android.core.ui.components.dialogs.BasicDialog
 import mega.android.core.ui.components.image.MegaIcon
+import mega.android.core.ui.components.inputfields.HelpTextError
+import mega.android.core.ui.components.inputfields.HelpTextSuccess
+import mega.android.core.ui.components.inputfields.HelpTextWarning
 import mega.android.core.ui.components.inputfields.PasswordTextInputField
 import mega.android.core.ui.components.inputfields.ReadOnlyTextInputField
 import mega.android.core.ui.components.list.FlexibleLineListItem
@@ -80,6 +83,10 @@ import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPresse
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDialogEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDiscardButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeeNotNowPlanFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeeNotNowPlanFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeePlanFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeePlanFolderButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFolderButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
@@ -98,6 +105,8 @@ import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEve
 import mega.privacy.mobile.analytics.event.LinkSettingsSaveButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSettingsSaveFailedEvent
 import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
+import mega.privacy.mobile.analytics.event.LinkUpgradeToProFeatureFileDialogEvent
+import mega.privacy.mobile.analytics.event.LinkUpgradeToProFeatureFolderDialogEvent
 import mega.privacy.android.icon.pack.R as iconPackR
 import mega.privacy.android.shared.resources.R as sharedR
 import java.util.Calendar
@@ -114,6 +123,7 @@ import java.util.Calendar
  * @param onPasswordEnabled Invoked when the "Set password" toggle changes.
  * @param onPasswordChanged Invoked when the revealed password field text changes.
  * @param onSave Invoked when the bottom "Save" button is tapped.
+ * @param onUpgrade Invoked when a free user chooses to see the Pro plans.
  * @param modifier Modifier for the scaffold.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -128,9 +138,11 @@ fun LinkSettingsScreen(
     onPasswordEnabled: (Boolean) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onSave: () -> Unit,
+    onUpgrade: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
+    var showUpgradeDialog by rememberSaveable { mutableStateOf(false) }
     val onCloseRequest = {
         if (uiState.hasUnsavedChanges) showDiscardDialog = true else onBack()
     }
@@ -151,13 +163,33 @@ fun LinkSettingsScreen(
         trackSeparateKeyToggle(uiState.isFolder, enabled)
         onSeparateKeyEnabled(enabled)
     }
+    // Pro-only rows stay interactive for free accounts: turning one on opens the upgrade prompt
+    // instead of applying the setting, matching legacy Get link.
+    val requestUpgrade = {
+        Analytics.tracker.trackEvent(
+            if (uiState.isFolder) {
+                LinkUpgradeToProFeatureFolderDialogEvent
+            } else {
+                LinkUpgradeToProFeatureFileDialogEvent
+            }
+        )
+        showUpgradeDialog = true
+    }
     val onExpiryToggled = { enabled: Boolean ->
-        trackExpiryToggle(uiState.isFolder, enabled)
-        onExpiryEnabled(enabled)
+        if (uiState.isProFeatureLocked) {
+            requestUpgrade()
+        } else {
+            trackExpiryToggle(uiState.isFolder, enabled)
+            onExpiryEnabled(enabled)
+        }
     }
     val onPasswordToggled = { enabled: Boolean ->
-        trackPasswordToggle(uiState, enabled)
-        onPasswordEnabled(enabled)
+        if (uiState.isProFeatureLocked) {
+            requestUpgrade()
+        } else {
+            trackPasswordToggle(uiState, enabled)
+            onPasswordEnabled(enabled)
+        }
     }
     val onSaveClick = {
         Analytics.tracker.trackEvent(LinkSettingsSaveButtonPressedEvent)
@@ -245,6 +277,38 @@ fun LinkSettingsScreen(
             onDismiss = { showDiscardDialog = false },
         )
     }
+
+    if (showUpgradeDialog) {
+        BasicDialog(
+            modifier = Modifier.testTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG),
+            title = stringResource(sharedR.string.share_link_upgrade_pro_dialog_title),
+            description = stringResource(sharedR.string.share_link_upgrade_pro_dialog_message),
+            positiveButtonText = stringResource(sharedR.string.share_link_upgrade_pro_dialog_see_plans),
+            onPositiveButtonClicked = {
+                Analytics.tracker.trackEvent(
+                    if (uiState.isFolder) {
+                        LinkProFeatureSeePlanFolderButtonPressedEvent
+                    } else {
+                        LinkProFeatureSeePlanFileButtonPressedEvent
+                    }
+                )
+                showUpgradeDialog = false
+                onUpgrade()
+            },
+            negativeButtonText = stringResource(sharedR.string.share_link_upgrade_pro_dialog_not_now),
+            onNegativeButtonClicked = {
+                Analytics.tracker.trackEvent(
+                    if (uiState.isFolder) {
+                        LinkProFeatureSeeNotNowPlanFolderButtonPressedEvent
+                    } else {
+                        LinkProFeatureSeeNotNowPlanFileButtonPressedEvent
+                    }
+                )
+                showUpgradeDialog = false
+            },
+            onDismiss = { showUpgradeDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -264,8 +328,12 @@ private fun LinkSettingsContent(
 
     // Enabling expiry with no date yet goes straight to the picker, so choosing a date does not
     // need a second tap on the revealed field.
+    // A Pro-locked tap only opens the upgrade prompt, so the picker must stay shut — otherwise both
+    // would appear at once.
     val onExpiryToggled = { enabled: Boolean ->
-        if (enabled && uiState.expiryDate == null) showDatePicker = true
+        if (enabled && !uiState.isProFeatureLocked && uiState.expiryDate == null) {
+            showDatePicker = true
+        }
         onExpiryEnabled(enabled)
     }
 
@@ -329,13 +397,12 @@ private fun LinkSettingsContent(
             titleTrailingElement = if (uiState.isProFeatureLocked) {
                 { ProBadge(Modifier.testTag(LINK_SETTINGS_EXPIRY_PRO_BADGE_TAG)) }
             } else null,
-            enableClick = !uiState.isProFeatureLocked,
+            enableClick = true,
             onClickListener = { onExpiryToggled(!uiState.isExpiryEnabled) },
             trailingElement = {
                 Toggle(
                     modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG),
                     isChecked = uiState.isExpiryEnabled,
-                    isEnabled = !uiState.isProFeatureLocked,
                     onCheckedChange = onExpiryToggled,
                 )
             },
@@ -356,43 +423,44 @@ private fun LinkSettingsContent(
             titleTrailingElement = if (uiState.isProFeatureLocked) {
                 { ProBadge(Modifier.testTag(LINK_SETTINGS_PASSWORD_PRO_BADGE_TAG)) }
             } else null,
-            enableClick = !uiState.isProFeatureLocked,
+            enableClick = true,
             onClickListener = { onPasswordEnabled(!uiState.isPasswordEnabled) },
             trailingElement = {
                 Toggle(
                     modifier = Modifier.testTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG),
                     isChecked = uiState.isPasswordEnabled,
-                    isEnabled = !uiState.isProFeatureLocked,
                     onCheckedChange = onPasswordEnabled,
                 )
             },
         )
         AnimatedVisibility(visible = uiState.isPasswordEnabled) {
-            val strengthLabel = uiState.passwordStrength
-                ?.strengthLabelRes()
-                ?.let { stringResource(it) }
-            PasswordTextInputField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .bringIntoViewRequester(passwordFieldPosition)
-                    .testTag(LINK_SETTINGS_PASSWORD_FIELD_TAG),
-                label = null,
-                placeholder = stringResource(sharedR.string.password_placeholder),
-                text = uiState.password.orEmpty(),
-                showClearIcon = true,
-                successText = strengthLabel.takeIf { uiState.passwordStrength.isAcceptable() },
-                warningText = strengthLabel.takeIf { uiState.passwordStrength == PasswordStrength.WEAK },
-                errorText = strengthLabel.takeIf { uiState.passwordStrength == PasswordStrength.VERY_WEAK },
-                onValueChanged = onPasswordChanged,
-                // The field sits at the bottom of the screen, so on focus scroll it fully into
-                // view — its strength help text included — above the keyboard.
-                onFocusChanged = { focused ->
-                    if (focused) {
-                        coroutineScope.launch { passwordFieldPosition.bringIntoView() }
-                    }
-                },
-            )
+            // The field sits at the bottom of the screen, so on focus the whole block — strength
+            // help text included — is scrolled above the keyboard.
+            Column(modifier = Modifier.bringIntoViewRequester(passwordFieldPosition)) {
+                PasswordTextInputField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .testTag(LINK_SETTINGS_PASSWORD_FIELD_TAG),
+                    label = null,
+                    placeholder = stringResource(sharedR.string.password_placeholder),
+                    text = uiState.password.orEmpty(),
+                    showClearIcon = true,
+                    onValueChanged = onPasswordChanged,
+                    onFocusChanged = { focused ->
+                        if (focused) {
+                            coroutineScope.launch { passwordFieldPosition.bringIntoView() }
+                        }
+                    },
+                )
+                PasswordStrengthHelpText(
+                    strength = uiState.passwordStrength,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                        .testTag(LINK_SETTINGS_PASSWORD_STRENGTH_TAG),
+                )
+            }
         }
     }
 
@@ -516,6 +584,26 @@ private fun ExpiryDateField(
     }
 }
 
+/**
+ * The password strength label, coloured by strength.
+ *
+ * Only the help text carries the strength colour — it is deliberately not fed to the input field's
+ * `successText`/`warningText`/`errorText`, which would also recolour the field's border. The field
+ * keeps its default accent-when-focused styling.
+ */
+@Composable
+private fun PasswordStrengthHelpText(
+    strength: PasswordStrength?,
+    modifier: Modifier = Modifier,
+) {
+    val label = strength?.strengthLabelRes()?.let { stringResource(it) } ?: return
+    when (strength) {
+        PasswordStrength.VERY_WEAK -> HelpTextError(modifier = modifier, text = label)
+        PasswordStrength.WEAK -> HelpTextWarning(modifier = modifier, text = label)
+        else -> HelpTextSuccess(modifier = modifier, text = label)
+    }
+}
+
 @StringRes
 private fun PasswordStrength.strengthLabelRes(): Int? = when (this) {
     PasswordStrength.VERY_WEAK -> sharedR.string.password_strength_very_weak
@@ -525,9 +613,6 @@ private fun PasswordStrength.strengthLabelRes(): Int? = when (this) {
     PasswordStrength.STRONG -> sharedR.string.password_strength_strong
     PasswordStrength.INVALID -> null
 }
-
-private fun PasswordStrength?.isAcceptable() =
-    this == PasswordStrength.MEDIUM || this == PasswordStrength.GOOD || this == PasswordStrength.STRONG
 
 @Composable
 private fun LinkSettingsLoading(modifier: Modifier = Modifier) {
@@ -573,6 +658,7 @@ private fun LinkSettingsScreenPreview() {
             onPasswordEnabled = {},
             onPasswordChanged = {},
             onSave = {},
+            onUpgrade = {},
         )
     }
 }
@@ -591,6 +677,7 @@ private fun LinkSettingsScreenDirtyPreview() {
             onPasswordEnabled = {},
             onPasswordChanged = {},
             onSave = {},
+            onUpgrade = {},
         )
     }
 }
@@ -616,6 +703,7 @@ private fun LinkSettingsScreenPasswordPreview(
             onPasswordEnabled = {},
             onPasswordChanged = {},
             onSave = {},
+            onUpgrade = {},
         )
     }
 }
@@ -644,6 +732,7 @@ private fun LinkSettingsScreenLoadingPreview() {
             onPasswordEnabled = {},
             onPasswordChanged = {},
             onSave = {},
+            onUpgrade = {},
         )
     }
 }
@@ -652,6 +741,8 @@ internal const val LINK_SETTINGS_APP_BAR_TAG = "link_settings_screen:app_bar"
 internal const val LINK_SETTINGS_SAVE_BUTTON_TAG = "link_settings_screen:button_save"
 internal const val LINK_SETTINGS_SEPARATE_KEY_ROW_TAG = "link_settings_screen:row_separate_key"
 internal const val LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG = "link_settings_screen:toggle_separate_key"
+internal const val LINK_SETTINGS_UPGRADE_DIALOG_TAG = "link_settings_screen:upgrade_dialog"
+internal const val LINK_SETTINGS_PASSWORD_STRENGTH_TAG = "link_settings_screen:password_strength"
 internal const val LINK_SETTINGS_SEPARATE_KEY_LEARN_MORE_TAG = "link_settings_screen:separate_key_learn_more"
 private const val LEARN_MORE_ANNOTATION = "learn_more"
 internal const val LINK_SETTINGS_EXPIRY_ROW_TAG = "link_settings_screen:row_expiry"

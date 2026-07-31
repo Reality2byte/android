@@ -3603,6 +3603,14 @@
     <string name="share_link_password_dialog_message">Do you want to share the password for this link?</string>
     <!-- Share link revamp: shared text when the user chooses to send the password with the link. %1$s is the link, %2$s is the password -->
     <string name="share_link_with_password">Link: %1$s\n\nPassword: %2$s</string>
+    <!-- Share link revamp: title of the dialog shown when a free user turns on a Pro-only link option -->
+    <string name="share_link_upgrade_pro_dialog_title">Upgrade to Pro</string>
+    <!-- Share link revamp: body of the dialog shown when a free user turns on a Pro-only link option -->
+    <string name="share_link_upgrade_pro_dialog_message">MEGA Pro users have exclusive access to additional link safety features making your account even more secure.</string>
+    <!-- Share link revamp: button on the upgrade dialog that opens the Pro plans -->
+    <string name="share_link_upgrade_pro_dialog_see_plans">See plans</string>
+    <!-- Share link revamp: button on the upgrade dialog that dismisses it without upgrading -->
+    <string name="share_link_upgrade_pro_dialog_not_now">Not now</string>
     <!-- Title of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->
     <string name="subscription_quota_no_connection_title">Couldn’t connect</string>
     <!-- Description of the error state on the quota-warning upsell screen when the plan data can’t be loaded -->

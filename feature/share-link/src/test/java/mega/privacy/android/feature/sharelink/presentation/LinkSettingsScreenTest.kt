@@ -22,6 +22,8 @@ import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPresse
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDialogEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDiscardButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeeNotNowPlanFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkProFeatureSeePlanFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
@@ -36,6 +38,8 @@ import mega.privacy.mobile.analytics.event.LinkSetPasswordFolderButtonPressedEve
 import mega.privacy.mobile.analytics.event.LinkSettingsSaveButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSettingsSaveFailedEvent
 import mega.privacy.mobile.analytics.event.LinkSettingsScreenEvent
+import mega.privacy.mobile.analytics.event.LinkUpgradeToProFeatureFileDialogEvent
+import mega.privacy.mobile.analytics.event.LinkUpgradeToProFeatureFolderDialogEvent
 import mega.privacy.android.shared.resources.R as sharedR
 import org.junit.Rule
 import org.junit.Test
@@ -57,6 +61,8 @@ class LinkSettingsScreenTest {
     private val loaded = LinkSettingsUiState(isLoading = false, accountType = AccountType.PRO_I)
 
     private val loadedFolder = loaded.copy(isFolder = true)
+
+    private val free = loaded.copy(accountType = AccountType.FREE)
 
     @Test
     fun `test that the loading placeholder is displayed while loading`() {
@@ -340,6 +346,88 @@ class LinkSettingsScreenTest {
     }
 
     @Test
+    fun `test that the strength helper text is displayed for a very weak password`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = "pass",
+                passwordStrength = PasswordStrength.VERY_WEAK,
+            )
+        )
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.password_strength_very_weak))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the strength helper text is displayed for a weak password`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = "pass",
+                passwordStrength = PasswordStrength.WEAK,
+            )
+        )
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.password_strength_weak))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the strength helper text is displayed for a medium password`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = "pass",
+                passwordStrength = PasswordStrength.MEDIUM,
+            )
+        )
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.password_strength_medium))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the strength helper text is displayed for a good password`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = "pass",
+                passwordStrength = PasswordStrength.GOOD,
+            )
+        )
+
+        composeRule.onNodeWithText(context.getString(sharedR.string.password_strength_good))
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that no strength helper text is shown for an invalid strength`() {
+        setContent(
+            uiState = loaded.copy(
+                isPasswordEnabled = true,
+                password = "pass",
+                passwordStrength = PasswordStrength.INVALID,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_STRENGTH_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that no strength helper text is shown before a strength is known`() {
+        setContent(uiState = loaded.copy(isPasswordEnabled = true, password = "pass"))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_STRENGTH_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun `test that the Pro badge is shown on the expiry and password rows for a free account`() {
         setContent(uiState = loaded.copy(accountType = AccountType.FREE))
 
@@ -360,24 +448,126 @@ class LinkSettingsScreenTest {
     }
 
     @Test
-    fun `test that the expiry and password toggles are disabled for a free account`() {
-        setContent(uiState = loaded.copy(accountType = AccountType.FREE))
+    fun `test that the expiry and password toggles are enabled for a free account`() {
+        setContent(uiState = free)
 
-        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).assertIsNotEnabled()
-        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).assertIsNotEnabled()
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).assertIsEnabled()
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).assertIsEnabled()
     }
 
     @Test
-    fun `test that tapping a locked expiry row does not invoke onExpiryEnabled for a free account`() {
+    fun `test that enabling expiry on a free account shows the upgrade dialog without applying it`() {
         var enabled: Boolean? = null
-        setContent(
-            uiState = loaded.copy(accountType = AccountType.FREE),
-            onExpiryEnabled = { enabled = it },
-        )
+        setContent(uiState = free, onExpiryEnabled = { enabled = it })
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertIsDisplayed()
+        assertThat(enabled).isNull()
+    }
+
+    @Test
+    fun `test that enabling password on a free account shows the upgrade dialog without applying it`() {
+        var enabled: Boolean? = null
+        setContent(uiState = free, onPasswordEnabled = { enabled = it })
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertIsDisplayed()
+        assertThat(enabled).isNull()
+    }
+
+    @Test
+    fun `test that tapping a locked expiry row shows the upgrade dialog for a free account`() {
+        setContent(uiState = free)
 
         composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_ROW_TAG).performClick()
 
-        assertThat(enabled).isNull()
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that enabling expiry on a free account does not open the date picker`() {
+        setContent(uiState = free)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(sharedR.string.general_ok_only))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that choosing See plans on the upgrade dialog invokes onUpgrade`() {
+        var upgraded = false
+        setContent(uiState = free, onUpgrade = { upgraded = true })
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_upgrade_pro_dialog_see_plans)
+        ).performClick()
+
+        assertThat(upgraded).isTrue()
+    }
+
+    @Test
+    fun `test that choosing Not now on the upgrade dialog dismisses it without upgrading`() {
+        var upgraded = false
+        setContent(uiState = free, onUpgrade = { upgraded = true })
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_upgrade_pro_dialog_not_now)
+        ).performClick()
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertDoesNotExist()
+        assertThat(upgraded).isFalse()
+    }
+
+    @Test
+    fun `test that the upgrade dialog tracks the file display and button events`() {
+        setContent(uiState = free)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+        assertThat(analyticsRule.events).contains(LinkUpgradeToProFeatureFileDialogEvent)
+
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_upgrade_pro_dialog_see_plans)
+        ).performClick()
+        assertThat(analyticsRule.events).contains(LinkProFeatureSeePlanFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that the upgrade dialog tracks the folder display event for a folder`() {
+        setContent(uiState = free.copy(isFolder = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkUpgradeToProFeatureFolderDialogEvent)
+    }
+
+    @Test
+    fun `test that Not now tracks the file not-now event`() {
+        setContent(uiState = free)
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+        composeRule.onNodeWithText(
+            context.getString(sharedR.string.share_link_upgrade_pro_dialog_not_now)
+        ).performClick()
+
+        assertThat(analyticsRule.events)
+            .contains(LinkProFeatureSeeNotNowPlanFileButtonPressedEvent)
+    }
+
+    @Test
+    fun `test that a paid account does not see the upgrade dialog when enabling expiry`() {
+        var enabled: Boolean? = null
+        setContent(uiState = loaded, onExpiryEnabled = { enabled = it })
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG).performClick()
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertDoesNotExist()
+        assertThat(enabled).isTrue()
     }
 
     @Test
@@ -640,6 +830,7 @@ class LinkSettingsScreenTest {
         onPasswordEnabled: (Boolean) -> Unit = {},
         onPasswordChanged: (String) -> Unit = {},
         onSave: () -> Unit = {},
+        onUpgrade: () -> Unit = {},
     ) {
         composeRule.setContent {
             LinkSettingsScreen(
@@ -652,6 +843,7 @@ class LinkSettingsScreenTest {
                 onPasswordEnabled = onPasswordEnabled,
                 onPasswordChanged = onPasswordChanged,
                 onSave = onSave,
+                onUpgrade = onUpgrade,
             )
         }
     }
