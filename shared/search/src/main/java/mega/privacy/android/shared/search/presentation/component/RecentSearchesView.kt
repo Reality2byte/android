@@ -2,12 +2,14 @@ package mega.privacy.android.shared.search.presentation.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
@@ -43,11 +45,35 @@ fun RecentSearchesView(
     onClearAllClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
+        recentSearchesSection(
+            queries = queries,
+            onClicked = onClicked,
+            onClearAllClicked = onClearAllClicked,
+        )
+    }
+}
+
+/**
+ * Recent searches section (header with "Clear All" plus one row per query) for embedding in a
+ * larger [LazyColumn], so the hosting list stays the single vertical scroll container.
+ *
+ * @param queries List of recent search strings
+ * @param onClicked Callback when a recent search is clicked, with the search string and a boolean for keyboard
+ * @param onClearAllClicked Callback when the "Clear All" button is clicked
+ * @param headerModifier Modifier applied to the header row (e.g. a test tag)
+ */
+fun LazyListScope.recentSearchesSection(
+    queries: List<String>,
+    onClicked: (String, Boolean) -> Unit,
+    onClearAllClicked: () -> Unit,
+    headerModifier: Modifier = Modifier,
+) {
+    item(key = RECENT_SEARCHES_HEADER_KEY, contentType = RECENT_SEARCHES_HEADER_KEY) {
         Row(
-            modifier = Modifier
+            modifier = headerModifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -59,7 +85,10 @@ fun RecentSearchesView(
                     fontWeight = FontWeight.Bold
                 ),
             )
-            TextButton(onClick = onClearAllClicked) {
+            TextButton(
+                modifier = Modifier.height(40.dp),
+                onClick = onClearAllClicked
+            ) {
                 MegaText(
                     text = stringResource(sharedR.string.general_clear_all),
                     textColor = TextColor.Error,
@@ -69,43 +98,47 @@ fun RecentSearchesView(
                 )
             }
         }
-        LazyColumn {
-            items(
-                items = queries,
-                key = { it }
-            ) { text ->
-                FlexibleLineListItem(
-                    title = text,
-                    leadingElement = {
-                        MegaIcon(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .align(Alignment.Center),
-                            painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.SearchSmall),
-                            contentDescription = null,
-                            tint = IconColor.Secondary
-                        )
-                    },
-                    trailingElement = {
-                        MegaIcon(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable {
-                                    onClicked(text, true) // Open with keyboard
-                                },
-                            painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.ArrowUpLeft),
-                            contentDescription = null,
-                            tint = IconColor.Secondary
-                        )
-                    },
-                    onClickListener = {
-                        onClicked(text, false)
-                    }
+    }
+    items(
+        items = queries,
+        key = { "$RECENT_SEARCH_ITEM_KEY_PREFIX$it" },
+        contentType = { RECENT_SEARCH_ITEM_KEY_PREFIX }
+    ) { text ->
+        FlexibleLineListItem(
+            title = text,
+            minHeight = 20.dp,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            leadingElement = {
+                MegaIcon(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .align(Alignment.Center),
+                    painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.SearchSmall),
+                    contentDescription = null,
+                    tint = IconColor.Secondary
                 )
+            },
+            trailingElement = {
+                MegaIcon(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable {
+                            onClicked(text, true) // Open with keyboard
+                        },
+                    painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.ArrowUpLeft),
+                    contentDescription = null,
+                    tint = IconColor.Secondary
+                )
+            },
+            onClickListener = {
+                onClicked(text, false)
             }
-        }
+        )
     }
 }
+
+private const val RECENT_SEARCHES_HEADER_KEY = "recent_searches_header"
+private const val RECENT_SEARCH_ITEM_KEY_PREFIX = "recent_search:"
 
 @CombinedThemePreviews
 @Composable

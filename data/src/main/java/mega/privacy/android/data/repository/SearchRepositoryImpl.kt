@@ -63,7 +63,8 @@ internal class SearchRepositoryImpl @Inject constructor(
             creationDate = creationDate,
             description = description,
             tag = tag,
-            useAndForTextQuery = description == null && tag == null,
+            useAndForTextQuery = parameters.useAndForTextQuery
+                ?: (description == null && tag == null),
         )
         val offlineItems = async { getAllOfflineNodeHandle() }
         val searchList = async {

@@ -57,14 +57,45 @@ class SearchFilterChipsTest {
         verify(onFilterClicked).invoke(MODIFIED_FILTER_ID)
     }
 
+    @Test
+    fun `test that tag chip is displayed when a tag is selected`() {
+        setupComposeContent(selectedTag = SELECTED_TAG)
+
+        composeRule.onNodeWithTag(TAG_FILTER_CHIP_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that tag chip is not displayed when no tag is selected`() {
+        setupComposeContent()
+
+        composeRule.onNodeWithTag(TAG_FILTER_CHIP_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that onClearTagClicked is called when the tag chip is clicked`() {
+        val onClearTagClicked = mock<() -> Unit>()
+        setupComposeContent(
+            selectedTag = SELECTED_TAG,
+            onClearTagClicked = onClearTagClicked,
+        )
+
+        composeRule.onNodeWithTag(TAG_FILTER_CHIP_TAG).performClick()
+
+        verify(onClearTagClicked).invoke()
+    }
+
     private fun setupComposeContent(
         onFilterClicked: (String) -> Unit = {},
+        selectedTag: String? = null,
+        onClearTagClicked: () -> Unit = {},
     ) {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 SearchFilterChips(
                     filters = filters,
                     onFilterClicked = onFilterClicked,
+                    selectedTag = selectedTag,
+                    onClearTagClicked = onClearTagClicked,
                 )
             }
         }
@@ -74,5 +105,6 @@ class SearchFilterChipsTest {
         const val TYPE_FILTER_ID = "type"
         const val MODIFIED_FILTER_ID = "modified"
         const val ADDED_FILTER_ID = "added"
+        const val SELECTED_TAG = "marketing"
     }
 }

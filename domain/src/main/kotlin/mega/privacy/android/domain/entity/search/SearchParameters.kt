@@ -10,6 +10,9 @@ package mega.privacy.android.domain.entity.search
  * @property creationDate added date
  * @property description description
  * @property tag tag
+ * @property useAndForTextQuery whether the query, description and tag text conditions are
+ * combined with AND (true) or OR (false); null keeps the default behaviour of AND only when
+ * description and tag are absent
  */
 data class SearchParameters(
     val query: String,
@@ -19,4 +22,5 @@ data class SearchParameters(
     val creationDate: DateFilterOption? = null,
     val description: String? = null,
     val tag: String? = null,
+    val useAndForTextQuery: Boolean? = null,
 )

@@ -11,6 +11,9 @@ import de.palm.composestateevents.triggered
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,8 +46,10 @@ import mega.privacy.android.domain.entity.search.DateFilterOption
 import mega.privacy.android.domain.entity.search.SearchParameters
 import mega.privacy.android.domain.entity.search.TypeFilterOption
 import mega.privacy.android.domain.usecase.GetNodeInfoByIdUseCase
+import mega.privacy.android.domain.usecase.GetRootNodeIdUseCase
 import mega.privacy.android.domain.usecase.SetCloudSortOrder
 import mega.privacy.android.domain.usecase.canceltoken.CancelCancelTokenUseCase
+import mega.privacy.android.domain.usecase.node.GetAllNodeTagsUseCase
 import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesByIdUseCase
 import mega.privacy.android.domain.usecase.node.hiddennode.MonitorHiddenNodesEnabledUseCase
 import mega.privacy.android.domain.usecase.node.sort.MonitorSortCloudOrderUseCase
@@ -99,6 +104,8 @@ class SearchViewModel @AssistedInject constructor(
     private val saveRecentSearchUseCase: SaveRecentSearchUseCase,
     private val monitorRecentSearchesUseCase: MonitorRecentSearchesUseCase,
     private val clearRecentSearchesUseCase: ClearRecentSearchesUseCase,
+    private val getAllNodeTagsUseCase: GetAllNodeTagsUseCase,
+    private val getRootNodeIdUseCase: GetRootNodeIdUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -121,20 +128,21 @@ class SearchViewModel @AssistedInject constructor(
 
     private val searchQueryFlow = MutableStateFlow("")
     private var nodeMultiSelectionJob: Job? = null
+    private var searchJob: Job? = null
 
     init {
         viewModelScope.launch {
             searchQueryFlow
                 .debounce(SEARCH_DEBOUNCE_MS)
-                .collectLatest { query -> performSearch(query) }
+                .collect { query -> launchSearch(query) }
         }
         monitorViewType()
-        // TODO Handle others, links sort types
         monitorSortOrder()
         monitorHiddenNodeSettings()
         monitorNodeUpdates()
         updateSearchPlaceholder()
         monitorRecentSearches()
+        loadNodeTags()
     }
 
     fun processAction(action: SearchUiAction) {
@@ -152,6 +160,8 @@ class SearchViewModel @AssistedInject constructor(
             is SearchUiAction.NavigateBackEventConsumed -> onNavigateBackEventConsumed()
             is SearchUiAction.SelectRecentSearch -> onSelectRecentSearch(action.query)
             is SearchUiAction.ClearRecentSearches -> onClearRecentSearches()
+            is SearchUiAction.SelectTag -> onSelectTag(action.tag)
+            is SearchUiAction.ClearTagFilter -> onClearTagFilter()
         }
     }
 
@@ -176,7 +186,7 @@ class SearchViewModel @AssistedInject constructor(
                 is SearchFilterResult.DateAdded -> state.copy(dateAddedFilterOption = result.option)
             }
         }
-        viewModelScope.launch { performSearch(_uiState.value.searchText) }
+        launchSearch(_uiState.value.searchText)
     }
 
     private fun updateSearchText(text: String) {
@@ -189,10 +199,28 @@ class SearchViewModel @AssistedInject constructor(
         searchQueryFlow.value = text
     }
 
-    private suspend fun performSearch(
+    /**
+     * Launch a search, cancelling any search still in flight so searches triggered from
+     * different paths never run concurrently and race to publish results.
+     */
+    private fun launchSearch(
         query: String = uiState.value.searchedQuery,
+        tag: String? = _uiState.value.tagFilterOption,
     ) {
-        if (query.isEmpty()) {
+        val previousSearch = searchJob
+        searchJob = viewModelScope.launch {
+            previousSearch?.apply {
+                cancel()
+                // Join non-cancellably so an aborted join can't let an older search outlive newer ones
+                withContext(NonCancellable) { join() }
+            }
+            ensureActive()
+            performSearch(query, tag)
+        }
+    }
+
+    private suspend fun performSearch(query: String, tag: String?) {
+        if (query.isEmpty() && tag == null) {
             _uiState.update { state ->
                 state.copy(
                     items = emptyList(),
@@ -209,7 +237,7 @@ class SearchViewModel @AssistedInject constructor(
             val nodes = searchUseCase(
                 parentHandle = NodeId(args.parentHandle),
                 nodeSourceType = args.nodeSourceType,
-                searchParameters = getSearchParameters(query),
+                searchParameters = getSearchParameters(query = query, tag = tag),
             )
             val nodeUiItems = nodeUiItemMapper(
                 nodeList = nodes,
@@ -223,7 +251,9 @@ class SearchViewModel @AssistedInject constructor(
                     nodesLoadingState = NodesLoadingState.FullyLoaded,
                 )
             }
-            saveRecentSearchUseCase(query)
+            if (query.isNotEmpty()) {
+                saveRecentSearchUseCase(query)
+            }
         }.onFailure { throwable ->
             if (throwable !is CancellationException) {
                 _uiState.update { state ->
@@ -236,24 +266,34 @@ class SearchViewModel @AssistedInject constructor(
         }
     }
 
-    private fun getSearchParameters(
-        query: String,
-    ) = SearchParameters(
-        query = query,
-        searchCategory = typeFilterToSearchMapper(
-            typeFilterOption = uiState.value.typeFilterOption,
-            nodeSourceType = args.nodeSourceType
-        ),
-        searchTarget = nodeSourceTypeToSearchTargetMapper(
-            nodeSourceType = args.nodeSourceType
-        ),
-        modificationDate = uiState.value.dateModifiedFilterOption,
-        creationDate = uiState.value.dateAddedFilterOption,
-        description = query,
-        tag = query.removePrefix("#").takeIf {
-            args.nodeSourceType != NodeSourceType.RUBBISH_BIN
+    private fun getSearchParameters(query: String, tag: String?): SearchParameters {
+        val base = SearchParameters(
+            query = query,
+            searchCategory = typeFilterToSearchMapper(
+                typeFilterOption = uiState.value.typeFilterOption,
+                nodeSourceType = args.nodeSourceType
+            ),
+            searchTarget = nodeSourceTypeToSearchTargetMapper(
+                nodeSourceType = args.nodeSourceType
+            ),
+            modificationDate = uiState.value.dateModifiedFilterOption,
+            creationDate = uiState.value.dateAddedFilterOption,
+        )
+        return if (tag != null) {
+            // Match the tag exactly, AND the typed text against names
+            base.copy(
+                tag = tag,
+                useAndForTextQuery = true,
+            )
+        } else {
+            base.copy(
+                description = query,
+                tag = query.removePrefix("#").takeIf {
+                    args.nodeSourceType != NodeSourceType.RUBBISH_BIN
+                },
+            )
         }
-    )
+    }
 
     private fun monitorNodeUpdates() {
         viewModelScope.launch {
@@ -271,8 +311,9 @@ class SearchViewModel @AssistedInject constructor(
                     } else {
                         // If nodes are currently loading, ignore updates
                         if (!uiState.value.nodesLoadingState.isInProgress) {
-                            performSearch()
+                            launchSearch()
                             updateSearchPlaceholder()
+                            loadNodeTags()
                         }
                     }
                 }
@@ -424,7 +465,7 @@ class SearchViewModel @AssistedInject constructor(
             .filterNotNull()
             .onEach {
                 updateSortOrder(it)
-                performSearch()
+                launchSearch()
             }
             .launchIn(viewModelScope)
     }
@@ -545,6 +586,55 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     /**
+     * Load the tags shown in the pre-search state; only offered at the Cloud Drive root,
+     * where tag-only search is supported
+     */
+    private fun loadNodeTags() {
+        if (args.nodeSourceType != NodeSourceType.CLOUD_DRIVE) return
+        viewModelScope.launch {
+            runCatching {
+                val isCloudDriveRoot = args.parentHandle == -1L ||
+                        args.parentHandle == getRootNodeIdUseCase()?.longValue
+                if (isCloudDriveRoot) {
+                    getAllNodeTagsUseCase(searchString = "")
+                } else {
+                    null
+                }
+            }.onSuccess { tags ->
+                _uiState.update { it.copy(tags = tags.orEmpty()) }
+            }.onFailure {
+                Timber.e(it, "Error loading node tags")
+            }
+        }
+    }
+
+    /**
+     * Activate a tag filter without touching the search field
+     */
+    private fun onSelectTag(tag: String) {
+        _uiState.update {
+            it.copy(
+                tagFilterOption = tag,
+                nodesLoadingState = NodesLoadingState.Loading,
+            )
+        }
+        launchSearch(_uiState.value.searchText)
+    }
+
+    /**
+     * Clear the tag filter, falling back to a plain text search or the pre-search state
+     */
+    private fun onClearTagFilter() {
+        _uiState.update {
+            it.copy(
+                tagFilterOption = null,
+                nodesLoadingState = NodesLoadingState.Loading,
+            )
+        }
+        launchSearch(_uiState.value.searchText)
+    }
+
+    /**
      * Handle clear recent searches action
      */
     private fun onClearRecentSearches() {
@@ -575,6 +665,8 @@ class SearchViewModel @AssistedInject constructor(
         recentSearches = recentSearches,
         isRecentSearchesLoading = isRecentSearchesLoading,
         filters = if (isFilterAllowed) toFilterChips() else emptyList(),
+        tags = tags,
+        selectedTag = tagFilterOption,
     )
 
     private fun SearchUiState.toFilterChips(): List<SearchFilterChipState> = listOf(

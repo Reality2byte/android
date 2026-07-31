@@ -44,6 +44,8 @@ data class SearchUiState(
     val placeholderText: LocalizedText = LocalizedText.Literal(""),
     val recentSearches: List<String> = emptyList(),
     val isRecentSearchesLoading: Boolean = true,
+    val tags: List<String> = emptyList(),
+    val tagFilterOption: String? = null,
 ) {
     /**
      * True if nodes or hidden node settings are loading
@@ -95,13 +97,14 @@ data class SearchUiState(
     /**
      * True if there are no visible items and not loading
      */
-    val isEmpty = visibleItemsCount == 0 && !isLoading && searchedQuery.isNotEmpty()
+    val isEmpty = visibleItemsCount == 0 && !isLoading &&
+            (searchedQuery.isNotEmpty() || tagFilterOption != null)
 
     /**
      * True when no search has been performed yet
      */
-    val isPreSearch =
-        nodesLoadingState == NodesLoadingState.Idle && (searchText.isEmpty() || searchedQuery.isEmpty())
+    val isPreSearch = nodesLoadingState == NodesLoadingState.Idle && tagFilterOption == null &&
+            (searchText.isEmpty() || searchedQuery.isEmpty())
 
     /**
      * Returns a list of selected nodes.

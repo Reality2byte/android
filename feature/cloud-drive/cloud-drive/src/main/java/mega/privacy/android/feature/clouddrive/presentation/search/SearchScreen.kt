@@ -53,6 +53,8 @@ import mega.privacy.android.shared.search.presentation.model.SearchEmptyContent
 import mega.privacy.mobile.analytics.event.SearchDateAddedDropdownChipPressedEvent
 import mega.privacy.mobile.analytics.event.SearchFileTypeDropdownChipPressedEvent
 import mega.privacy.mobile.analytics.event.SearchLastModifiedDropdownChipPressedEvent
+import mega.privacy.mobile.analytics.event.SearchTagChipPressedEvent
+import mega.privacy.mobile.analytics.event.SearchTagFilterRemovedEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,6 +102,14 @@ fun SearchScreen(
         onBack = navigationHandler::back,
         onRecentSearchSelected = { viewModel.processAction(SearchUiAction.SelectRecentSearch(it)) },
         onClearRecentSearches = { viewModel.processAction(SearchUiAction.ClearRecentSearches) },
+        onTagSelected = {
+            Analytics.tracker.trackEvent(SearchTagChipPressedEvent)
+            viewModel.processAction(SearchUiAction.SelectTag(it))
+        },
+        onTagFilterCleared = {
+            Analytics.tracker.trackEvent(SearchTagFilterRemovedEvent)
+            viewModel.processAction(SearchUiAction.ClearTagFilter)
+        },
         filterOptionsProvider = viewModel::filterOptions,
         onFilterChipClicked = { filterId -> trackFilterChipPressed(filterId) },
         onFilterOptionSelected = viewModel::onFilterOptionSelected,

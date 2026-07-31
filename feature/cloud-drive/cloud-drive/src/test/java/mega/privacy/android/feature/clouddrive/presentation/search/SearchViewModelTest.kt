@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceTimeBy
@@ -28,8 +29,10 @@ import mega.privacy.android.domain.entity.search.SearchCategory
 import mega.privacy.android.domain.entity.search.SearchTarget
 import mega.privacy.android.domain.entity.search.TypeFilterOption
 import mega.privacy.android.domain.usecase.GetNodeInfoByIdUseCase
+import mega.privacy.android.domain.usecase.GetRootNodeIdUseCase
 import mega.privacy.android.domain.usecase.SetCloudSortOrder
 import mega.privacy.android.domain.usecase.canceltoken.CancelCancelTokenUseCase
+import mega.privacy.android.domain.usecase.node.GetAllNodeTagsUseCase
 import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesByIdUseCase
 import mega.privacy.android.domain.usecase.node.hiddennode.MonitorHiddenNodesEnabledUseCase
 import mega.privacy.android.domain.usecase.node.sort.MonitorSortCloudOrderUseCase
@@ -61,6 +64,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
@@ -90,6 +94,8 @@ class SearchViewModelTest {
     private val saveRecentSearchUseCase: SaveRecentSearchUseCase = mock()
     private val monitorRecentSearchesUseCase: MonitorRecentSearchesUseCase = mock()
     private val clearRecentSearchesUseCase: ClearRecentSearchesUseCase = mock()
+    private val getAllNodeTagsUseCase: GetAllNodeTagsUseCase = mock()
+    private val getRootNodeIdUseCase: GetRootNodeIdUseCase = mock()
     private val nodeSourceType = NodeSourceType.CLOUD_DRIVE
     private val parentHandle = 123L
     private val args = SearchViewModel.Args(
@@ -107,7 +113,9 @@ class SearchViewModelTest {
             nodeSourceTypeToSearchTargetMapper,
             saveRecentSearchUseCase,
             monitorRecentSearchesUseCase,
-            clearRecentSearchesUseCase
+            clearRecentSearchesUseCase,
+            getAllNodeTagsUseCase,
+            getRootNodeIdUseCase
         )
     }
 
@@ -133,6 +141,8 @@ class SearchViewModelTest {
         saveRecentSearchUseCase = saveRecentSearchUseCase,
         monitorRecentSearchesUseCase = monitorRecentSearchesUseCase,
         clearRecentSearchesUseCase = clearRecentSearchesUseCase,
+        getAllNodeTagsUseCase = getAllNodeTagsUseCase,
+        getRootNodeIdUseCase = getRootNodeIdUseCase,
     )
 
     private fun setupTestData(
@@ -1222,6 +1232,254 @@ class SearchViewModelTest {
                     params.description == query && params.tag == null
                 },
             )
+        }
+
+    @Test
+    fun `test that init loads node tags when searching from the cloud drive root`() = runTest {
+        setupTestData()
+        whenever(
+            monitorNodeUpdatesByIdUseCase(
+                NodeId(-1L),
+                NodeSourceType.CLOUD_DRIVE
+            )
+        ).thenReturn(flowOf())
+        whenever(getAllNodeTagsUseCase(searchString = "")).thenReturn(listOf("marketing", "2026"))
+
+        val underTest = createViewModel(
+            SearchViewModel.Args(
+                parentHandle = -1L,
+                nodeSourceType = NodeSourceType.CLOUD_DRIVE
+            )
+        )
+        advanceUntilIdle()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().tags).containsExactly("marketing", "2026").inOrder()
+        }
+    }
+
+    @Test
+    fun `test that init loads node tags when parent handle is the root node id`() = runTest {
+        setupTestData()
+        whenever(getRootNodeIdUseCase()).thenReturn(NodeId(parentHandle))
+        whenever(getAllNodeTagsUseCase(searchString = "")).thenReturn(listOf("marketing"))
+
+        val underTest = createViewModel()
+        advanceUntilIdle()
+
+        underTest.uiState.test {
+            assertThat(awaitItem().tags).containsExactly("marketing")
+        }
+    }
+
+    @Test
+    fun `test that init does not call getAllNodeTagsUseCase when parent is not the root node`() =
+        runTest {
+            setupTestData()
+            whenever(getRootNodeIdUseCase()).thenReturn(NodeId(999L))
+
+            createViewModel()
+            advanceUntilIdle()
+
+            verify(getAllNodeTagsUseCase, never()).invoke(any())
+        }
+
+    @Test
+    fun `test that init does not call getAllNodeTagsUseCase when nodeSourceType is not CLOUD_DRIVE`() =
+        runTest {
+            setupTestData()
+            whenever(
+                monitorNodeUpdatesByIdUseCase(
+                    NodeId(-1L),
+                    NodeSourceType.FAVOURITES
+                )
+            ).thenReturn(flowOf())
+
+            createViewModel(
+                SearchViewModel.Args(
+                    parentHandle = -1L,
+                    nodeSourceType = NodeSourceType.FAVOURITES
+                )
+            )
+            advanceUntilIdle()
+
+            verify(getAllNodeTagsUseCase, never()).invoke(any())
+        }
+
+    @Test
+    fun `test that SelectTag action searches by tag only and keeps the search field untouched`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("file.txt")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(SearchUiAction.SelectTag("marketing"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            assertThat(underTest.uiState.value.searchText).isEmpty()
+            assertThat(underTest.uiState.value.tagFilterOption).isEqualTo("marketing")
+            verify(searchUseCase, atLeast(1)).invoke(
+                parentHandle = any(),
+                nodeSourceType = any(),
+                searchParameters = argThat { params ->
+                    params.query.isEmpty() &&
+                            params.description == null &&
+                            params.tag == "marketing" &&
+                            params.useAndForTextQuery == true
+                },
+            )
+        }
+
+    @Test
+    fun `test that UpdateSearchText action searches within the tag when a tag filter is active`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("file.txt")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(SearchUiAction.SelectTag("marketing"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            underTest.processAction(SearchUiAction.UpdateSearchText("holiday"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            verify(searchUseCase, atLeast(1)).invoke(
+                parentHandle = any(),
+                nodeSourceType = any(),
+                searchParameters = argThat { params ->
+                    params.query == "holiday" &&
+                            params.description == null &&
+                            params.tag == "marketing" &&
+                            params.useAndForTextQuery == true
+                },
+            )
+        }
+
+    @Test
+    fun `test that a new search cancels the search in flight when triggered from another path`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+            val slowNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(1L))
+                on { name }.thenReturn("slow.txt")
+            }
+            val fastNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(2L))
+                on { name }.thenReturn("fast.txt")
+            }
+            setupTestData()
+            var searchCount = 0
+            whenever(searchUseCase(any(), any(), any())).doSuspendableAnswer {
+                if (searchCount++ == 0) {
+                    delay(10_000)
+                    listOf(slowNode)
+                } else {
+                    listOf(fastNode)
+                }
+            }
+            whenever(
+                nodeUiItemMapper(
+                    nodeList = any(),
+                    existingItems = anyOrNull(),
+                    nodeSourceType = any(),
+                    isPublicNodes = any(),
+                    showPublicLinkCreationTime = any(),
+                    highlightedNodeId = anyOrNull(),
+                    highlightedNames = anyOrNull(),
+                    isContactVerificationOn = any(),
+                )
+            ).doSuspendableAnswer { invocation ->
+                invocation.getArgument<List<TypedNode>>(0)
+                    .map { NodeUiItem(node = it, isSelected = false) }
+            }
+
+            val underTest = createViewModel()
+            underTest.processAction(SearchUiAction.UpdateSearchText("query"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+
+            underTest.processAction(SearchUiAction.SelectTag("marketing"))
+            advanceUntilIdle()
+
+            val itemIds = underTest.uiState.value.items.map { it.node.id }
+            assertThat(itemIds).containsExactly(NodeId(2L))
+        }
+
+    @Test
+    fun `test that ClearTagFilter action returns to pre-search state when query is empty`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("file.txt")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(SearchUiAction.SelectTag("marketing"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+            assertThat(underTest.uiState.value.isPreSearch).isFalse()
+
+            underTest.processAction(SearchUiAction.ClearTagFilter)
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            with(underTest.uiState.value) {
+                assertThat(tagFilterOption).isNull()
+                assertThat(isPreSearch).isTrue()
+                assertThat(items).isEmpty()
+            }
+        }
+
+    @Test
+    fun `test that SelectTag action does not save the search to recent searches`() = runTest {
+        whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+        val typedFileNode = mock<TypedFileNode> {
+            on { id }.thenReturn(NodeId(123L))
+            on { name }.thenReturn("file.txt")
+        }
+        setupTestData(listOf(typedFileNode))
+
+        val underTest = createViewModel()
+        underTest.processAction(SearchUiAction.SelectTag("marketing"))
+        advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+        advanceUntilIdle()
+
+        verify(searchUseCase, atLeast(1)).invoke(any(), any(), any())
+        verify(saveRecentSearchUseCase, never()).invoke(any())
+    }
+
+    @Test
+    fun `test that UpdateSearchText action saves the search to recent searches when typed after a tag search`() =
+        runTest {
+            whenever(typeFilterToSearchMapper(anyOrNull(), any())).thenReturn(SearchCategory.ALL)
+            val typedFileNode = mock<TypedFileNode> {
+                on { id }.thenReturn(NodeId(123L))
+                on { name }.thenReturn("file.txt")
+            }
+            setupTestData(listOf(typedFileNode))
+
+            val underTest = createViewModel()
+            underTest.processAction(SearchUiAction.SelectTag("marketing"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            underTest.processAction(SearchUiAction.UpdateSearchText("holiday"))
+            advanceTimeBy(SearchViewModel.SEARCH_DEBOUNCE_MS + 100)
+            advanceUntilIdle()
+
+            verify(saveRecentSearchUseCase).invoke("holiday")
         }
 
     @Test

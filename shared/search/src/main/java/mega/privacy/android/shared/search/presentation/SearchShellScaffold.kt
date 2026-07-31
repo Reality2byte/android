@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -31,11 +32,12 @@ import mega.android.core.ui.components.sheets.MegaModalBottomSheet
 import mega.android.core.ui.components.sheets.MegaModalBottomSheetBackground
 import mega.android.core.ui.modifiers.applyScrollToHideBehavior
 import mega.android.core.ui.modifiers.excludingBottomPadding
-import mega.privacy.android.shared.search.presentation.component.RecentSearchesView
 import mega.privacy.android.shared.search.presentation.component.SearchEmptyStateView
 import mega.privacy.android.shared.search.presentation.component.SearchFilterBottomSheetContent
 import mega.privacy.android.shared.search.presentation.component.SearchFilterChips
+import mega.privacy.android.shared.search.presentation.component.SearchTagsView
 import mega.privacy.android.shared.search.presentation.component.SearchTopAppBar
+import mega.privacy.android.shared.search.presentation.component.recentSearchesSection
 import mega.privacy.android.shared.search.presentation.model.SearchEmptyContent
 import mega.privacy.android.shared.search.presentation.model.SearchFilterOptions
 import mega.privacy.android.shared.search.presentation.model.SearchShellState
@@ -56,6 +58,8 @@ import mega.privacy.android.shared.search.presentation.model.SearchShellState
  * @param onBack Invoked when the user navigates back.
  * @param onRecentSearchSelected Invoked when a recent search is tapped (focus handling is internal).
  * @param onClearRecentSearches Invoked when the user clears recent searches.
+ * @param onTagSelected Invoked when a tag chip is tapped in the pre-search state.
+ * @param onTagFilterCleared Invoked when the active tag filter chip is dismissed.
  * @param filterOptionsProvider Returns the options to show when a filter chip is tapped, or null.
  * @param onFilterChipClicked Invoked when a filter chip is tapped (e.g. for analytics).
  * @param onFilterOptionSelected Invoked with the filter id and chosen option id (null clears it).
@@ -76,6 +80,8 @@ fun SearchShellScaffold(
     onClearRecentSearches: () -> Unit,
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
+    onTagSelected: (String) -> Unit = {},
+    onTagFilterCleared: () -> Unit = {},
     filterOptionsProvider: (filterId: String) -> SearchFilterOptions? = { null },
     onFilterChipClicked: (filterId: String) -> Unit = {},
     onFilterOptionSelected: (filterId: String, optionId: String?) -> Unit = { _, _ -> },
@@ -114,7 +120,7 @@ fun SearchShellScaffold(
                     detectTapGestures(onTap = { localFocusManager.clearFocus() })
                 }
         ) {
-            if (state.filters.isNotEmpty()) {
+            if (state.filters.isNotEmpty() || state.selectedTag != null) {
                 SearchFilterChips(
                     modifier = Modifier
                         .applyScrollToHideBehavior()
@@ -125,30 +131,57 @@ fun SearchShellScaffold(
                         onFilterChipClicked(filterId)
                         selectedFilterId = filterId
                     },
+                    selectedTag = state.selectedTag,
+                    onClearTagClicked = onTagFilterCleared,
                 )
             }
 
             when {
                 state.isPreSearch -> {
-                    if (state.recentSearches.isNotEmpty()) {
-                        RecentSearchesView(
+                    if (state.tags.isNotEmpty() || state.recentSearches.isNotEmpty()) {
+                        LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .imePadding()
-                                .testTag(SEARCH_SHELL_RECENT_SEARCHES_TAG),
-                            queries = state.recentSearches,
-                            onClicked = { query, openKeyboard ->
-                                onRecentSearchSelected(query)
-                                coroutineScope.launch {
-                                    if (openKeyboard) {
-                                        focusRequester.requestFocus()
-                                    } else {
-                                        localFocusManager.clearFocus()
-                                    }
+                                .imePadding(),
+                        ) {
+                            if (state.tags.isNotEmpty()) {
+                                item(
+                                    key = SEARCH_SHELL_TAGS_TAG,
+                                    contentType = SEARCH_SHELL_TAGS_TAG,
+                                ) {
+                                    SearchTagsView(
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .testTag(SEARCH_SHELL_TAGS_TAG),
+                                        tags = state.tags,
+                                        onTagClicked = { tag ->
+                                            localFocusManager.clearFocus()
+                                            onTagSelected(tag)
+                                        },
+                                        expandedByDefault = state.recentSearches.isEmpty() &&
+                                                !state.isRecentSearchesLoading,
+                                    )
                                 }
-                            },
-                            onClearAllClicked = onClearRecentSearches,
-                        )
+                            }
+                            if (state.recentSearches.isNotEmpty()) {
+                                recentSearchesSection(
+                                    queries = state.recentSearches,
+                                    onClicked = { query, openKeyboard ->
+                                        onRecentSearchSelected(query)
+                                        coroutineScope.launch {
+                                            if (openKeyboard) {
+                                                focusRequester.requestFocus()
+                                            } else {
+                                                localFocusManager.clearFocus()
+                                            }
+                                        }
+                                    },
+                                    onClearAllClicked = onClearRecentSearches,
+                                    headerModifier = Modifier
+                                        .testTag(SEARCH_SHELL_RECENT_SEARCHES_TAG),
+                                )
+                            }
+                        }
                     } else if (!state.isRecentSearchesLoading) {
                         SearchEmptyStateView(
                             modifier = Modifier
@@ -212,6 +245,7 @@ private fun DefaultSearchLoading() {
 }
 
 internal const val SEARCH_SHELL_RECENT_SEARCHES_TAG = "search_shell:recent_searches"
+internal const val SEARCH_SHELL_TAGS_TAG = "search_shell:tags"
 internal const val SEARCH_SHELL_LANDING_TAG = "search_shell:landing"
 internal const val SEARCH_SHELL_EMPTY_TAG = "search_shell:empty"
 internal const val SEARCH_SHELL_RESULTS_TAG = "search_shell:results"

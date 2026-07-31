@@ -19,6 +19,9 @@ import mega.android.core.ui.model.LocalizedText
  * @property recentSearches Recent search queries, most recent first.
  * @property isRecentSearchesLoading True while recent searches are still loading.
  * @property filters Filter chips to display; empty hides the chips row.
+ * @property tags Tags shown as chips in the pre-search state; empty hides the section.
+ * @property selectedTag Tag the results are currently filtered by, shown as a dismissible chip
+ * at the start of the filter chips row; null when no tag filter is active.
  */
 @Immutable
 data class SearchShellState(
@@ -31,4 +34,6 @@ data class SearchShellState(
     val recentSearches: List<String> = emptyList(),
     val isRecentSearchesLoading: Boolean = true,
     val filters: List<SearchFilterChipState> = emptyList(),
+    val tags: List<String> = emptyList(),
+    val selectedTag: String? = null,
 )

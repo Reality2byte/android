@@ -24,6 +24,8 @@ dependencies {
 
     implementation(project(":resources:string-resources"))
     implementation(project(":resources:icon-pack"))
+    implementation(project(":core:analytics:analytics-tracker"))
+    implementation(lib.mega.analytics)
 
     //core components
     implementation(lib.mega.core.ui)

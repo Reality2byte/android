@@ -159,6 +159,50 @@ class SearchRepositoryImplTest {
     }
 
     @Test
+    fun `test that search passes useAndForTextQuery override from parameters to the filter mapper`() =
+        runTest {
+            whenever(sortOrderIntMapper(any(), any())).thenReturn(0)
+            val nodeID = NodeId(-1L)
+            val query = "Some query"
+            val order = SortOrder.ORDER_NONE
+            val filter = mock<MegaSearchFilter>()
+            whenever(cancelTokenProvider.getOrCreateCancelToken()).thenReturn(megaCancelToken)
+            whenever(megaLocalRoomGateway.getAllOfflineInfo()).thenReturn(emptyList())
+            whenever(
+                megsSearchFilterMapper(
+                    searchQuery = query,
+                    parentHandle = nodeID,
+                    searchCategory = SearchCategory.ALL,
+                    tag = "marketing",
+                    useAndForTextQuery = true,
+                )
+            ).thenReturn(filter)
+            whenever(
+                megaApiGateway.searchWithFilter(
+                    filter = filter,
+                    megaCancelToken = megaCancelToken,
+                    order = sortOrderIntMapper(order)
+                )
+            ).thenReturn(emptyList())
+
+            underTest.search(
+                nodeId = nodeID,
+                order = order,
+                parameters = SearchParameters(
+                    query = query,
+                    tag = "marketing",
+                    useAndForTextQuery = true,
+                ),
+            )
+
+            verify(megaApiGateway).searchWithFilter(
+                filter,
+                sortOrderIntMapper(SortOrder.ORDER_NONE),
+                megaCancelToken
+            )
+        }
+
+    @Test
     fun `test that getInShares returns list of untyped nodes`() = runTest {
         whenever(getCloudSortOrder()).thenReturn(SortOrder.ORDER_NONE)
         whenever(megaApiGateway.getInShares(sortOrderIntMapper(SortOrder.ORDER_NONE))).thenReturn(

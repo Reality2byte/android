@@ -3194,12 +3194,6 @@
         <item quantity="one">Minute</item>
         <item quantity="other">Minutes</item>
     </plurals>
-    <!-- Title of the dialog shown when the discount offer countdown reaches zero while the user is on the subscription page -->
-    <string name="subscription_offer_expired_dialog_title">This offer has ended</string>
-    <!-- Body of the dialog shown when the discount offer countdown reaches zero, pointing the user at the currently available plans -->
-    <string name="subscription_offer_expired_dialog_description">This deal is no longer available. Check our current plans to find one that suits you.</string>
-    <!-- Button that closes the expired-offer dialog and reloads the subscription page with the currently available plans -->
-    <string name="subscription_offer_expired_dialog_button">View plans</string>
     <!-- Password strength label shown below a password field when the password is very weak -->
     <string name="password_strength_very_weak">Very weak password</string>
     <!-- Password strength label shown below a password field when the password is weak -->
@@ -3617,6 +3611,12 @@
     <string name="subscription_quota_no_connection_description">Check your storage and transfer details later, or try again</string>
     <!-- Label of the button that retries loading the quota-warning upsell screen -->
     <string name="subscription_quota_no_connection_retry_button">Try again</string>
+    <!-- Title of the dialog shown when the discount offer countdown reaches zero while the user is on the subscription page -->
+    <string name="subscription_offer_expired_dialog_title">This offer has ended</string>
+    <!-- Body of the dialog shown when the discount offer countdown reaches zero, pointing the user at the currently available plans -->
+    <string name="subscription_offer_expired_dialog_description">This deal is no longer available. Check our current plans to find one that suits you.</string>
+    <!-- Button that closes the expired-offer dialog and reloads the subscription page with the currently available plans -->
+    <string name="subscription_offer_expired_dialog_button">View plans</string>
     <!-- Video editor: screen title shown in the top app bar -->
     <string name="video_editor_screen_title">Edit video</string>
     <!-- Video editor: top bar action that exports the edited video as a new file -->
@@ -3669,4 +3669,8 @@
     <string name="video_editor_encoding_label">Encoding&#8230;</string>
     <!-- Video editor: body of the confirmation dialog shown when leaving with unsaved edits -->
     <string name="video_editor_discard_changes_description">If you leave now, your edits will be lost.</string>
+    <!-- Button label on the search screen tags section to expand and show all tags -->
+    <string name="search_tags_show_all">Show all</string>
+    <!-- Button label on the search screen tags section to collapse the expanded tags list -->
+    <string name="search_tags_show_less">Show less</string>
 </resources>

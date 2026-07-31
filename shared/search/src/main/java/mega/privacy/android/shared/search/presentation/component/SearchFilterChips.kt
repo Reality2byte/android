@@ -25,6 +25,9 @@ import mega.privacy.android.shared.search.presentation.model.SearchFilterChipSta
  *
  * Any analytics or value resolution is the consumer's responsibility: it builds the chip states
  * (resolving labels) and reacts to [onFilterClicked] with the chip [SearchFilterChipState.id].
+ *
+ * When [selectedTag] is set, a dismissible tag chip leads the row; tapping it invokes
+ * [onClearTagClicked] to clear the tag filter.
  */
 @Composable
 fun SearchFilterChips(
@@ -32,6 +35,8 @@ fun SearchFilterChips(
     onFilterClicked: (filterId: String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    selectedTag: String? = null,
+    onClearTagClicked: () -> Unit = {},
 ) {
     ThemedSurface(
         modifier = modifier
@@ -43,6 +48,19 @@ fun SearchFilterChips(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Spacer(Modifier.size(8.dp))
+
+            selectedTag?.let { tag ->
+                MegaChip(
+                    modifier = Modifier
+                        .animateContentSize()
+                        .testTag(TAG_FILTER_CHIP_TAG),
+                    content = "#$tag",
+                    selected = true,
+                    trailingPainter = rememberVectorPainter(IconPack.Medium.Thin.Outline.X),
+                    onClick = onClearTagClicked,
+                    enabled = enabled
+                )
+            }
 
             filters.forEach { filter ->
                 MegaChip(
@@ -87,3 +105,4 @@ private fun SearchFilterChipsPreview() {
 
 internal const val FILTER_CHIPS_TAG = "search_filter_chips"
 internal const val FILTER_CHIP_TAG = "search_filter_chips:chip"
+internal const val TAG_FILTER_CHIP_TAG = "search_filter_chips:chip_tag"

@@ -35,4 +35,8 @@ sealed interface SearchUiAction {
     data class SelectRecentSearch(val query: String) : SearchUiAction
 
     data object ClearRecentSearches : SearchUiAction
+
+    data class SelectTag(val tag: String) : SearchUiAction
+
+    data object ClearTagFilter : SearchUiAction
 }

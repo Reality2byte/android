@@ -10,9 +10,13 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.common.truth.Truth.assertThat
 import mega.android.core.ui.model.LocalizedText
 import mega.android.core.ui.theme.AndroidThemeForPreviews
+import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.android.shared.search.presentation.component.FILTER_CHIPS_TAG
 import mega.privacy.android.shared.search.presentation.model.SearchEmptyContent
 import mega.privacy.android.shared.search.presentation.model.SearchFilterChipState
@@ -61,6 +65,80 @@ class SearchShellScaffoldTest {
 
         composeRule.onNodeWithTag(SEARCH_SHELL_LANDING_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(SEARCH_SHELL_RESULTS_TAG).assertIsNotDisplayed()
+    }
+
+    @Test
+    fun `test that tags are displayed before searching when there are tags`() {
+        setupContent(
+            SearchShellState(
+                isPreSearch = true,
+                tags = TAGS,
+                isRecentSearchesLoading = false,
+            )
+        )
+
+        composeRule.onNodeWithTag(SEARCH_SHELL_TAGS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(SEARCH_SHELL_LANDING_TAG).assertIsNotDisplayed()
+    }
+
+    @Test
+    fun `test that tags are expanded when there are no recent searches`() {
+        setupContent(
+            SearchShellState(
+                isPreSearch = true,
+                tags = MANY_TAGS,
+                isRecentSearchesLoading = false,
+            )
+        )
+
+        composeRule.onNodeWithText(getString(sharedR.string.search_tags_show_less))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that tags are collapsed when there are recent searches`() {
+        setupContent(
+            SearchShellState(
+                isPreSearch = true,
+                tags = MANY_TAGS,
+                recentSearches = RECENT_SEARCHES,
+                isRecentSearchesLoading = false,
+            )
+        )
+
+        composeRule.onNodeWithText(getString(sharedR.string.search_tags_show_all))
+            .assertIsDisplayed()
+    }
+
+    private fun getString(resId: Int) = composeRule.activity.getString(resId)
+
+    @Test
+    fun `test that tags are not displayed after a search is performed`() {
+        setupContent(
+            SearchShellState(
+                isPreSearch = false,
+                tags = TAGS,
+            )
+        )
+
+        composeRule.onNodeWithTag(SEARCH_SHELL_TAGS_TAG).assertIsNotDisplayed()
+    }
+
+    @Test
+    fun `test that onTagSelected is invoked when a tag chip is clicked`() {
+        var selectedTag: String? = null
+        setupContent(
+            SearchShellState(
+                isPreSearch = true,
+                tags = TAGS,
+                isRecentSearchesLoading = false,
+            ),
+            onTagSelected = { selectedTag = it },
+        )
+
+        composeRule.onNodeWithText("#${TAGS.first()}", useUnmergedTree = true).performClick()
+
+        assertThat(selectedTag).isEqualTo(TAGS.first())
     }
 
     @Test
@@ -119,7 +197,23 @@ class SearchShellScaffoldTest {
         composeRule.onNodeWithTag(FILTER_CHIPS_TAG).assertIsNotDisplayed()
     }
 
-    private fun setupContent(state: SearchShellState) {
+    @Test
+    fun `test that filter chips row is displayed when only a tag filter is active`() {
+        setupContent(
+            SearchShellState(
+                isPreSearch = false,
+                filters = emptyList(),
+                selectedTag = "marketing",
+            )
+        )
+
+        composeRule.onNodeWithTag(FILTER_CHIPS_TAG).assertIsDisplayed()
+    }
+
+    private fun setupContent(
+        state: SearchShellState,
+        onTagSelected: (String) -> Unit = {},
+    ) {
         composeRule.setContent {
             AndroidThemeForPreviews {
                 SearchShellScaffold(
@@ -130,6 +224,7 @@ class SearchShellScaffoldTest {
                     onBack = {},
                     onRecentSearchSelected = {},
                     onClearRecentSearches = {},
+                    onTagSelected = onTagSelected,
                     resultsContent = { ResultsPlaceholder() },
                 )
             }
@@ -144,5 +239,7 @@ class SearchShellScaffoldTest {
     private companion object {
         const val FILTER_ID = "type"
         val RECENT_SEARCHES = listOf("query1", "query2")
+        val TAGS = listOf("marketing", "2026")
+        val MANY_TAGS = List(40) { "longtagname$it" }
     }
 }
