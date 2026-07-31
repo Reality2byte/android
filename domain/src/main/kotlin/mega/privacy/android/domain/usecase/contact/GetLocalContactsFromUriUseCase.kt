@@ -18,8 +18,14 @@ class GetLocalContactsFromUriUseCase @Inject constructor(
      * Invocation method to retrieve the local contacts from the given [UriPath].
      *
      * @param uriPath The [UriPath] returned by the contact picker.
+     * @param includePhoneNumbers When `true`, phone numbers are also resolved and populated on
+     * [LocalContact.phoneNumbers] alongside emails; defaults to `false`, returning only contacts
+     * with email addresses.
      * @return List of [LocalContact]
      */
-    suspend operator fun invoke(uriPath: UriPath): List<LocalContact> =
-        contactsRepository.getLocalContactsFromUri(uriPath)
+    suspend operator fun invoke(
+        uriPath: UriPath,
+        includePhoneNumbers: Boolean = false,
+    ): List<LocalContact> =
+        contactsRepository.getLocalContactsFromUri(uriPath, includePhoneNumbers)
 }

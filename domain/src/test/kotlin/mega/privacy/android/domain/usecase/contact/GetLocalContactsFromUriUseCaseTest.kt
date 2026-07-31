@@ -32,20 +32,45 @@ class GetLocalContactsFromUriUseCaseTest {
     }
 
     @Test
-    fun `test that invoke returns the local contacts returned by the repository`() = runTest {
-        val uriPath = UriPath("content://com.android.contacts/session/1")
-        val expected = listOf(
-            LocalContact(
-                id = 1L,
-                name = "name",
-                emails = listOf("test@test.com")
+    fun `test that invoke delegates to the repository excluding phone numbers by default`() =
+        runTest {
+            val uriPath = UriPath("content://com.android.contacts/session/1")
+            val expected = listOf(
+                LocalContact(
+                    id = 1L,
+                    name = "name",
+                    emails = listOf("test@test.com")
+                )
             )
-        )
-        whenever(contactsRepository.getLocalContactsFromUri(uriPath)).thenReturn(expected)
+            whenever(
+                contactsRepository.getLocalContactsFromUri(uriPath, includePhoneNumbers = false)
+            ).thenReturn(expected)
 
-        val actual = underTest(uriPath)
+            val actual = underTest(uriPath)
 
-        assertThat(actual).isEqualTo(expected)
-        verify(contactsRepository).getLocalContactsFromUri(uriPath)
-    }
+            assertThat(actual).isEqualTo(expected)
+            verify(contactsRepository).getLocalContactsFromUri(uriPath, includePhoneNumbers = false)
+        }
+
+    @Test
+    fun `test that invoke delegates to the repository including phone numbers when requested`() =
+        runTest {
+            val uriPath = UriPath("content://com.android.contacts/session/1")
+            val expected = listOf(
+                LocalContact(
+                    id = 1L,
+                    name = "name",
+                    phoneNumbers = listOf("1234567890"),
+                    emails = listOf("test@test.com")
+                )
+            )
+            whenever(
+                contactsRepository.getLocalContactsFromUri(uriPath, includePhoneNumbers = true)
+            ).thenReturn(expected)
+
+            val actual = underTest(uriPath, includePhoneNumbers = true)
+
+            assertThat(actual).isEqualTo(expected)
+            verify(contactsRepository).getLocalContactsFromUri(uriPath, includePhoneNumbers = true)
+        }
 }

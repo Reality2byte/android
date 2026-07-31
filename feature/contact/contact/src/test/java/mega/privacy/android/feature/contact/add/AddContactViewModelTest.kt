@@ -404,7 +404,7 @@ class AddContactViewModelTest {
         runTest {
             stubContactsFlow(listOf(createContactItem(handle = 1L, email = "a@test.com")))
             whenever(getDeviceSdkVersionUseCase()).thenReturn(PICKER_SDK)
-            whenever(getLocalContactsFromUriUseCase(any())).thenReturn(
+            whenever(getLocalContactsFromUriUseCase(any(), any())).thenReturn(
                 listOf(LocalContact(id = 1L, name = "Picked", emails = listOf("picked@test.com")))
             )
             underTest = createViewModel(chatId = null, showPhoneContacts = true)
@@ -428,7 +428,7 @@ class AddContactViewModelTest {
     fun `test that onContactsPicked de-duplicates by email`() = runTest {
         stubContactsFlow(listOf(createContactItem(handle = 1L, email = "a@test.com")))
         whenever(getDeviceSdkVersionUseCase()).thenReturn(PICKER_SDK)
-        whenever(getLocalContactsFromUriUseCase(any())).thenReturn(
+        whenever(getLocalContactsFromUriUseCase(any(), any())).thenReturn(
             listOf(LocalContact(id = 1L, name = "Picked", emails = listOf("dup@test.com")))
         )
         underTest = createViewModel(chatId = null, showPhoneContacts = true)

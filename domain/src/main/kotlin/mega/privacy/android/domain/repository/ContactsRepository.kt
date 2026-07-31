@@ -474,9 +474,15 @@ interface ContactsRepository {
      * Get list of local contacts from a contact picker session [UriPath].
      *
      * @param uriPath The [UriPath] returned by the contact picker.
+     * @param includePhoneNumbers When `true`, phone numbers are also resolved and populated on
+     * [LocalContact.phoneNumbers] alongside emails; when `false`, only contacts with email
+     * addresses are returned.
      * @return List of [LocalContact]
      */
-    suspend fun getLocalContactsFromUri(uriPath: UriPath): List<LocalContact>
+    suspend fun getLocalContactsFromUri(
+        uriPath: UriPath,
+        includePhoneNumbers: Boolean,
+    ): List<LocalContact>
 
     /**
      * Get list of local contact's numbers from the ContactGateway

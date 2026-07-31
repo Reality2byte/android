@@ -1044,9 +1044,12 @@ internal class DefaultContactsRepository @Inject constructor(
         contactGateway.getLocalContacts()
     }
 
-    override suspend fun getLocalContactsFromUri(uriPath: UriPath): List<LocalContact> =
+    override suspend fun getLocalContactsFromUri(
+        uriPath: UriPath,
+        includePhoneNumbers: Boolean,
+    ): List<LocalContact> =
         withContext(ioDispatcher) {
-            contactGateway.getLocalContactsFromUri(uriPath)
+            contactGateway.getLocalContactsFromUri(uriPath, includePhoneNumbers)
         }
 
     override suspend fun getLocalContactNumbers(): List<LocalContact> = withContext(ioDispatcher) {

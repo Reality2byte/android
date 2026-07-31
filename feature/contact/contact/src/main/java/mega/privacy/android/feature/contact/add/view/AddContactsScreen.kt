@@ -65,6 +65,7 @@ import mega.privacy.android.feature.contact.picker.ContactSelectionState
 import mega.privacy.android.feature.contact.picker.ManualEmailEntrySection
 import mega.privacy.android.feature.contact.picker.ManualEmailSubmitResult
 import mega.privacy.android.feature.contact.picker.PhoneContactsSection
+import mega.privacy.android.feature.contact.picker.ContactPickMode
 import mega.privacy.android.feature.contact.picker.PickPhoneContactContract
 import mega.privacy.android.feature.contact.picker.rememberContactSelectionState
 import mega.privacy.android.icon.pack.IconPack
@@ -355,7 +356,7 @@ internal fun AddContactsScreen(
                                             permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                                         },
                                         onSelectPhoneContactsClick = {
-                                            pickContactLauncher.launch(Unit)
+                                            pickContactLauncher.launch(ContactPickMode.Email)
                                         },
                                         onPhoneContactClick = selectionState::togglePhoneSelection,
                                     )

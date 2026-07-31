@@ -306,7 +306,10 @@ class ContactGatewayImplTest {
                 val uri = mock<Uri>()
                 whenever(Uri.parse(pickerUriString)).thenReturn(uri)
 
-                val actual = underTest.getLocalContactsFromUri(UriPath(pickerUriString))
+                val actual = underTest.getLocalContactsFromUri(
+                    UriPath(pickerUriString),
+                    includePhoneNumbers = false,
+                )
 
                 val expected = listOf(
                     LocalContact(
@@ -325,7 +328,7 @@ class ContactGatewayImplTest {
         }
 
     @Test
-    fun `test that an empty list is returned when the picker Uri contains no email rows`() =
+    fun `test that an empty list is returned when the picker Uri contains no email rows and phone numbers are excluded`() =
         runTest {
             val pickerUriString = "content://com.android.contacts/session/1"
             val mockCursor = mock<Cursor> {
@@ -344,9 +347,115 @@ class ContactGatewayImplTest {
                 val uri = mock<Uri>()
                 whenever(Uri.parse(pickerUriString)).thenReturn(uri)
 
-                val actual = underTest.getLocalContactsFromUri(UriPath(pickerUriString))
+                val actual = underTest.getLocalContactsFromUri(
+                    UriPath(pickerUriString),
+                    includePhoneNumbers = false,
+                )
 
                 assertThat(actual).isEqualTo(emptyList<LocalContact>())
+            }
+        }
+
+    @Test
+    fun `test that phone rows are ignored when phone numbers are excluded even if email rows are present`() =
+        runTest {
+            val pickerUriString = "content://com.android.contacts/session/1"
+            val lookupKey = "lookupKey1"
+            val name = "name1"
+            val email = "first@test.com"
+            val phoneNumber = "1234567890"
+
+            val mockCursor = mock<Cursor> {
+                on { getString(0) }.thenReturn(lookupKey, lookupKey)
+                on { getString(1) }.thenReturn(name, name)
+                on { getString(2) }.thenReturn(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+                )
+                on { getString(3) }.thenReturn(email, phoneNumber)
+                on { moveToNext() }.thenReturn(true, true, false)
+            }
+            val contentResolver = mock<ContentResolver> {
+                on { query(any(), any(), eq(null), eq(null), eq(null)) }.thenReturn(mockCursor)
+            }
+            whenever(context.contentResolver).thenReturn(contentResolver)
+
+            mockStatic(Uri::class.java).use {
+                val uri = mock<Uri>()
+                whenever(Uri.parse(pickerUriString)).thenReturn(uri)
+
+                val actual = underTest.getLocalContactsFromUri(
+                    UriPath(pickerUriString),
+                    includePhoneNumbers = false,
+                )
+
+                val expected = listOf(
+                    LocalContact(
+                        id = lookupKey.hashCode().toLong(),
+                        name = name,
+                        emails = listOf(email),
+                    )
+                )
+                assertThat(actual).containsExactlyElementsIn(expected)
+            }
+        }
+
+    @Test
+    fun `test that phone numbers and emails are populated per contact when phone numbers are included`() =
+        runTest {
+            val pickerUriString = "content://com.android.contacts/session/1"
+            val emailLookupKey = "lookupKey1"
+            val phoneLookupKey = "lookupKey2"
+            val emailName = "name1"
+            val phoneName = "name2"
+            val email = "first@test.com"
+            val firstPhone = "1234567890"
+            val secondPhone = "0987654321"
+
+            val mockCursor = mock<Cursor> {
+                on { getString(0) }.thenReturn(
+                    emailLookupKey,
+                    emailLookupKey,
+                    phoneLookupKey,
+                )
+                on { getString(1) }.thenReturn(emailName, emailName, phoneName)
+                on { getString(2) }.thenReturn(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE,
+                )
+                on { getString(3) }.thenReturn(email, firstPhone, secondPhone)
+                on { moveToNext() }.thenReturn(true, true, true, false)
+            }
+            val contentResolver = mock<ContentResolver> {
+                on { query(any(), any(), eq(null), eq(null), eq(null)) }.thenReturn(mockCursor)
+            }
+            whenever(context.contentResolver).thenReturn(contentResolver)
+
+            mockStatic(Uri::class.java).use {
+                val uri = mock<Uri>()
+                whenever(Uri.parse(pickerUriString)).thenReturn(uri)
+
+                val actual = underTest.getLocalContactsFromUri(
+                    UriPath(pickerUriString),
+                    includePhoneNumbers = true,
+                )
+
+                val expected = listOf(
+                    LocalContact(
+                        id = emailLookupKey.hashCode().toLong(),
+                        name = emailName,
+                        phoneNumbers = listOf(firstPhone),
+                        emails = listOf(email),
+                    ),
+                    LocalContact(
+                        id = phoneLookupKey.hashCode().toLong(),
+                        name = phoneName,
+                        phoneNumbers = listOf(secondPhone),
+                        emails = emptyList(),
+                    )
+                )
+                assertThat(actual).containsExactlyElementsIn(expected)
             }
         }
 
@@ -363,7 +472,10 @@ class ContactGatewayImplTest {
                 val uri = mock<Uri>()
                 whenever(Uri.parse(pickerUriString)).thenReturn(uri)
 
-                val actual = underTest.getLocalContactsFromUri(UriPath(pickerUriString))
+                val actual = underTest.getLocalContactsFromUri(
+                    UriPath(pickerUriString),
+                    includePhoneNumbers = false,
+                )
 
                 assertThat(actual).isEqualTo(emptyList<LocalContact>())
             }

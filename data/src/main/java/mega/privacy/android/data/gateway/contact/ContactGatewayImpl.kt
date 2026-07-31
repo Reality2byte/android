@@ -50,7 +50,10 @@ class ContactGatewayImpl @Inject constructor(
             }
         }
 
-    override suspend fun getLocalContactsFromUri(uriPath: UriPath): List<LocalContact> {
+    override suspend fun getLocalContactsFromUri(
+        uriPath: UriPath,
+        includePhoneNumbers: Boolean,
+    ): List<LocalContact> {
         val uri = uriPath.value.toUri()
         val projection = arrayOf(
             ContactsContract.Data.LOOKUP_KEY,
@@ -69,6 +72,7 @@ class ContactGatewayImpl @Inject constructor(
 
         val namesByLookupKey = mutableMapOf<String, String>()
         val emailsByLookupKey = mutableMapOf<String, MutableList<String>>()
+        val phonesByLookupKey = mutableMapOf<String, MutableList<String>>()
         cursor?.use {
             Timber.d("getting local contacts from picker uri")
             while (it.moveToNext()) {
@@ -76,20 +80,35 @@ class ContactGatewayImpl @Inject constructor(
                 val name = it.getString(1).orEmpty()
                 val mimeType = it.getString(2)
                 val data = it.getString(3)
-
-                if (mimeType != ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE) continue
                 if (data.isNullOrEmpty()) continue
 
-                namesByLookupKey.putIfAbsent(lookupKey, name)
-                emailsByLookupKey.getOrPut(lookupKey) { mutableListOf() }.add(data)
+                when (mimeType) {
+                    ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE -> {
+                        namesByLookupKey.putIfAbsent(lookupKey, name)
+                        emailsByLookupKey.getOrPut(lookupKey) { mutableListOf() }.add(data)
+                    }
+
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE -> {
+                        if (!includePhoneNumbers) continue
+                        namesByLookupKey.putIfAbsent(lookupKey, name)
+                        phonesByLookupKey.getOrPut(lookupKey) { mutableListOf() }.add(data)
+                    }
+                }
             }
         }
 
-        return emailsByLookupKey.map { (lookupKey, emails) ->
+        val lookupKeys = if (includePhoneNumbers) {
+            emailsByLookupKey.keys + phonesByLookupKey.keys
+        } else {
+            emailsByLookupKey.keys
+        }
+
+        return lookupKeys.map { lookupKey ->
             LocalContact(
                 id = lookupKey.hashCode().toLong(),
                 name = namesByLookupKey[lookupKey].orEmpty(),
-                emails = emails
+                phoneNumbers = phonesByLookupKey[lookupKey].orEmpty(),
+                emails = emailsByLookupKey[lookupKey].orEmpty(),
             )
         }
     }

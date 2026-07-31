@@ -45,12 +45,14 @@ import mega.privacy.android.domain.entity.contacts.ContactLinkQueryResult
 import mega.privacy.android.domain.entity.contacts.ContactRequest
 import mega.privacy.android.domain.entity.contacts.ContactRequestStatus
 import mega.privacy.android.domain.entity.contacts.InviteContactRequest
+import mega.privacy.android.domain.entity.contacts.LocalContact
 import mega.privacy.android.domain.entity.contacts.User
 import mega.privacy.android.domain.entity.contacts.UserChatStatus
 import mega.privacy.android.domain.entity.user.UserChanges
 import mega.privacy.android.domain.entity.user.UserCredentials
 import mega.privacy.android.domain.entity.user.UserId
 import mega.privacy.android.domain.entity.user.UserUpdate
+import mega.privacy.android.domain.entity.uri.UriPath
 import mega.privacy.android.domain.entity.user.UserVisibility
 import mega.privacy.android.domain.exception.ContactDoesNotExistException
 import mega.privacy.android.domain.exception.MegaException
@@ -172,6 +174,28 @@ class DefaultContactsRepositoryTest {
             userVisibilityMapper = userVisibilityMapper,
         )
     }
+
+    @Test
+    fun `test that getLocalContactsFromUri threads the includePhoneNumbers flag to the gateway`() =
+        runTest {
+            val uriPath = UriPath("content://com.android.contacts/session/1")
+            val expected = listOf(
+                LocalContact(
+                    id = 1L,
+                    name = "name",
+                    phoneNumbers = listOf("1234567890"),
+                    emails = listOf("test@test.com")
+                )
+            )
+            whenever(
+                contactGateway.getLocalContactsFromUri(uriPath, includePhoneNumbers = true)
+            ).thenReturn(expected)
+
+            val actual = underTest.getLocalContactsFromUri(uriPath, includePhoneNumbers = true)
+
+            assertThat(actual).isEqualTo(expected)
+            verify(contactGateway).getLocalContactsFromUri(uriPath, includePhoneNumbers = true)
+        }
 
     @Test
     fun `test that get contact credentials returns valid credentials if user exists and api returns valid credentials`() =
