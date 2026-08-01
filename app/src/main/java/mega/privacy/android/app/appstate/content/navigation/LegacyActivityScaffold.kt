@@ -19,6 +19,7 @@ import de.palm.composestateevents.EventEffect
 import mega.android.core.ui.components.LocalSnackBarHostState
 import mega.android.core.ui.components.snackbar.SnackbarLifetimeController
 import mega.privacy.android.app.appstate.content.transfer.AppTransferViewModel
+import mega.privacy.android.app.appstate.global.quota.StreamOverQuotaEffect
 import mega.privacy.android.app.appstate.global.snackbar.SnackbarEventsViewModel
 import mega.privacy.android.app.appstate.global.util.show
 import mega.privacy.android.app.presentation.transfers.starttransfer.view.StartTransferComponent
@@ -152,6 +153,7 @@ fun LegacyActivityScaffold(
                 event = transferState.transferEvent,
                 onConsumeEvent = appTransferViewModel::consumedTransferEvent,
             )
+            StreamOverQuotaEffect(navigationHandler)
             overlayContent(navigationHandler)
         }
     }

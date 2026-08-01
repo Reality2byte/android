@@ -30,7 +30,9 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
@@ -54,6 +56,7 @@ import mega.privacy.android.app.appstate.content.transfer.TransferHandlerImpl
 import mega.privacy.android.app.appstate.global.GlobalStateViewModel
 import mega.privacy.android.app.appstate.global.model.GlobalState
 import mega.privacy.android.app.appstate.global.model.RootNodeState
+import mega.privacy.android.app.appstate.global.quota.StreamOverQuotaEffect
 import mega.privacy.android.app.appstate.global.snackbar.SnackbarEventsViewModel
 import mega.privacy.android.app.appstate.global.util.show
 import mega.privacy.android.app.middlelayer.inappupdate.InAppUpdateHandler
@@ -364,18 +367,21 @@ class MegaActivity : FragmentActivity() {
 
                                 FeatureFlagGate(feature = ApiFeatures.QuotaWarningUpsellScreen) {
                                     LaunchedEffect(Unit) {
-                                        monitorTransferOverQuotaEventUseCase().collect {
-                                            navigationHandler.navigate(
-                                                QuotaWarningUpgradeNavKey(
-                                                    type = QuotaWarningType.Transfer,
-                                                    trigger = QuotaWarningTrigger.Download,
-                                                ),
-                                                navOptions { dropIfAlreadyShown = true },
-                                            )
-                                        }
+                                        monitorTransferOverQuotaEventUseCase()
+                                            .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+                                            .collect {
+                                                navigationHandler.navigate(
+                                                    QuotaWarningUpgradeNavKey(
+                                                        type = QuotaWarningType.Transfer,
+                                                        trigger = QuotaWarningTrigger.Download,
+                                                    ),
+                                                    navOptions { dropIfAlreadyShown = true },
+                                                )
+                                            }
                                     }
                                 }
 
+                                StreamOverQuotaEffect(navigationHandler)
 
                                 CompositionLocalProvider(
                                     LocalSnackBarHostState provides snackbarHostState

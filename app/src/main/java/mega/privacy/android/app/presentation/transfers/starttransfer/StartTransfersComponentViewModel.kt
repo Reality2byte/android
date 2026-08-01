@@ -41,7 +41,6 @@ import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.domain.entity.transfer.isPreviewDownload
 import mega.privacy.android.domain.entity.uri.UriPath
 import mega.privacy.android.domain.exception.NotEnoughStorageException
-import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.monitoring.CrashReporter
 import mega.privacy.android.domain.usecase.SetAskForDownloadLocationUseCase
 import mega.privacy.android.domain.usecase.SetDownloadLocationUseCase
@@ -50,7 +49,6 @@ import mega.privacy.android.domain.usecase.canceltoken.CancelCancelTokenUseCase
 import mega.privacy.android.domain.usecase.canceltoken.InvalidateCancelTokenUseCase
 import mega.privacy.android.domain.usecase.chat.message.SendChatAttachmentsUseCase
 import mega.privacy.android.domain.usecase.environment.GetCurrentTimeInMillisUseCase
-import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
 import mega.privacy.android.domain.usecase.file.TotalFileSizeOfNodesUseCase
 import mega.privacy.android.domain.usecase.network.IsConnectedToInternetUseCase
 import mega.privacy.android.domain.usecase.node.GetFilePreviewDownloadPathUseCase
@@ -146,7 +144,6 @@ internal class StartTransfersComponentViewModel @Inject constructor(
     private val getPreviewDownloadUseCase: GetPreviewDownloadUseCase,
     private val ratingHandler: RatingHandlerImpl,
     private val crashReporter: CrashReporter,
-    private val getFeatureFlagValueUseCase: GetFeatureFlagValueUseCase,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     private val _uiState = MutableStateFlow(StartTransferViewState())
@@ -162,16 +159,6 @@ internal class StartTransfersComponentViewModel @Inject constructor(
         monitorStorageOverQuota()
         monitorPreviews()
         monitorTransferToCancel()
-        loadQuotaWarningUpsellFlag()
-    }
-
-    private fun loadQuotaWarningUpsellFlag() {
-        viewModelScope.launch {
-            val enabled = runCatching {
-                getFeatureFlagValueUseCase(ApiFeatures.QuotaWarningUpsellScreen)
-            }.getOrDefault(false)
-            _uiState.update { it.copy(isQuotaWarningUpsellEnabled = enabled) }
-        }
     }
 
     /**
@@ -1125,7 +1112,7 @@ internal class StartTransfersComponentViewModel @Inject constructor(
         if (pathsAndNames.isEmpty()) {
             Timber.e("Paths in $pathsAndNames must exist")
             _uiState.updateEventAndClearProgress(StartTransferEvent.Message.TransferCancelled)
-            return
+            return@with
         }
 
         runCatching {
