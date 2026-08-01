@@ -12,7 +12,6 @@ import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.Currency
-import mega.privacy.android.domain.entity.Product
 import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.SubscriptionStatus
 import mega.privacy.android.domain.entity.account.AccountDetail
@@ -24,7 +23,6 @@ import mega.privacy.android.domain.entity.agesignal.UserAgeComplianceStatus
 import mega.privacy.android.domain.entity.billing.Pricing
 import mega.privacy.android.domain.entity.payment.Subscriptions
 import mega.privacy.android.domain.exception.LocalPricingNotAvailableException
-import mega.privacy.android.domain.exception.MegaException
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.usecase.GetPricing
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
@@ -34,6 +32,7 @@ import mega.privacy.android.domain.usecase.billing.GetSubscriptionsUseCase
 import mega.privacy.android.domain.usecase.billing.IsSubscriptionFeatureAvailableUseCase
 import mega.privacy.android.domain.usecase.environment.GetCurrentTimeInMillisUseCase
 import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
+import mega.privacy.android.feature.payment.model.CurrentPlanRenewal
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.PlanPeriod
 import mega.privacy.android.feature.payment.model.mapper.LocalisedPriceCurrencyCodeStringMapper
@@ -111,6 +110,46 @@ class UpgradeAccountViewModelTest {
             getCurrentTimeInMillisUseCase = getCurrentTimeInMillisUseCase,
             isUpgradeAccount = isUpgradeAccount,
         )
+    }
+
+    private fun mockProPlan(subscriptionId: String?, startTime: Long = 0L) =
+        mock<AccountPlanDetail> {
+            on { isProPlan }.thenReturn(true)
+            on { this.subscriptionId }.thenReturn(subscriptionId)
+            on { this.startTime }.thenReturn(startTime)
+        }
+
+    private fun mockSubscription(subscriptionId: String, status: SubscriptionStatus) =
+        mock<AccountSubscriptionDetail> {
+            on { this.subscriptionId }.thenReturn(subscriptionId)
+            on { subscriptionStatus }.thenReturn(status)
+            on { subscriptionCycle }.thenReturn(AccountSubscriptionCycle.YEARLY)
+        }
+
+    private fun mockLevelDetail(
+        planDetail: AccountPlanDetail? = null,
+        subscriptions: List<AccountSubscriptionDetail> = emptyList(),
+        subscriptionStatus: SubscriptionStatus = SubscriptionStatus.NONE,
+        proExpirationTime: Long = 0L,
+    ) = mock<AccountLevelDetail> {
+        on { accountType }.thenReturn(AccountType.PRO_I)
+        on { accountSubscriptionCycle }.thenReturn(AccountSubscriptionCycle.UNKNOWN)
+        on { this.subscriptionStatus }.thenReturn(subscriptionStatus)
+        on { this.proExpirationTime }.thenReturn(proExpirationTime)
+        on { accountPlanDetail }.thenReturn(planDetail)
+        on { accountSubscriptionDetailList }.thenReturn(subscriptions)
+    }
+
+    private suspend fun stubAccountDetail(levelDetail: AccountLevelDetail) {
+        val accountDetail = mock<AccountDetail> {
+            on { this.levelDetail }.thenReturn(levelDetail)
+        }
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(accountDetail))
+        whenever(getPricing(any())).thenReturn(Pricing(emptyList()))
+        whenever(getSubscriptionsUseCase()).thenReturn(
+            Subscriptions(expectedMonthlySubscriptionsList, expectedYearlySubscriptionsList)
+        )
+        wheneverBlocking { getFeatureFlagValueUseCase(any()) }.thenReturn(false)
     }
 
     @Test
@@ -656,9 +695,7 @@ class UpgradeAccountViewModelTest {
         runTest {
             val startTime = 1_783_500_245L
             val expiryTime = 1_815_036_245L
-            val planDetail = mock<AccountPlanDetail> {
-                on { this.startTime }.thenReturn(startTime)
-            }
+            val planDetail = mockProPlan(subscriptionId = null, startTime = startTime)
             val levelDetail = mock<AccountLevelDetail> {
                 on { accountType }.thenReturn(AccountType.PRO_I)
                 on { accountSubscriptionCycle }.thenReturn(AccountSubscriptionCycle.UNKNOWN)
@@ -690,9 +727,7 @@ class UpgradeAccountViewModelTest {
         runTest {
             val startTime = 1_783_500_245L
             val expiryTime = startTime + 5 * 24 * 60 * 60
-            val planDetail = mock<AccountPlanDetail> {
-                on { this.startTime }.thenReturn(startTime)
-            }
+            val planDetail = mockProPlan(subscriptionId = null, startTime = startTime)
             val levelDetail = mock<AccountLevelDetail> {
                 on { accountType }.thenReturn(AccountType.PRO_I)
                 on { accountSubscriptionCycle }.thenReturn(AccountSubscriptionCycle.UNKNOWN)
@@ -720,9 +755,7 @@ class UpgradeAccountViewModelTest {
     @Test
     fun `test that the plan period is null when the plan has no start time`() =
         runTest {
-            val planDetail = mock<AccountPlanDetail> {
-                on { this.startTime }.thenReturn(0L)
-            }
+            val planDetail = mockProPlan(subscriptionId = null, startTime = 0L)
             val levelDetail = mock<AccountLevelDetail> {
                 on { accountType }.thenReturn(AccountType.PRO_I)
                 on { accountSubscriptionCycle }.thenReturn(AccountSubscriptionCycle.YEARLY)
@@ -832,6 +865,151 @@ class UpgradeAccountViewModelTest {
             }
         }
 
+    @Test
+    fun `test that currentPlanRenewal is Renewing when the plan subscription is still active`() =
+        runTest {
+            stubAccountDetail(
+                mockLevelDetail(
+                    planDetail = mockProPlan(subscriptionId = "sub-1"),
+                    subscriptions = listOf(mockSubscription("sub-1", SubscriptionStatus.VALID)),
+                )
+            )
+            initViewModel()
+
+            underTest.state.test {
+                val state = awaitItem()
+                Truth.assertThat(state.currentPlanRenewal)
+                    .isEqualTo(CurrentPlanRenewal.Renewing)
+                Truth.assertThat(state.isCurrentSubscriptionRenewing).isTrue()
+            }
+        }
+
+    @Test
+    fun `test that currentPlanRenewal is Cancelled when the plan subscription is no longer listed`() =
+        runTest {
+            stubAccountDetail(
+                mockLevelDetail(
+                    planDetail = mockProPlan(subscriptionId = "sub-1"),
+                    subscriptions = listOf(mockSubscription("vpn-add-on", SubscriptionStatus.VALID)),
+                )
+            )
+            initViewModel()
+
+            underTest.state.test {
+                val state = awaitItem()
+                Truth.assertThat(state.currentPlanRenewal)
+                    .isEqualTo(CurrentPlanRenewal.Cancelled)
+                Truth.assertThat(state.isCurrentSubscriptionRenewing).isFalse()
+            }
+        }
+
+    @Test
+    fun `test that currentPlanRenewal is Cancelled when the matching subscription is not valid`() =
+        runTest {
+            stubAccountDetail(
+                mockLevelDetail(
+                    planDetail = mockProPlan(subscriptionId = "sub-1"),
+                    subscriptions = listOf(mockSubscription("sub-1", SubscriptionStatus.INVALID)),
+                )
+            )
+            initViewModel()
+
+            underTest.state.test {
+                Truth.assertThat(awaitItem().currentPlanRenewal)
+                    .isEqualTo(CurrentPlanRenewal.Cancelled)
+            }
+        }
+
+    @Test
+    fun `test that currentPlanRenewal is OneOff when the plan carries no subscription id`() =
+        runTest {
+            stubAccountDetail(mockLevelDetail(planDetail = mockProPlan(subscriptionId = "")))
+            initViewModel()
+
+            underTest.state.test {
+                Truth.assertThat(awaitItem().currentPlanRenewal)
+                    .isEqualTo(CurrentPlanRenewal.OneOff)
+            }
+        }
+
+    @Test
+    fun `test that currentPlanRenewal is null when the account reports no plan`() = runTest {
+        stubAccountDetail(mockLevelDetail(planDetail = null))
+        initViewModel()
+
+        underTest.state.test {
+            Truth.assertThat(awaitItem().currentPlanRenewal).isNull()
+        }
+    }
+
+    @Test
+    fun `test that an unresolved renewal falls back to the account subscription status`() = runTest {
+        stubAccountDetail(
+            mockLevelDetail(planDetail = null, subscriptionStatus = SubscriptionStatus.VALID)
+        )
+        initViewModel()
+
+        underTest.state.test {
+            val state = awaitItem()
+            Truth.assertThat(state.currentPlanRenewal).isNull()
+            Truth.assertThat(state.isCurrentSubscriptionRenewing).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that isCurrentPlanExpiring is false when an unresolved renewal has an active subscription`() =
+        runTest {
+            val nowSeconds = 1_800_000_000L
+            stubAccountDetail(
+                mockLevelDetail(
+                    planDetail = null,
+                    subscriptionStatus = SubscriptionStatus.VALID,
+                    proExpirationTime = nowSeconds + 10 * 24 * 60 * 60,
+                )
+            )
+            whenever(getCurrentTimeInMillisUseCase()).thenReturn(nowSeconds * 1000)
+            initViewModel()
+
+            underTest.state.test {
+                Truth.assertThat(awaitItem().isCurrentPlanExpiring).isFalse()
+            }
+        }
+
+    @Test
+    fun `test that currentPlanPeriod is null for a cancelled subscription`() = runTest {
+        val startTime = 1_783_500_245L
+        stubAccountDetail(
+            mockLevelDetail(
+                planDetail = mockProPlan(subscriptionId = "sub-1", startTime = startTime),
+                proExpirationTime = 1_815_036_245L,
+            )
+        )
+        initViewModel()
+
+        underTest.state.test {
+            val state = awaitItem()
+            Truth.assertThat(state.currentPlanRenewal).isEqualTo(CurrentPlanRenewal.Cancelled)
+            Truth.assertThat(state.currentPlanPeriod).isNull()
+        }
+    }
+
+    @Test
+    fun `test that isCurrentPlanExpiring is true when a cancelled subscription expires within 30 days`() =
+        runTest {
+            val nowSeconds = 1_800_000_000L
+            stubAccountDetail(
+                mockLevelDetail(
+                    planDetail = mockProPlan(subscriptionId = "sub-1"),
+                    proExpirationTime = nowSeconds + 10 * 24 * 60 * 60,
+                )
+            )
+            whenever(getCurrentTimeInMillisUseCase()).thenReturn(nowSeconds * 1000)
+            initViewModel()
+
+            underTest.state.test {
+                Truth.assertThat(awaitItem().isCurrentPlanExpiring).isTrue()
+            }
+        }
 
     @Test
     fun `test that offerValidUntil is populated from the discounted offer expiry`() = runTest {

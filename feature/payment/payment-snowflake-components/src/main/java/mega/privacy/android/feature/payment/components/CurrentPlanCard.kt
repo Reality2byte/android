@@ -26,7 +26,9 @@ import mega.android.core.ui.tokens.theme.DSTokens
  *
  * @param currentPlanLabel label above the plan (e.g. "Current plan")
  * @param planName the current plan name (e.g. "Pro I")
- * @param cycleText the billing cycle or one-off period text (e.g. "Yearly subscription" or "12 months")
+ * @param cycleText the billing cycle or one-off period text (e.g. "Yearly subscription" or
+ * "12 months"), null/blank to show the plan name alone — used for a cancelled subscription, whose
+ * cycle the API no longer reports
  * @param helpText supplementary text (e.g. "Renews on 8 July 2027" or "Expires on 8 July 2027"),
  * null when no renewal/expiry date is available
  * @param expiringLabel badge text shown next to [currentPlanLabel] when the plan expires soon (e.g.
@@ -36,7 +38,7 @@ import mega.android.core.ui.tokens.theme.DSTokens
 fun CurrentPlanCard(
     currentPlanLabel: String,
     planName: String,
-    cycleText: String,
+    cycleText: String?,
     modifier: Modifier = Modifier,
     helpText: String? = null,
     expiringLabel: String? = null,
@@ -81,17 +83,19 @@ fun CurrentPlanCard(
                 textColor = TextColor.Primary,
                 modifier = Modifier.testTag(TEST_TAG_CURRENT_PLAN_NAME),
             )
-            MegaText(
-                text = "•",
-                style = MaterialTheme.typography.titleMedium,
-                textColor = TextColor.Primary,
-            )
-            MegaText(
-                text = cycleText,
-                style = MaterialTheme.typography.titleMedium,
-                textColor = TextColor.Secondary,
-                modifier = Modifier.testTag(TEST_TAG_CURRENT_PLAN_CYCLE),
-            )
+            if (!cycleText.isNullOrBlank()) {
+                MegaText(
+                    text = "•",
+                    style = MaterialTheme.typography.titleMedium,
+                    textColor = TextColor.Primary,
+                )
+                MegaText(
+                    text = cycleText,
+                    style = MaterialTheme.typography.titleMedium,
+                    textColor = TextColor.Secondary,
+                    modifier = Modifier.testTag(TEST_TAG_CURRENT_PLAN_CYCLE),
+                )
+            }
         }
         if (!helpText.isNullOrEmpty()) {
             MegaText(
@@ -145,6 +149,20 @@ private fun CurrentPlanCardOneOffPreview() {
             currentPlanLabel = "Current plan",
             planName = "Pro I",
             cycleText = "12 months",
+            helpText = "Expires on 8 July 2027",
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@CombinedThemePreviews
+@Composable
+private fun CurrentPlanCardCancelledPreview() {
+    AndroidTheme(isSystemInDarkTheme()) {
+        CurrentPlanCard(
+            currentPlanLabel = "Current plan",
+            planName = "Pro I",
+            cycleText = null,
             helpText = "Expires on 8 July 2027",
             modifier = Modifier.padding(16.dp),
         )

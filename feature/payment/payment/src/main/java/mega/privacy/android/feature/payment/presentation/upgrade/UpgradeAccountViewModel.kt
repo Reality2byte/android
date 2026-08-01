@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
+import mega.privacy.android.domain.entity.SubscriptionStatus
 import mega.privacy.android.domain.entity.account.AccountLevelDetail
 import mega.privacy.android.domain.exception.LocalPricingNotAvailableException
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
@@ -25,8 +26,10 @@ import mega.privacy.android.domain.usecase.billing.GetSubscriptionsUseCase
 import mega.privacy.android.domain.usecase.billing.IsSubscriptionFeatureAvailableUseCase
 import mega.privacy.android.domain.usecase.environment.GetCurrentTimeInMillisUseCase
 import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
+import mega.privacy.android.feature.payment.model.CurrentPlanRenewal
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.UpgradeAccountState
+import mega.privacy.android.feature.payment.model.isRenewing
 import mega.privacy.android.feature.payment.model.mapper.LocalisedSubscriptionMapper
 import mega.privacy.android.feature.payment.presentation.upgrade.UpgradeAccountViewModel.Companion.EXPIRING_SOON_THRESHOLD
 import timber.log.Timber
@@ -164,18 +167,20 @@ class UpgradeAccountViewModel @AssistedInject constructor(
                     val proExpirationTime =
                         levelDetail.proExpirationTime.takeIf { time -> time > 0 }
                     val cycle = resolveCurrentPlanCycle(levelDetail)
+                    val renewal = resolveCurrentPlanRenewal(levelDetail)
                     _state.update {
                         it.copy(
                             subscriptionCycle = cycle,
                             currentSubscriptionPlan = levelDetail.accountType,
                             subscriptionStatus = levelDetail.subscriptionStatus,
+                            currentPlanRenewal = renewal,
                             subscriptionRenewTime = levelDetail.subscriptionRenewTime
                                 .takeIf { time -> time > 0 },
                             proExpirationTime = proExpirationTime,
                             proPlanStartTime = levelDetail.accountPlanDetail?.startTime
                                 ?.takeIf { time -> time > 0 },
                             isCurrentPlanExpiring = isPlanExpiringSoon(
-                                cycle = cycle,
+                                isRenewing = renewal.isRenewing(levelDetail.subscriptionStatus),
                                 proExpirationTime = proExpirationTime,
                             ),
                         )
@@ -226,15 +231,40 @@ class UpgradeAccountViewModel @AssistedInject constructor(
     }
 
     /**
-     * Whether the current plan is expiring soon: a one-off (non-recurring) plan — identified by an
-     * unknown billing cycle, which excludes renewing subscriptions — whose expiry is within the next
-     * [EXPIRING_SOON_THRESHOLD]. Drives the "Expiring" badge on the current plan card.
+     * Classifies how the current plan renews by matching the Pro plan's subscription id ("subid")
+     * against the subscriptions the account still holds: a plan whose subscription is still listed
+     * renews, a plan carrying a subid with no matching subscription had its auto-renewal cancelled,
+     * and a plan with no subid was a one-off purchase.
+     *
+     * Accounts that report no Pro plan resolve to null, since the comparison cannot be made at all
+     * there; consumers fall back to the account-wide subscription status via [isRenewing].
+     */
+    private fun resolveCurrentPlanRenewal(levelDetail: AccountLevelDetail): CurrentPlanRenewal? {
+        val proPlan = levelDetail.accountPlanDetail?.takeIf { it.isProPlan }
+            ?: return null
+        val subscriptionId = proPlan.subscriptionId?.takeIf { it.isNotBlank() }
+            ?: return CurrentPlanRenewal.OneOff
+        val hasActiveSubscription = levelDetail.accountSubscriptionDetailList.any {
+            it.subscriptionId == subscriptionId &&
+                    it.subscriptionStatus == SubscriptionStatus.VALID
+        }
+        return if (hasActiveSubscription) {
+            CurrentPlanRenewal.Renewing
+        } else {
+            CurrentPlanRenewal.Cancelled
+        }
+    }
+
+    /**
+     * Whether the current plan is expiring soon: a plan that will not renew — a one-off purchase or a
+     * cancelled subscription — whose expiry is within the next [EXPIRING_SOON_THRESHOLD]. Drives the
+     * "Expiring" badge on the current plan card.
      */
     private fun isPlanExpiringSoon(
         proExpirationTime: Long?,
-        cycle: AccountSubscriptionCycle,
+        isRenewing: Boolean,
     ): Boolean {
-        if (proExpirationTime == null || cycle != AccountSubscriptionCycle.UNKNOWN) return false
+        if (proExpirationTime == null || isRenewing) return false
         val remaining = (proExpirationTime - getCurrentTimeInMillisUseCase() / 1000).seconds
         return remaining > Duration.ZERO && remaining <= EXPIRING_SOON_THRESHOLD
     }

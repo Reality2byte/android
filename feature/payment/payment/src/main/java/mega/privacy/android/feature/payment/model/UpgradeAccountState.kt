@@ -2,7 +2,6 @@ package mega.privacy.android.feature.payment.model
 
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.AccountType
-import mega.privacy.android.domain.entity.Product
 import mega.privacy.android.domain.entity.SubscriptionStatus
 import mega.privacy.android.domain.entity.agesignal.UserAgeComplianceStatus
 import java.time.Instant
@@ -19,10 +18,11 @@ import kotlin.time.Duration.Companion.seconds
  * @property currentSubscriptionPlan current subscribed plan, default Free plan
  * @property subscriptionCycle current subscription cycle (monthly/yearly), default UNKNOWN
  * @property subscriptionStatus current subscription status (VALID/INVALID/NONE), null if unknown
+ * @property currentPlanRenewal how the current plan renews, resolved from its subscription id, null
+ * while unresolved (before account details arrive, or when the account reports no Pro plan)
  * @property subscriptionRenewTime renewal timestamp of the current subscription in seconds, null if unknown
  * @property proExpirationTime expiration timestamp of the current Pro plan in seconds, null if unknown
- * @property proPlanStartTime start timestamp of the current Pro plan in seconds (uq "ts" field), null if unknown.
- * A plan that has both a start and an expiry time is a one-off (non-recurring) purchase.
+ * @property proPlanStartTime start timestamp of the current Pro plan in seconds (uq "ts" field), null if unknown
  * @property isCurrentPlanExpiring whether the current plan expires within the next 30 days, driving the
  * "Expiring" badge on the current plan card
  * @property offerValidUntil expiry timestamp of the active discount offer in seconds (utqa "mo.e"), null when
@@ -35,6 +35,7 @@ data class UpgradeAccountState(
     val currentSubscriptionPlan: AccountType? = null,
     val subscriptionCycle: AccountSubscriptionCycle = AccountSubscriptionCycle.UNKNOWN,
     val subscriptionStatus: SubscriptionStatus? = null,
+    val currentPlanRenewal: CurrentPlanRenewal? = null,
     val subscriptionRenewTime: Long? = null,
     val proExpirationTime: Long? = null,
     val proPlanStartTime: Long? = null,
@@ -48,12 +49,16 @@ data class UpgradeAccountState(
      * (as opposed to a one-off purchase / cancelled subscription that expires).
      */
     val isCurrentSubscriptionRenewing: Boolean
-        get() = subscriptionStatus == SubscriptionStatus.VALID
+        get() = currentPlanRenewal.isRenewing(subscriptionStatus)
 
     /**
      * Period of a one-off (non-recurring) plan, derived from its start and expiry timestamps and
-     * expressed in the largest unit that fits its duration, or null when either timestamp is
-     * unavailable (i.e. not a one-off plan).
+     * expressed in the largest unit that fits its duration, or null when the plan is not a one-off
+     * purchase or either timestamp is unavailable.
+     *
+     * Restricted to one-off plans because only they have a single billing period: a plan that has
+     * renewed spans several, so the arithmetic below would report their sum (e.g. "36 months" for a
+     * three-year-old yearly plan).
      *
      * Whole months are counted with calendar arithmetic (their length varies by month and leap year),
      * mirroring how the backend derives the expiry by adding calendar months to the start; shorter
@@ -61,6 +66,7 @@ data class UpgradeAccountState(
      */
     val currentPlanPeriod: PlanPeriod?
         get() {
+            if (currentPlanRenewal != CurrentPlanRenewal.OneOff) return null
             val start = proPlanStartTime ?: return null
             val end = proExpirationTime ?: return null
             val duration = (end - start).seconds

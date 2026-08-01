@@ -37,6 +37,23 @@ class CurrentPlanCardTest {
     }
 
     @Test
+    fun `test that CurrentPlanCard hides cycle text when null`() {
+        composeRule.setContent {
+            CurrentPlanCard(
+                modifier = Modifier.fillMaxWidth(),
+                currentPlanLabel = "Current plan",
+                planName = "Pro I",
+                cycleText = null,
+                helpText = "Expires on 8 July 2027",
+            )
+        }
+        composeRule.onNodeWithTag(TEST_TAG_CURRENT_PLAN_CYCLE, useUnmergedTree = true)
+            .assertDoesNotExist()
+        composeRule.onNodeWithText("Pro I").assertIsDisplayed()
+        composeRule.onNodeWithText("•", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
     fun `test that CurrentPlanCard hides help text when null`() {
         composeRule.setContent {
             CurrentPlanCard(

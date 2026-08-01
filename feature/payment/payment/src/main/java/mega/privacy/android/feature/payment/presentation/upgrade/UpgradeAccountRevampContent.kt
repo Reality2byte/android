@@ -31,6 +31,7 @@ import mega.privacy.android.feature.payment.components.CurrentPlanCard
 import mega.privacy.android.feature.payment.components.PlanPriceCard
 import mega.privacy.android.feature.payment.components.WhyGoProCard
 import mega.privacy.android.feature.payment.components.upgradeAccountSkeleton
+import mega.privacy.android.feature.payment.model.CurrentPlanRenewal
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.UpgradeAccountState
 import mega.privacy.android.feature.payment.model.extensions.toUIAccountType
@@ -203,23 +204,27 @@ internal fun LazyListScope.currentPlanItem(
         uiState.currentSubscriptionPlan == AccountType.FREE
     ) return
     item("revamp_current_plan") {
-        val period = uiState.currentPlanPeriod
-        val cycleText =
-            if (period != null && uiState.subscriptionCycle == AccountSubscriptionCycle.UNKNOWN) {
+        val cycleText = when (uiState.currentPlanRenewal) {
+            CurrentPlanRenewal.Renewing, null -> when (uiState.subscriptionCycle) {
+                AccountSubscriptionCycle.MONTHLY ->
+                    stringResource(sharedR.string.subscription_revamp_current_plan_cycle_monthly)
+
+                AccountSubscriptionCycle.YEARLY ->
+                    stringResource(sharedR.string.subscription_revamp_current_plan_cycle_yearly)
+
+                AccountSubscriptionCycle.UNKNOWN -> null
+            }
+
+            CurrentPlanRenewal.OneOff -> uiState.currentPlanPeriod?.let { period ->
                 pluralStringResource(
                     period.unit.toPlanPeriodPluralRes(),
                     period.value,
                     period.value
                 )
-            } else {
-                stringResource(
-                    if (uiState.subscriptionCycle == AccountSubscriptionCycle.MONTHLY) {
-                        sharedR.string.subscription_revamp_current_plan_cycle_monthly
-                    } else {
-                        sharedR.string.subscription_revamp_current_plan_cycle_yearly
-                    }
-                )
             }
+
+            CurrentPlanRenewal.Cancelled -> null
+        }
         val date = currentPlanDate(uiState, locale)
         val helpText = date?.let {
             if (uiState.isCurrentSubscriptionRenewing) {
