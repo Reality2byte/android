@@ -8,7 +8,9 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.feature.payment.components.SubscriptionOfferScreenContent
+import mega.privacy.android.feature.payment.components.SubscriptionOfferScreenError
 import mega.privacy.android.feature.payment.components.SubscriptionOfferScreenSkeleton
+import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.extensions.toUIAccountType
 import mega.privacy.android.feature.payment.presentation.upgrade.billedDescription
 import mega.privacy.android.feature.payment.presentation.upgrade.getCampaignName
@@ -20,7 +22,8 @@ import java.util.Date
  * Full-screen promo for the recommended discounted plan (DSN-3130 offer landing screen). Shows the
  * campaign artwork, the offer countdown, the discounted plan card and a pinned buy CTA.
  *
- * Renders a full-screen empty placeholder while [SubscriptionOfferState.offerSubscription] is null.
+ * Shows the "Couldn't connect" state while the device is offline or the offer failed to load, and a
+ * full-screen skeleton while [SubscriptionOfferState.offerSubscription] is still null.
  *
  * When more than one plan carries the campaign, a "View all plans" text button is shown below the
  * buy CTA so the other discounted plans stay reachable.
@@ -29,6 +32,7 @@ import java.util.Date
  * @param onBuyClick called with the promoted [Subscription] when the buy CTA is tapped
  * @param onDismiss called when the dismiss (X) icon is tapped
  * @param onViewAllPlansClick called when the "View all plans" text button is tapped
+ * @param onRetryClick called when the error state's "Try again" button is tapped
  * @param modifier
  */
 @Composable
@@ -37,17 +41,59 @@ internal fun SubscriptionOfferScreen(
     onBuyClick: (Subscription) -> Unit,
     onDismiss: () -> Unit,
     onViewAllPlansClick: () -> Unit,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val offerSubscription = uiState.offerSubscription
+    val subscription = offerSubscription?.getSubscription(uiState.isMonthly)
+    when {
+        !uiState.isConnected || uiState.hasLoadError -> SubscriptionOfferScreenError(
+            onRetryClick = onRetryClick,
+            onDismissClick = onDismiss,
+            modifier = modifier.fillMaxSize(),
+        )
+
+        offerSubscription == null || subscription == null ->
+            SubscriptionOfferScreenSkeleton(
+                onDismissClick = onDismiss,
+                modifier = modifier.fillMaxSize(),
+            )
+
+        else -> SubscriptionOfferLoadedContent(
+            uiState = uiState,
+            offerSubscription = offerSubscription,
+            subscription = subscription,
+            onBuyClick = onBuyClick,
+            onDismiss = onDismiss,
+            onViewAllPlansClick = onViewAllPlansClick,
+            modifier = modifier,
+        )
+    }
+}
+
+/**
+ * The loaded offer: resolves the localised plan name, benefits and discount wording for
+ * [offerSubscription] on the promoted billing period and hands them to [SubscriptionOfferScreenContent].
+ *
+ * @param uiState the offer to promote
+ * @param offerSubscription the discounted plan to promote
+ * @param subscription the promoted [offerSubscription] on the billing period the offer applies to
+ * @param onBuyClick called with [subscription] when the buy CTA is tapped
+ * @param onDismiss called when the dismiss (X) icon is tapped
+ * @param onViewAllPlansClick called when the "View all plans" text button is tapped
+ * @param modifier
+ */
+@Composable
+private fun SubscriptionOfferLoadedContent(
+    uiState: SubscriptionOfferState,
+    offerSubscription: LocalisedSubscription,
+    subscription: Subscription,
+    onBuyClick: (Subscription) -> Unit,
+    onDismiss: () -> Unit,
+    onViewAllPlansClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isMonthly = uiState.isMonthly
-    val offerSubscription = uiState.offerSubscription
-    val subscription = offerSubscription?.getSubscription(isMonthly)
-    if (offerSubscription == null || subscription == null) {
-        // Full-height skeleton while loading: the slide-up enter transition derives its travel
-        // distance from the entering content height, so an empty screen here would slide nowhere.
-        SubscriptionOfferScreenSkeleton(modifier = modifier.fillMaxSize())
-        return
-    }
     val context = LocalContext.current
     val locale = LocalLocale.current.platformLocale
     val planName = stringResource(offerSubscription.accountType.toUIAccountType().textValue)

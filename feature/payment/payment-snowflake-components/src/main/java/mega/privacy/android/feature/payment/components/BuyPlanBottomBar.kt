@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.button.PrimaryFilledButton
 import mega.android.core.ui.components.button.TextOnlyButton
@@ -25,6 +28,8 @@ import mega.android.core.ui.tokens.theme.DSTokens
  * @param textOnlyButtonText label of an optional underlined text button shown below the buy button,
  * null to show the buy button alone
  * @param onTextOnlyButtonClick called when the text button is tapped
+ * @param maxContentWidth caps the width of the buttons and centres them, leaving the divider and
+ * background full width; [Dp.Unspecified] lets the buttons span the whole bar
  */
 @Composable
 fun BuyPlanBottomBar(
@@ -33,6 +38,7 @@ fun BuyPlanBottomBar(
     text: String,
     textOnlyButtonText: String? = null,
     onTextOnlyButtonClick: () -> Unit = {},
+    maxContentWidth: Dp = Dp.Unspecified,
 ) {
     Box(
         modifier = modifier
@@ -45,7 +51,10 @@ fun BuyPlanBottomBar(
         )
 
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .widthIn(max = maxContentWidth)
+                .padding(horizontal = 16.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             PrimaryFilledButton(

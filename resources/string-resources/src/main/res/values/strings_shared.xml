@@ -3617,6 +3617,8 @@
     <string name="subscription_offer_expired_dialog_description">This deal is no longer available. Check our current plans to find one that suits you.</string>
     <!-- Button that closes the expired-offer dialog and reloads the subscription page with the currently available plans -->
     <string name="subscription_offer_expired_dialog_button">View plans</string>
+    <!-- Description of the error state on the subscription offer screen when the offer can’t be loaded -->
+    <string name="subscription_offer_no_connection_description">Check your internet connection and try again.</string>
     <!-- Video editor: screen title shown in the top app bar -->
     <string name="video_editor_screen_title">Edit video</string>
     <!-- Video editor: top bar action that exports the edited video as a new file -->

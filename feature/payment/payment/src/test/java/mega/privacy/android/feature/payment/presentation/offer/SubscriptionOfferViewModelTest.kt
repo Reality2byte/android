@@ -3,12 +3,15 @@ package mega.privacy.android.feature.payment.presentation.offer
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
 import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.account.Skus
 import mega.privacy.android.domain.entity.billing.RecommendedSubscriptionOffer
 import mega.privacy.android.domain.usecase.billing.GetRecommendedSubscriptionWithOfferUseCase
+import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
 import mega.privacy.android.feature.payment.model.LocalisedSubscription
 import mega.privacy.android.feature.payment.model.mapper.LocalisedSubscriptionMapper
 import org.junit.jupiter.api.BeforeEach
@@ -32,19 +35,30 @@ class SubscriptionOfferViewModelTest {
 
     private val getRecommendedSubscriptionWithOfferUseCase =
         mock<GetRecommendedSubscriptionWithOfferUseCase>()
+    private val monitorConnectivityUseCase = mock<MonitorConnectivityUseCase>()
     private val localisedSubscriptionMapper = mock<LocalisedSubscriptionMapper>()
     private val localisedSubscription = mock<LocalisedSubscription>()
 
     @BeforeEach
     fun setUp() {
-        reset(getRecommendedSubscriptionWithOfferUseCase, localisedSubscriptionMapper)
+        reset(
+            getRecommendedSubscriptionWithOfferUseCase,
+            monitorConnectivityUseCase,
+            localisedSubscriptionMapper,
+        )
         whenever(localisedSubscriptionMapper(anyOrNull(), anyOrNull()))
             .thenReturn(localisedSubscription)
+        stubConnectivity(true)
+    }
+
+    private fun stubConnectivity(isConnected: Boolean) {
+        whenever(monitorConnectivityUseCase()).thenReturn(flowOf(isConnected))
     }
 
     private fun initViewModel() {
         underTest = SubscriptionOfferViewModel(
             getRecommendedSubscriptionWithOfferUseCase = getRecommendedSubscriptionWithOfferUseCase,
+            monitorConnectivityUseCase = monitorConnectivityUseCase,
             localisedSubscriptionMapper = localisedSubscriptionMapper,
         )
     }
@@ -127,6 +141,17 @@ class SubscriptionOfferViewModelTest {
     }
 
     @Test
+    fun `test that init does not report a load error when there is no recommended subscription`() =
+        runTest {
+            wheneverBlocking { getRecommendedSubscriptionWithOfferUseCase() }.thenReturn(null)
+            initViewModel()
+
+            underTest.state.test {
+                assertThat(awaitItem().hasLoadError).isFalse()
+            }
+        }
+
+    @Test
     fun `test that init exposes no offer when loading fails`() = runTest {
         wheneverBlocking { getRecommendedSubscriptionWithOfferUseCase() }
             .thenThrow(RuntimeException("boom"))
@@ -136,6 +161,66 @@ class SubscriptionOfferViewModelTest {
             val state = awaitItem()
             assertThat(state.isLoading).isFalse()
             assertThat(state.offerSubscription).isNull()
+        }
+    }
+
+    @Test
+    fun `test that init reports a load error when loading fails`() = runTest {
+        wheneverBlocking { getRecommendedSubscriptionWithOfferUseCase() }
+            .thenThrow(RuntimeException("boom"))
+        initViewModel()
+
+        underTest.state.test {
+            assertThat(awaitItem().hasLoadError).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that init exposes the connectivity state when the device is offline`() = runTest {
+        stubConnectivity(false)
+        stubOffer(Skus.SKU_PRO_I_MONTH)
+        initViewModel()
+
+        underTest.state.test {
+            assertThat(awaitItem().isConnected).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that onRetry exposes the offer when loading succeeds`() = runTest {
+        wheneverBlocking { getRecommendedSubscriptionWithOfferUseCase() }
+            .thenThrow(RuntimeException("boom"))
+        initViewModel()
+        advanceUntilIdle()
+        assertThat(underTest.state.value.hasLoadError).isTrue()
+
+        reset(getRecommendedSubscriptionWithOfferUseCase)
+        stubOffer(Skus.SKU_PRO_I_MONTH)
+        underTest.onRetry()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            assertThat(state.hasLoadError).isFalse()
+            assertThat(state.isLoading).isFalse()
+            assertThat(state.offerSubscription).isEqualTo(localisedSubscription)
+        }
+    }
+
+    @Test
+    fun `test that onRetry keeps the load error when loading fails again`() = runTest {
+        wheneverBlocking { getRecommendedSubscriptionWithOfferUseCase() }
+            .thenThrow(RuntimeException("boom"))
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.onRetry()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            assertThat(state.hasLoadError).isTrue()
+            assertThat(state.isLoading).isFalse()
         }
     }
 

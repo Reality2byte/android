@@ -40,8 +40,14 @@ internal fun SubscriptionOfferRoute(
         }
     }
 
-    LaunchedEffect(uiState.isLoading, uiState.offerSubscription) {
-        if (!uiState.isLoading && uiState.offerSubscription == null) {
+    LaunchedEffect(
+        uiState.isLoading,
+        uiState.offerSubscription,
+        uiState.isConnected,
+        uiState.hasLoadError,
+    ) {
+        val canShowError = !uiState.isConnected || uiState.hasLoadError
+        if (!uiState.isLoading && uiState.offerSubscription == null && !canShowError) {
             onBack()
         }
     }
@@ -59,5 +65,6 @@ internal fun SubscriptionOfferRoute(
         },
         onDismiss = onBack,
         onViewAllPlansClick = onViewAllPlans,
+        onRetryClick = viewModel::onRetry,
     )
 }

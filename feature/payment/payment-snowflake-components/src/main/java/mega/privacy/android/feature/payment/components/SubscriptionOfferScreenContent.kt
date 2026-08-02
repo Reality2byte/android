@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import mega.android.core.ui.components.MegaScaffold
@@ -107,6 +109,7 @@ fun SubscriptionOfferScreenContent(
                 onClick = onBuyClick,
                 textOnlyButtonText = viewAllPlansText,
                 onTextOnlyButtonClick = onViewAllPlansClick,
+                maxContentWidth = SUBSCRIPTION_OFFER_CONTENT_MAX_WIDTH,
                 modifier = Modifier.navigationBarsPadding(),
             )
         },
@@ -117,6 +120,7 @@ fun SubscriptionOfferScreenContent(
                 .background(DSTokens.colors.background.pageBackground)
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Image(
@@ -133,7 +137,9 @@ fun SubscriptionOfferScreenContent(
                 )
                 Column(
                     modifier = Modifier
+                        .align(Alignment.TopCenter)
                         .padding(top = HEADER_TOP)
+                        .widthIn(max = SUBSCRIPTION_OFFER_CONTENT_MAX_WIDTH)
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -182,7 +188,10 @@ fun SubscriptionOfferScreenContent(
                 storageText = storageText,
                 transferText = transferText,
                 monthlyPriceText = monthlyPriceText,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                modifier = Modifier
+                    .widthIn(max = SUBSCRIPTION_OFFER_CONTENT_MAX_WIDTH)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
             )
         }
     }
@@ -241,6 +250,13 @@ private val BANNER_HEIGHT = 220.dp
  */
 private val HEADER_TOP = 160.dp
 
+/**
+ * On wide screens the offer content stays this narrow and centred, matching the landscape layout in
+ * the design, so the header, plan card and CTA keep readable line lengths. Only the banner artwork
+ * spans the full width.
+ */
+internal val SUBSCRIPTION_OFFER_CONTENT_MAX_WIDTH = 500.dp
+
 @CombinedThemePreviews
 @Composable
 private fun SubscriptionOfferScreenContentPreview() {
@@ -282,6 +298,28 @@ private fun SubscriptionOfferScreenContentMultipleOffersPreview() {
             onBuyClick = {},
             onDismissClick = {},
             viewAllPlansText = "View all plans",
+        )
+    }
+}
+
+@Preview(name = "Landscape", showBackground = true, widthDp = 917, heightDp = 500)
+@Composable
+private fun SubscriptionOfferScreenContentLandscapePreview() {
+    AndroidTheme(isSystemInDarkTheme()) {
+        SubscriptionOfferScreenContent(
+            campaignText = "Black Friday: 50% off",
+            validUntil = System.currentTimeMillis() / 1000L +
+                    28L * 24L * 3600L + 12L * 3600L + 90L,
+            validUntilText = "valid until July 11, 2026",
+            planName = "Pro I",
+            priceText = "€4.99/month",
+            originalPriceText = "€9.99",
+            discountDescriptionText = "Billed at €4.99/month for the first 12 months, €9.99/month after",
+            storageText = "2 TB cloud storage",
+            transferText = "2 TB transfer",
+            buyButtonText = "Get Pro I",
+            onBuyClick = {},
+            onDismissClick = {},
         )
     }
 }
