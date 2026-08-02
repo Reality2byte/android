@@ -1,5 +1,7 @@
 package mega.privacy.android.app.globalmanagement
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -29,9 +31,10 @@ class ChatApiListenerCoordinator @Inject constructor(
     private val globalChatListener: GlobalChatListener,
     private val monitorCallSoundsUseCase: MonitorCallSoundsUseCase,
     @ApplicationScope private val applicationScope: CoroutineScope,
+    @ApplicationContext private val context: Context,
 ) {
     private val meetingListener = MeetingListener()
-    private val soundsController = CallSoundsController()
+    private val soundsController = CallSoundsController(context)
     private var callSoundsJob: Job? = null
     private var registered = false
 

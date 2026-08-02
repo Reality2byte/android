@@ -5,7 +5,6 @@ import android.content.res.AssetFileDescriptor
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
-import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import timber.log.Timber
 import java.io.IOException
@@ -13,7 +12,7 @@ import java.io.IOException
 /**
  * Class responsible for playing call-related sounds
  */
-class CallSoundsController {
+class CallSoundsController(private val context: Context) {
 
     private var mMediaPlayer: MediaPlayer? = null
     private var audioManager: AudioManager? = null
@@ -25,7 +24,7 @@ class CallSoundsController {
      */
     fun playSound(type: CallSoundType) {
         audioManager =
-            MegaApplication.getInstance().baseContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (mMediaPlayer == null)
             mMediaPlayer = MediaPlayer()
 
@@ -34,7 +33,7 @@ class CallSoundsController {
                 mp.stop()
             }
 
-            val res = MegaApplication.getInstance().baseContext.resources
+            val res = context.resources
             Timber.d("Play sound: $type")
             when (type) {
                 CallSoundType.CALL_ENDED -> playSpecificSound(res.openRawResourceFd(R.raw.end_call))

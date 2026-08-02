@@ -1,5 +1,6 @@
 package mega.privacy.android.app.globalmanagement
 
+import android.content.Context
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +33,7 @@ class ChatApiListenerCoordinatorTest {
     private val megaChatNotificationHandler = mock<MegaChatNotificationHandler>()
     private val globalChatListener = mock<GlobalChatListener>()
     private val monitorCallSoundsUseCase = mock<MonitorCallSoundsUseCase>()
+    private val context = mock<Context>()
 
     @BeforeEach
     fun resetMocks() {
@@ -52,6 +54,7 @@ class ChatApiListenerCoordinatorTest {
         globalChatListener = globalChatListener,
         monitorCallSoundsUseCase = monitorCallSoundsUseCase,
         applicationScope = applicationScope,
+        context = context,
     )
 
     @Test

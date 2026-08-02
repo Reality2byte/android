@@ -1,11 +1,11 @@
 package mega.privacy.android.app.nav.contract
 
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
-import mega.privacy.android.app.MegaApplication
 import timber.log.Timber
 
 /**
@@ -13,7 +13,7 @@ import timber.log.Timber
  * This contract allows users to select multiple files and grants the application
  * persistable URI permissions for those files.
  */
-class OpenMultipleDocumentsPersistable :
+class OpenMultipleDocumentsPersistable(private val contentResolver: ContentResolver) :
     ActivityResultContract<Array<String>, List<@JvmSuppressWildcards Uri>>() {
 
     override fun createIntent(context: Context, input: Array<String>): Intent {
@@ -34,7 +34,7 @@ class OpenMultipleDocumentsPersistable :
         return intent.takeIf { resultCode == Activity.RESULT_OK }?.getClipDataUris().orEmpty()
             .map {
                 runCatching {
-                    MegaApplication.getInstance().contentResolver.takePersistableUriPermission(
+                    contentResolver.takePersistableUriPermission(
                         it,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )

@@ -1,7 +1,9 @@
 package mega.privacy.android.app.nav
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
+import dagger.hilt.android.qualifiers.ApplicationContext
 import mega.privacy.android.app.activities.contract.AddToAlbumActivityContract
 import mega.privacy.android.app.activities.contract.HiddenNodeOnboardingActivityContract
 import mega.privacy.android.app.activities.contract.NameCollisionActivityContract
@@ -21,7 +23,9 @@ import javax.inject.Inject
  * Implementation of MegaActivityResultContract that provides all the necessary
  * ActivityResultContract instances for node-related operations.
  */
-class MegaActivityResultContractImpl @Inject constructor() : MegaActivityResultContract {
+class MegaActivityResultContractImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : MegaActivityResultContract {
 
     override val versionsFileActivityResultContract: VersionsFileActivityContract =
         VersionsFileActivityContract()
@@ -45,7 +49,7 @@ class MegaActivityResultContractImpl @Inject constructor() : MegaActivityResultC
         get() = NameCollisionActivityContract()
 
     override val openMultipleDocumentsPersistable: ActivityResultContract<Array<String>, List<@JvmSuppressWildcards Uri>>
-        get() = OpenMultipleDocumentsPersistable()
+        get() = OpenMultipleDocumentsPersistable(context.contentResolver)
 
     override val addToAlbumResultContract: ActivityResultContract<Pair<Array<Long>, Int>, String?>
         get() = AddToAlbumActivityContract()
