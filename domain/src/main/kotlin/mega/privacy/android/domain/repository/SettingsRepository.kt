@@ -651,6 +651,20 @@ interface SettingsRepository {
     suspend fun setHomeConfigurationTooltipShown(shown: Boolean)
 
     /**
+     * Monitor video editor tooltip shown preference
+     *
+     * @return video editor tooltip shown status as a flow
+     */
+    fun monitorVideoEditorTooltipShown(): Flow<Boolean>
+
+    /**
+     * Set video editor tooltip shown
+     *
+     * @param shown true if the tooltip has been shown, false otherwise
+     */
+    suspend fun setVideoEditorTooltipShown(shown: Boolean)
+
+    /**
      * Monitor enabled home screen widget configuration
      *
      * @return latest widget configuration

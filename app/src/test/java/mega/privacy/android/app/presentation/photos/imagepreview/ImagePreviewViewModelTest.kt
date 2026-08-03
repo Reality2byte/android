@@ -48,6 +48,8 @@ import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.usecase.GetBusinessStatusUseCase
 import mega.privacy.android.domain.usecase.IsHiddenNodesOnboardedUseCase
+import mega.privacy.android.domain.usecase.MonitorVideoEditorTooltipShownUseCase
+import mega.privacy.android.domain.usecase.SetVideoEditorTooltipShownUseCase
 import mega.privacy.android.domain.usecase.UpdateNodeSensitiveUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.favourites.AddFavouritesUseCase
@@ -151,6 +153,9 @@ class ImagePreviewViewModelTest {
     private val isUserLoggedInUseCase: IsUserLoggedInUseCase = mock()
     private val isEditableImageUseCase = IsEditableImageUseCase()
     private val isEditableVideoUseCase = IsEditableVideoUseCase()
+    private val monitorVideoEditorTooltipShownUseCase: MonitorVideoEditorTooltipShownUseCase =
+        mock()
+    private val setVideoEditorTooltipShownUseCase: SetVideoEditorTooltipShownUseCase = mock()
 
     private val accountLevelDetail = mock<AccountLevelDetail> {
         on { accountType }.thenReturn(AccountType.PRO_III)
@@ -163,6 +168,7 @@ class ImagePreviewViewModelTest {
     fun setup() {
         wheneverBlocking { monitorShowHiddenItemsUseCase() }.thenReturn(flowOf(false))
         wheneverBlocking { monitorAccountDetailUseCase() }.thenReturn(flowOf(accountDetail))
+        whenever(monitorVideoEditorTooltipShownUseCase()).thenReturn(flowOf(true))
         initViewModel()
     }
 
@@ -200,6 +206,8 @@ class ImagePreviewViewModelTest {
         getNodeByHandle,
         getFeatureFlagValueUseCase,
         isUserLoggedInUseCase,
+        monitorVideoEditorTooltipShownUseCase,
+        setVideoEditorTooltipShownUseCase,
     ).also {
         imageNodeFetchers.clear()
         underTest.consumeTransferEvent()
@@ -246,6 +254,8 @@ class ImagePreviewViewModelTest {
             isEditableVideoUseCase = isEditableVideoUseCase,
             largeBundleHolder = largeBundleHolder,
             isUserLoggedInUseCase = isUserLoggedInUseCase,
+            monitorVideoEditorTooltipShownUseCase = monitorVideoEditorTooltipShownUseCase,
+            setVideoEditorTooltipShownUseCase = setVideoEditorTooltipShownUseCase,
             context = mock(),
         )
     }
@@ -260,6 +270,35 @@ class ImagePreviewViewModelTest {
         underTest.state.test {
             assertThat(expectMostRecentItem().isOnline).isEqualTo(isOnline)
         }
+    }
+
+    @Test
+    fun `test that showVideoEditorTooltip is true when the tooltip has not been shown`() = runTest {
+        whenever(monitorVideoEditorTooltipShownUseCase()).thenReturn(flowOf(false))
+
+        initViewModel()
+
+        underTest.state.test {
+            assertThat(expectMostRecentItem().showVideoEditorTooltip).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that showVideoEditorTooltip is false when the tooltip has been shown`() = runTest {
+        whenever(monitorVideoEditorTooltipShownUseCase()).thenReturn(flowOf(true))
+
+        initViewModel()
+
+        underTest.state.test {
+            assertThat(expectMostRecentItem().showVideoEditorTooltip).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that onVideoEditorTooltipDismissed marks the tooltip as shown`() = runTest {
+        underTest.onVideoEditorTooltipDismissed()
+
+        verify(setVideoEditorTooltipShownUseCase).invoke()
     }
 
     @Test

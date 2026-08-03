@@ -58,6 +58,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -288,6 +290,9 @@ internal fun ImagePreviewScreen(
                         ) {
                             ImagePreviewTopBar(
                                 imageNode = imageNode,
+                                showEditTooltip = viewState.showVideoEditorTooltip
+                                        && imageNode.type is VideoFileTypeInfo,
+                                onEditTooltipDismissed = viewModel::onVideoEditorTooltipDismissed,
                                 showEditMenu = viewModel::isPhotoEditorMenuVisible,
                                 showSlideshowMenu = viewModel::isSlideshowMenuVisible,
                                 showForwardMenu = viewModel::isForwardMenuVisible,
@@ -732,6 +737,8 @@ private fun ImageContent(
 @Composable
 private fun ImagePreviewTopBar(
     imageNode: ImageNode,
+    showEditTooltip: Boolean,
+    onEditTooltipDismissed: () -> Unit,
     showEditMenu: suspend (ImageNode) -> Boolean,
     showSlideshowMenu: suspend (ImageNode) -> Boolean,
     showForwardMenu: suspend (ImageNode) -> Boolean,
@@ -796,7 +803,20 @@ private fun ImagePreviewTopBar(
                 }
 
                 if (isEditMenuVisible) {
-                    IconButton(onClick = onClickEdit) {
+                    var editIconCoordinates by remember {
+                        mutableStateOf<LayoutCoordinates?>(null)
+                    }
+                    IconButton(
+                        onClick = {
+                            if (showEditTooltip) {
+                                onEditTooltipDismissed()
+                            }
+                            onClickEdit()
+                        },
+                        modifier = Modifier.onGloballyPositioned { coordinates ->
+                            editIconCoordinates = coordinates
+                        },
+                    ) {
                         Icon(
                             imageVector = IconPack.Medium.Thin.Outline.SlidersHorizontal01,
                             contentDescription = null,
@@ -804,6 +824,12 @@ private fun ImagePreviewTopBar(
                             modifier = Modifier
                                 .testTag(IMAGE_PREVIEW_APP_BAR_EDIT)
                                 .size(22.dp),
+                        )
+                    }
+                    if (showEditTooltip) {
+                        VideoEditorTooltip(
+                            anchorCoordinates = editIconCoordinates,
+                            onDismiss = onEditTooltipDismissed,
                         )
                     }
                 }

@@ -28,4 +28,5 @@ internal data class ImagePreviewState(
     val isFromLink: Boolean = false,
     val isLoggedIn: Boolean = false,
     val isFromOffline: Boolean = false,
+    val showVideoEditorTooltip: Boolean = false,
 )

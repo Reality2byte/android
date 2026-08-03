@@ -54,6 +54,8 @@ import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.qualifier.DefaultDispatcher
 import mega.privacy.android.domain.usecase.GetBusinessStatusUseCase
 import mega.privacy.android.domain.usecase.IsHiddenNodesOnboardedUseCase
+import mega.privacy.android.domain.usecase.MonitorVideoEditorTooltipShownUseCase
+import mega.privacy.android.domain.usecase.SetVideoEditorTooltipShownUseCase
 import mega.privacy.android.domain.usecase.UpdateNodeSensitiveUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.favourites.AddFavouritesUseCase
@@ -132,6 +134,8 @@ class ImagePreviewViewModel @Inject constructor(
     private val isEditableVideoUseCase: IsEditableVideoUseCase,
     private val largeBundleHolder: LargeBundleHolder,
     private val isUserLoggedInUseCase: IsUserLoggedInUseCase,
+    private val monitorVideoEditorTooltipShownUseCase: MonitorVideoEditorTooltipShownUseCase,
+    private val setVideoEditorTooltipShownUseCase: SetVideoEditorTooltipShownUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
@@ -167,6 +171,24 @@ class ImagePreviewViewModel @Inject constructor(
             monitorOfflineNodeUpdates()
         }
         loadLinkAndLoginState()
+        monitorVideoEditorTooltip()
+    }
+
+    private fun monitorVideoEditorTooltip() {
+        viewModelScope.launch {
+            monitorVideoEditorTooltipShownUseCase()
+                .catch { Timber.e(it) }
+                .collectLatest { isShown ->
+                    _state.update { it.copy(showVideoEditorTooltip = !isShown) }
+                }
+        }
+    }
+
+    fun onVideoEditorTooltipDismissed() {
+        viewModelScope.launch {
+            runCatching { setVideoEditorTooltipShownUseCase() }
+                .onFailure { Timber.e(it) }
+        }
     }
 
     private fun loadLinkAndLoginState() {
