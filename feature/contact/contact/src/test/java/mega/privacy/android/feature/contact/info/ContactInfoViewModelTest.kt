@@ -7,11 +7,14 @@ import com.google.common.truth.Truth.assertThat
 import de.palm.composestateevents.StateEventWithContentTriggered
 import de.palm.composestateevents.consumed
 import de.palm.composestateevents.triggered
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
+import mega.privacy.android.domain.entity.StorageState
+import mega.privacy.android.domain.entity.call.ChatCall
 import mega.privacy.android.domain.entity.chat.ChatPushNotificationMuteOption
 import mega.privacy.android.domain.entity.contacts.ContactData
 import mega.privacy.android.domain.entity.contacts.ContactInfoState
@@ -19,7 +22,11 @@ import mega.privacy.android.domain.entity.contacts.ContactItem
 import mega.privacy.android.domain.entity.contacts.UserChatStatus
 import mega.privacy.android.domain.entity.user.UserVisibility
 import mega.privacy.android.domain.exception.ContactDoesNotExistException
+import mega.privacy.android.domain.usecase.account.GetCurrentStorageStateUseCase
+import mega.privacy.android.domain.usecase.call.GetChatCallUseCase
+import mega.privacy.android.domain.usecase.call.StartCallUseCase
 import mega.privacy.android.domain.usecase.chat.CreateChatRoomUseCase
+import mega.privacy.android.domain.usecase.chat.Get1On1ChatIdUseCase
 import mega.privacy.android.domain.usecase.chat.GetChatMuteOptionListUseCase
 import mega.privacy.android.domain.usecase.chat.MuteChatNotificationForChatRoomsUseCase
 import mega.privacy.android.domain.usecase.contact.MonitorContactInfoUseCase
@@ -28,6 +35,7 @@ import mega.privacy.android.domain.usecase.contact.SetUserAliasUseCase
 import mega.privacy.android.domain.usecase.network.MonitorConnectivityUseCase
 import mega.privacy.android.feature.contact.info.model.ContactInfoMessage
 import mega.privacy.android.feature.contact.info.model.ContactInfoUiState
+import mega.privacy.android.feature.contact.list.model.CallEventData
 import mega.privacy.android.shared.contact.mapper.ContactItemAvatarMapper
 import mega.privacy.android.shared.contact.model.AvatarData
 import org.junit.jupiter.api.AfterEach
@@ -36,6 +44,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
@@ -55,12 +64,17 @@ class ContactInfoViewModelTest {
     private val muteChatNotificationForChatRoomsUseCase =
         mock<MuteChatNotificationForChatRoomsUseCase>()
     private val getChatMuteOptionListUseCase = mock<GetChatMuteOptionListUseCase>()
+    private val get1On1ChatIdUseCase = mock<Get1On1ChatIdUseCase>()
+    private val getChatCallUseCase = mock<GetChatCallUseCase>()
+    private val startCallUseCase = mock<StartCallUseCase>()
+    private val getCurrentStorageStateUseCase = mock<GetCurrentStorageStateUseCase>()
     private val contactItemAvatarMapper = mock<ContactItemAvatarMapper>()
 
     @BeforeEach
     fun setUp() {
         whenever(monitorConnectivityUseCase()).thenReturn(flowOf(true))
         whenever(contactItemAvatarMapper(any())).thenReturn(AVATAR)
+        whenever { getCurrentStorageStateUseCase() }.thenReturn(StorageState.Green)
         underTest = createViewModel(email = EMAIL, chatId = null)
     }
 
@@ -74,6 +88,10 @@ class ContactInfoViewModelTest {
             createChatRoomUseCase,
             muteChatNotificationForChatRoomsUseCase,
             getChatMuteOptionListUseCase,
+            get1On1ChatIdUseCase,
+            getChatCallUseCase,
+            startCallUseCase,
+            getCurrentStorageStateUseCase,
             contactItemAvatarMapper,
         )
     }
@@ -88,6 +106,10 @@ class ContactInfoViewModelTest {
         createChatRoomUseCase = createChatRoomUseCase,
         muteChatNotificationForChatRoomsUseCase = muteChatNotificationForChatRoomsUseCase,
         getChatMuteOptionListUseCase = getChatMuteOptionListUseCase,
+        get1On1ChatIdUseCase = get1On1ChatIdUseCase,
+        getChatCallUseCase = getChatCallUseCase,
+        startCallUseCase = startCallUseCase,
+        getCurrentStorageStateUseCase = getCurrentStorageStateUseCase,
         contactItemAvatarMapper = contactItemAvatarMapper,
     )
 
@@ -675,6 +697,280 @@ class ContactInfoViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `test that sendMessage triggers the open chat event when a chat room exists`() = runTest {
+        stubContactInfo()
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.sendMessage()
+            val actual = awaitDataState { it.openChatEvent is StateEventWithContentTriggered }
+            val event = actual.openChatEvent as StateEventWithContentTriggered
+            assertThat(event.content).isEqualTo(CHAT_ID)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(createChatRoomUseCase, never()).invoke(any(), any())
+    }
+
+    @Test
+    fun `test that sendMessage creates the chat room first when none exists`() = runTest {
+        stubContactInfo(createContactInfoState(chatRoomId = null, isNotificationsMuted = null))
+        whenever(createChatRoomUseCase(isGroup = false, userHandles = listOf(USER_HANDLE)))
+            .thenReturn(NEW_CHAT_ID)
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.sendMessage()
+            val actual = awaitDataState { it.openChatEvent is StateEventWithContentTriggered }
+            val event = actual.openChatEvent as StateEventWithContentTriggered
+            assertThat(event.content).isEqualTo(NEW_CHAT_ID)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(createChatRoomUseCase).invoke(isGroup = false, userHandles = listOf(USER_HANDLE))
+    }
+
+    @Test
+    fun `test that sendMessage triggers the chat creation error message when chat room creation fails`() =
+        runTest {
+            stubContactInfo(createContactInfoState(chatRoomId = null, isNotificationsMuted = null))
+            whenever(createChatRoomUseCase(any(), any()))
+                .thenThrow(RuntimeException("creation failed"))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.sendMessage()
+                val actual = awaitDataState { it.messageEvent is StateEventWithContentTriggered }
+                val event = actual.messageEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(ContactInfoMessage.ChatCreationError)
+                assertThat(actual.openChatEvent)
+                    .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that sendMessage does nothing when offline`() = runTest {
+        stubContactInfo()
+        whenever(monitorConnectivityUseCase()).thenReturn(flowOf(false))
+
+        underTest.uiState.test {
+            awaitDataState { !it.isOnline }
+            underTest.sendMessage()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat((underTest.uiState.value as ContactInfoUiState.Data).openChatEvent)
+            .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+    }
+
+    @Test
+    fun `test that sendMessage triggers the storage over quota event when the account is in paywall state`() =
+        runTest {
+            stubContactInfo()
+            whenever { getCurrentStorageStateUseCase() }.thenReturn(StorageState.PayWall)
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.sendMessage()
+                val actual = awaitDataState { it.storageOverQuotaEvent == triggered }
+                assertThat(actual.openChatEvent)
+                    .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that startCall triggers the start call event for a new call when none exists`() =
+        runTest {
+            stubContactInfo()
+            whenever(get1On1ChatIdUseCase(USER_HANDLE)).thenReturn(CHAT_ID)
+            whenever(getChatCallUseCase(CHAT_ID)).thenReturn(null)
+            whenever(startCallUseCase(chatId = CHAT_ID, audio = true, video = true))
+                .thenReturn(ChatCall(chatId = CHAT_ID, callId = 1L, hasLocalAudio = true, hasLocalVideo = true))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.startCall(withVideo = true)
+                val actual = awaitDataState {
+                    it.startCallEvent is StateEventWithContentTriggered
+                }
+                val event = actual.startCallEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(
+                    CallEventData(
+                        chatId = CHAT_ID,
+                        hasLocalAudio = true,
+                        hasLocalVideo = true,
+                        isExistingCall = false,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that startCall triggers the start call event for the existing call when one is ongoing`() =
+        runTest {
+            stubContactInfo()
+            whenever(get1On1ChatIdUseCase(USER_HANDLE)).thenReturn(CHAT_ID)
+            whenever(getChatCallUseCase(CHAT_ID))
+                .thenReturn(ChatCall(chatId = CHAT_ID, callId = 1L))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.startCall(withVideo = false)
+                val actual = awaitDataState {
+                    it.startCallEvent is StateEventWithContentTriggered
+                }
+                val event = actual.startCallEvent as StateEventWithContentTriggered
+                assertThat(event.content).isEqualTo(
+                    CallEventData(
+                        chatId = CHAT_ID,
+                        hasLocalAudio = true,
+                        hasLocalVideo = false,
+                        isExistingCall = true,
+                    )
+                )
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(startCallUseCase, never()).invoke(any(), any(), any())
+        }
+
+    @Test
+    fun `test that call buttons are disabled while the call start is in flight`() = runTest {
+        stubContactInfo()
+        val callStart = CompletableDeferred<ChatCall?>()
+        whenever(get1On1ChatIdUseCase(USER_HANDLE)).thenReturn(CHAT_ID)
+        whenever(getChatCallUseCase(CHAT_ID)).thenReturn(null)
+        whenever(startCallUseCase(chatId = CHAT_ID, audio = true, video = false))
+            .doSuspendableAnswer { callStart.await() }
+
+        underTest.uiState.test {
+            awaitDataState { it.enableCallButtons }
+            underTest.startCall(withVideo = false)
+            awaitDataState { !it.enableCallButtons }
+            callStart.complete(null)
+            awaitDataState { it.enableCallButtons }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that startCall re-enables the call buttons without an event when starting the call fails`() =
+        runTest {
+            stubContactInfo()
+            whenever(get1On1ChatIdUseCase(USER_HANDLE))
+                .thenThrow(RuntimeException("start call failed"))
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.startCall(withVideo = false)
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            val actual = underTest.uiState.value as ContactInfoUiState.Data
+            assertThat(actual.enableCallButtons).isTrue()
+            assertThat(actual.startCallEvent)
+                .isNotInstanceOf(StateEventWithContentTriggered::class.java)
+        }
+
+    @Test
+    fun `test that startCall triggers the storage over quota event when the account is in paywall state`() =
+        runTest {
+            stubContactInfo()
+            whenever { getCurrentStorageStateUseCase() }.thenReturn(StorageState.PayWall)
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.startCall(withVideo = false)
+                awaitDataState { it.storageOverQuotaEvent == triggered }
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(get1On1ChatIdUseCase, never()).invoke(any())
+        }
+
+    @Test
+    fun `test that startCall does nothing when the call buttons are disabled`() = runTest {
+        stubContactInfo(createContactInfoState(hasOngoingCall = true))
+
+        underTest.uiState.test {
+            awaitDataState { !it.enableCallButtons }
+            underTest.startCall(withVideo = false)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(get1On1ChatIdUseCase, never()).invoke(any())
+    }
+
+    @Test
+    fun `test that onCallPermissionsDenied triggers the microphone permission message`() =
+        runTest {
+            stubContactInfo()
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.onCallPermissionsDenied()
+                val actual = awaitDataState {
+                    it.messageEvent is StateEventWithContentTriggered
+                }
+                val event = actual.messageEvent as StateEventWithContentTriggered
+                assertThat(event.content)
+                    .isEqualTo(ContactInfoMessage.MicrophonePermissionDenied)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that onOpenChatEventConsumed resets the open chat event`() = runTest {
+        stubContactInfo()
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.sendMessage()
+            awaitDataState { it.openChatEvent is StateEventWithContentTriggered }
+            underTest.onOpenChatEventConsumed()
+            awaitDataState { it.openChatEvent !is StateEventWithContentTriggered }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that onStartCallEventConsumed resets the start call event`() = runTest {
+        stubContactInfo()
+        whenever(get1On1ChatIdUseCase(USER_HANDLE)).thenReturn(CHAT_ID)
+        whenever(getChatCallUseCase(CHAT_ID)).thenReturn(null)
+        whenever(startCallUseCase(chatId = CHAT_ID, audio = true, video = false))
+            .thenReturn(null)
+
+        underTest.uiState.test {
+            awaitDataState()
+            underTest.startCall(withVideo = false)
+            awaitDataState { it.startCallEvent is StateEventWithContentTriggered }
+            underTest.onStartCallEventConsumed()
+            awaitDataState { it.startCallEvent !is StateEventWithContentTriggered }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that onStorageOverQuotaEventConsumed resets the storage over quota event`() =
+        runTest {
+            stubContactInfo()
+            whenever { getCurrentStorageStateUseCase() }.thenReturn(StorageState.PayWall)
+
+            underTest.uiState.test {
+                awaitDataState()
+                underTest.sendMessage()
+                awaitDataState { it.storageOverQuotaEvent == triggered }
+                underTest.onStorageOverQuotaEventConsumed()
+                awaitDataState { it.storageOverQuotaEvent == consumed }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 
     private suspend fun ReceiveTurbine<ContactInfoUiState>.awaitDataState(
         predicate: (ContactInfoUiState.Data) -> Boolean = { true },

@@ -3583,6 +3583,10 @@
         <item quantity="one">%1$d hour</item>
         <item quantity="other">%1$d hours</item>
     </plurals>
+    <!-- Contact info: toolbar action that sends files to the chat with the contact -->
+    <string name="contact_info_send_file">Send file to chat</string>
+    <!-- Contact info: snackbar message shown when the microphone permission required to start a call is denied -->
+    <string name="contact_info_microphone_permission_message">Allow access to your microphone to make encrypted calls.</string>
     <!--Title of the Meetings tab in the chat list-->
     <string name="chat_tab_meetings_title">Meetings</string>
     <!-- Message of the dialog shown when opening a link to content that is not available for the logged in account -->

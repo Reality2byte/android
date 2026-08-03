@@ -190,6 +190,9 @@ class ContactInfoContentScreenshotTest {
         isOnline = isOnline,
         showMuteOptionsEvent = consumed(),
         messageEvent = consumed(),
+        openChatEvent = consumed(),
+        startCallEvent = consumed(),
+        storageOverQuotaEvent = consumed,
         closeEvent = consumed,
     )
 }

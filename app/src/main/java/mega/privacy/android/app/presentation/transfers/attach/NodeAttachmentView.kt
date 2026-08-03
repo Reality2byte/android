@@ -34,6 +34,20 @@ fun NodeAttachmentView(
 }
 
 /**
+ * Node attachment view for hosts without a Material 2 [SnackbarHostState].
+ *
+ * @param showMessage Invoked with the attach success message and the chat id so the host can
+ * show it in its own snackbar.
+ */
+@Composable
+fun NodeAttachmentView(
+    viewModel: NodeAttachmentViewModel,
+    showMessage: (String, Long) -> Unit,
+) {
+    NodeAttachmentView(viewModel, null, showMessage)
+}
+
+/**
  * Node attachment view
  * @param snackbarHostState SnackbarHostState to handle show chat message, if it's not null, it will show snackbar, you don't need to pass showMessage
  * @param showMessage Show message function, if snackbarHostState is null, it will use this function to show message

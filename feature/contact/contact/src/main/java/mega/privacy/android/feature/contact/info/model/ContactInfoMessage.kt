@@ -19,4 +19,9 @@ enum class ContactInfoMessage {
      * Creating the 1:1 chat room with the contact failed.
      */
     ChatCreationError,
+
+    /**
+     * The microphone permission required to start a call was denied.
+     */
+    MicrophonePermissionDenied,
 }

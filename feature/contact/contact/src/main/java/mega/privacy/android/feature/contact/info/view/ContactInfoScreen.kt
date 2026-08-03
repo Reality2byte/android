@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,8 @@ import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
 import mega.android.core.ui.extensions.showAutoDurationSnackbar
+import mega.android.core.ui.model.menu.MenuActionWithClick
+import mega.android.core.ui.model.menu.MenuActionWithIcon
 import mega.android.core.ui.modifiers.shimmerEffect
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
@@ -43,6 +46,7 @@ import mega.privacy.android.feature.contact.info.model.ContactInfoUiState
 import mega.privacy.android.feature.contact.info.view.dialog.MutePushNotificationDialogM3
 import mega.privacy.android.feature.contact.info.view.dialog.NicknameDialog
 import mega.privacy.android.feature.contact.info.view.dialog.RemoveContactConfirmationDialog
+import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.shared.contact.model.AvatarData
 import mega.privacy.android.shared.resources.R as sharedR
 
@@ -70,6 +74,7 @@ import mega.privacy.android.shared.resources.R as sharedR
  * @param onManageChatHistoryClick
  * @param onRemoveContact invoked when the remove-contact dialog is confirmed.
  * @param onMessageEventConsumed invoked once the message event has been consumed.
+ * @param onSendFileClick invoked when the send file to chat toolbar action is selected.
  * @param modifier
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,6 +96,7 @@ internal fun ContactInfoScreen(
     onManageChatHistoryClick: () -> Unit,
     onRemoveContact: () -> Unit,
     onMessageEventConsumed: () -> Unit,
+    onSendFileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     MegaScaffoldWithTopAppBarScrollBehavior(
@@ -101,6 +107,11 @@ internal fun ContactInfoScreen(
             MegaTopAppBar(
                 title = stringResource(sharedR.string.contacts_action_contact_info),
                 navigationType = AppBarNavigationType.Back(onNavigateBack),
+                actions = if ((state as? ContactInfoUiState.Data)?.showSendFile == true) {
+                    listOf(MenuActionWithClick(SendFileMenuAction) { onSendFileClick() })
+                } else {
+                    emptyList()
+                },
             )
         },
     ) { padding ->
@@ -125,6 +136,8 @@ internal fun ContactInfoScreen(
                     stringResource(sharedR.string.contact_info_nickname_removed)
                 val chatCreationErrorMessage =
                     stringResource(sharedR.string.contact_info_create_chat_error)
+                val microphonePermissionMessage =
+                    stringResource(sharedR.string.contact_info_microphone_permission_message)
                 EventEffect(
                     event = state.messageEvent,
                     onConsumed = onMessageEventConsumed,
@@ -134,6 +147,8 @@ internal fun ContactInfoScreen(
                             ContactInfoMessage.NicknameAdded -> nicknameAddedMessage
                             ContactInfoMessage.NicknameRemoved -> nicknameRemovedMessage
                             ContactInfoMessage.ChatCreationError -> chatCreationErrorMessage
+                            ContactInfoMessage.MicrophonePermissionDenied ->
+                                microphonePermissionMessage
                         }
                     )
                 }
@@ -234,7 +249,22 @@ private fun ContactInfoLoadingView(modifier: Modifier = Modifier) {
 
 private val SKELETON_ROW_WIDTHS = listOf(0.7f, 0.5f, 0.6f, 0.4f)
 
+/**
+ * Toolbar action that sends files to the chat with the contact.
+ */
+internal data object SendFileMenuAction : MenuActionWithIcon {
+    @Composable
+    override fun getIconPainter() =
+        rememberVectorPainter(IconPack.Medium.Thin.Outline.MessageArrowUp)
+
+    @Composable
+    override fun getDescription() = stringResource(sharedR.string.contact_info_send_file)
+
+    override val testTag = CONTACT_INFO_SEND_FILE_ACTION_TAG
+}
+
 internal const val CONTACT_INFO_SCREEN_TAG = "contact_info_screen"
+internal const val CONTACT_INFO_SEND_FILE_ACTION_TAG = "contact_info_screen:action_send_file"
 internal const val CONTACT_INFO_LOADING_TAG = "contact_info_screen:loading_view"
 internal const val CONTACT_INFO_NAME_TAG = "contact_info_screen:text_name"
 internal const val CONTACT_INFO_EMAIL_TAG = "contact_info_screen:text_email"
@@ -260,6 +290,7 @@ private fun ContactInfoScreenLoadingPreview() {
             onManageChatHistoryClick = {},
             onRemoveContact = {},
             onMessageEventConsumed = {},
+            onSendFileClick = {},
         )
     }
 }
@@ -288,6 +319,9 @@ private fun ContactInfoScreenLoadedPreview() {
                 isOnline = true,
                 showMuteOptionsEvent = consumed(),
                 messageEvent = consumed(),
+                openChatEvent = consumed(),
+                startCallEvent = consumed(),
+                storageOverQuotaEvent = consumed,
                 closeEvent = consumed,
             ),
             onNavigateBack = {},
@@ -305,6 +339,7 @@ private fun ContactInfoScreenLoadedPreview() {
             onManageChatHistoryClick = {},
             onRemoveContact = {},
             onMessageEventConsumed = {},
+            onSendFileClick = {},
         )
     }
 }

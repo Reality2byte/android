@@ -147,6 +147,24 @@ data class ContactInfoNavKey(
     }
 }
 
+/**
+ * Navigation key for the node attachment history screen (NodeAttachmentHistoryActivity) showing
+ * the files shared in a chat.
+ *
+ * @param chatId Id of the chat whose shared files are shown.
+ */
+@Serializable
+data class NodeAttachmentHistoryNavKey(val chatId: Long) : NavKey
+
+/**
+ * Navigation key for the list of folders a contact shares with the user
+ * (ContactFileListActivity).
+ *
+ * @param email Email of the contact.
+ */
+@Serializable
+data class ContactSharedFoldersNavKey(val email: String) : NavKey
+
 @Serializable
 data class FileContactInfoNavKey(
     val folderHandle: Long,

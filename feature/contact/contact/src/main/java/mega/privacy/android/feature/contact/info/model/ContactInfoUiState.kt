@@ -4,6 +4,7 @@ import de.palm.composestateevents.StateEvent
 import de.palm.composestateevents.StateEventWithContent
 import mega.privacy.android.domain.entity.chat.ChatPushNotificationMuteOption
 import mega.privacy.android.domain.entity.contacts.UserChatStatus
+import mega.privacy.android.feature.contact.list.model.CallEventData
 import mega.privacy.android.shared.contact.model.AvatarData
 
 /**
@@ -52,6 +53,12 @@ sealed interface ContactInfoUiState {
      * @property showMuteOptionsEvent One-shot event requesting the mute options dialog, carrying
      * the mute options to offer.
      * @property messageEvent One-shot event carrying a feedback message to show in a snackbar.
+     * @property openChatEvent One-shot event requesting navigation to the chat with the contact,
+     * carrying the chat id.
+     * @property startCallEvent One-shot event requesting navigation to the call screen, carrying
+     * the started or ongoing call data.
+     * @property storageOverQuotaEvent One-shot event requesting the over disk quota paywall
+     * warning.
      * @property closeEvent
      */
     data class Data(
@@ -73,6 +80,9 @@ sealed interface ContactInfoUiState {
         val isOnline: Boolean,
         val showMuteOptionsEvent: StateEventWithContent<List<ChatPushNotificationMuteOption>>,
         val messageEvent: StateEventWithContent<ContactInfoMessage>,
+        val openChatEvent: StateEventWithContent<Long>,
+        val startCallEvent: StateEventWithContent<CallEventData>,
+        val storageOverQuotaEvent: StateEvent,
         override val closeEvent: StateEvent,
     ) : ContactInfoUiState {
 
@@ -106,5 +116,10 @@ sealed interface ContactInfoUiState {
          * Whether the manage chat history row is shown.
          */
         val showManageChatHistory: Boolean get() = chatRoomId != null && isOnline
+
+        /**
+         * Whether the send file to chat toolbar action is shown.
+         */
+        val showSendFile: Boolean get() = isFromContacts && isOnline && email != null
     }
 }

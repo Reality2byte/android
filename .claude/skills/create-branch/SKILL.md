@@ -110,11 +110,34 @@ overwritten, **halt** and surface the error. Do NOT discard the user's work.
 Then:
 
 ```bash
-git checkout -b <branch-name>
+git checkout --no-track -b <branch-name>
 ```
+
+Always pass `--no-track`. When `<base>` is another feature branch (a stacked
+branch) or a remote-tracking ref, git's `branch.autoSetupMerge` would
+otherwise set the new branch's upstream to the **parent**, so `git pull`
+merges the parent and breaks once the parent branch is deleted after merge.
+The repo sets `branch.autoSetupMerge=false` as a belt-and-suspenders
+guardrail, but pass `--no-track` explicitly too.
 
 If the branch already exists, ask the user whether to switch to it or pick
 a different name. Do not force-overwrite.
+
+### Step 4b — Verify tracking is not the parent
+
+```bash
+git config branch.<branch-name>.merge
+```
+
+This MUST print nothing (no upstream yet) or `refs/heads/<branch-name>`. If it
+prints any OTHER ref (e.g. the parent branch), repair immediately:
+
+```bash
+git branch --unset-upstream <branch-name>
+```
+
+The correct same-name upstream gets set later by `/create-mr`'s
+`git push -u` / `--set-upstream`. Never leave a branch tracking its parent.
 
 ### Step 5 — Transition Jira ticket (skip if `--no-jira`)
 
