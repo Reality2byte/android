@@ -1271,7 +1271,8 @@ object CallUtil {
         val statusIcon: Bitmap? = if (isOneToOneCall(chatToAnswer)) {
             getStatusBitmap(
                 MegaApplication.getInstance().megaChatApi
-                    .getUserOnlineStatus(chatToAnswer.getPeerHandle(0))
+                    .getUserOnlineStatus(chatToAnswer.getPeerHandle(0)),
+                context
             )
         } else {
             null

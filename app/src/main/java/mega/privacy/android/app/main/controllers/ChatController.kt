@@ -109,7 +109,7 @@ class ChatController @Inject constructor(
             )
 
             else -> {
-                val text = getMutedPeriodString(option)
+                val text = getMutedPeriodString(option, context)
                 if (!isTextEmpty(text)) {
                     showSnackbar(
                         snackbarContext,

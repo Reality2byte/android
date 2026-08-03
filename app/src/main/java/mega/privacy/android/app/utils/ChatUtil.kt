@@ -198,14 +198,13 @@ object ChatUtil {
         contactStateText: TextView?,
         where: StatusIconLocation,
     ) {
-        val app = MegaApplication.getInstance()
-        val context = app.applicationContext
+        val context = textViewContactIcon.context
         val statusImageResId = getIconResourceIdByLocation(context, userStatus, where)
 
         if (statusImageResId == 0) {
             textViewContactIcon.visibility = View.GONE
         } else {
-            val drawable = ContextCompat.getDrawable(MegaApplication.getInstance().applicationContext, statusImageResId)
+            val drawable = ContextCompat.getDrawable(context, statusImageResId)
             textViewContactIcon.setImageDrawable(drawable)
             textViewContactIcon.visibility = View.VISIBLE
         }
@@ -614,11 +613,11 @@ object ChatUtil {
      * Method for getting the string depending on the selected mute option.
      *
      * @param option The selected mute option.
+     * @param context Context used to resolve string resources.
      * @return The appropriate string.
      */
     @JvmStatic
-    fun getMutedPeriodString(option: String): String? {
-        val context = MegaApplication.getInstance().baseContext
+    fun getMutedPeriodString(option: String, context: Context): String? {
         return when (option) {
             Constants.NOTIFICATIONS_30_MINUTES ->
                 removeFormatPlaceholder(context.resources.getQuantityString(R.plurals.plural_call_ended_messages_minutes, 30, 30))
@@ -690,7 +689,7 @@ object ChatUtil {
             val timestampMute = push.getChatDnd(chatId)
             notificationsSubTitle.visibility = View.VISIBLE
             notificationsSubTitle.text = if (timestampMute == 0L)
-                MegaApplication.getInstance().getString(R.string.mute_chatroom_notification_option_off)
+                context.getString(R.string.mute_chatroom_notification_option_off)
             else
                 getCorrectStringDependingOnOptionSelected(timestampMute, context)
         } else {
@@ -727,12 +726,13 @@ object ChatUtil {
      * Method for obtaining the contact status bitmap.
      *
      * @param userStatus The contact status.
+     * @param context Context used to resolve drawable resources.
      * @return The final bitmap.
      */
     @JvmStatic
-    fun getStatusBitmap(userStatus: Int): Bitmap? {
-        val resources = MegaApplication.getInstance().baseContext.resources
-        val isDarkMode = Util.isDarkMode(MegaApplication.getInstance())
+    fun getStatusBitmap(userStatus: Int, context: Context): Bitmap? {
+        val resources = context.resources
+        val isDarkMode = Util.isDarkMode(context)
         return when (userStatus) {
             MegaChatApi.STATUS_ONLINE ->
                 BitmapFactory.decodeResource(
@@ -787,11 +787,12 @@ object ChatUtil {
      * Method for getting the appropriate String from the seconds of rentention time.
      *
      * @param seconds The retention time in seconds
+     * @param context Context used to resolve string resources.
      * @return The right text
      */
     @Deprecated("Use RetentionTimeUpdatedMessageView.getRetentionTimeString instead.")
     @JvmStatic
-    fun transformSecondsInString(seconds: Long): String {
+    fun transformSecondsInString(seconds: Long, context: Context): String {
         if (seconds == Constants.DISABLED_RETENTION_TIME.toLong())
             return ""
 
@@ -802,27 +803,27 @@ object ChatUtil {
         val years = seconds % Constants.SECONDS_IN_YEAR
 
         if (years == 0L) {
-            return MegaApplication.getInstance().baseContext.resources.getString(R.string.subtitle_properties_manage_chat_label_year)
+            return context.resources.getString(R.string.subtitle_properties_manage_chat_label_year)
         }
 
         if (months == 0L) {
             val month = (seconds / Constants.SECONDS_IN_MONTH_30).toInt()
-            return MegaApplication.getInstance().baseContext.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_months, month, month)
+            return context.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_months, month, month)
         }
 
         if (weeks == 0L) {
             val week = (seconds / Constants.SECONDS_IN_WEEK).toInt()
-            return MegaApplication.getInstance().baseContext.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_weeks, week, week)
+            return context.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_weeks, week, week)
         }
 
         if (days == 0L) {
             val day = (seconds / Constants.SECONDS_IN_DAY).toInt()
-            return MegaApplication.getInstance().baseContext.resources.getQuantityString(R.plurals.label_time_in_days_full, day, day)
+            return context.resources.getQuantityString(R.plurals.label_time_in_days_full, day, day)
         }
 
         if (hours == 0L) {
             val hour = (seconds / Constants.SECONDS_IN_HOUR).toInt()
-            return MegaApplication.getInstance().baseContext.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_hours, hour, hour)
+            return context.resources.getQuantityString(R.plurals.subtitle_properties_manage_chat_label_hours, hour, hour)
         }
 
         return ""
@@ -835,7 +836,7 @@ object ChatUtil {
      */
     @JvmStatic
     fun updateRetentionTimeLayout(retentionTimeText: TextView, time: Long, context: Context) {
-        val timeFormatted = transformSecondsInString(time)
+        val timeFormatted = transformSecondsInString(time, context)
         if (timeFormatted.isBlank()) {
             retentionTimeText.visibility = View.GONE
         } else {

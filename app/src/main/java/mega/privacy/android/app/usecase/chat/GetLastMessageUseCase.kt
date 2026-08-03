@@ -88,7 +88,7 @@ class GetLastMessageUseCase @Inject constructor(
                     }
 
                 TYPE_SET_RETENTION_TIME -> {
-                    val timeFormatted = ChatUtil.transformSecondsInString(chatRoom.retentionTime)
+                    val timeFormatted = ChatUtil.transformSecondsInString(chatRoom.retentionTime, context)
                     if (timeFormatted.isBlank()) {
                         String.format(
                             context.getString(R.string.retention_history_disabled),

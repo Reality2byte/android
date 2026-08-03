@@ -61,6 +61,6 @@ private fun getMutedPeriodText(
         ChatPushNotificationMuteOption.Mute24Hours -> NOTIFICATIONS_24_HOURS
         else -> throw IllegalArgumentException("Invalid mute option")
     }
-    val text = ChatUtil.getMutedPeriodString(legacyOption)
+    val text = ChatUtil.getMutedPeriodString(legacyOption, context)
     return context.getString(R.string.success_muting_a_chat_for_specific_time, text)
 }
