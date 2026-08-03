@@ -3585,6 +3585,31 @@
     </plurals>
     <!--Title of the Meetings tab in the chat list-->
     <string name="chat_tab_meetings_title">Meetings</string>
+    <!-- Invite contacts: top bar subtitle showing how many recipients are currently selected -->
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
+    <!-- Invite contacts: label of the toolbar action that shares an invite link -->
+    <string name="invite_contacts_share_link_action">Invite via link</string>
+    <!-- Invite contacts: label of the toolbar action that opens the user\'s own QR code -->
+    <string name="invite_contacts_my_qr_code_action">My QR code</string>
+    <!-- Invite contacts: placeholder for the field where an email address or phone number is typed to invite -->
+    <string name="invite_contacts_manual_input_placeholder">Enter email or phone number</string>
+    <!-- Invite contacts: error snackbar shown when the typed email is the user\'s own email address -->
+    <string name="invite_contacts_own_email_error">There’s no need to add your own email address</string>
+    <!-- Invite contacts: error snackbar shown when the typed email is already saved as a contact -->
+    <string name="invite_contacts_already_contact_error">This email address is already a contact</string>
+    <!-- Invite contacts: error snackbar shown when an invitation was already sent to the typed email -->
+    <string name="invite_contacts_pending_error">An invitation has already been sent to this email address</string>
+    <!-- Invite contacts: error snackbar shown when the typed text is neither a valid email nor phone number -->
+    <string name="invite_contacts_invalid_input_error">Enter a valid email address or phone number</string>
+    <!-- Invite contacts: title of the dialog confirming a QR scan while a call is ongoing -->
+    <string name="invite_contacts_open_camera_confirmation_title">Open camera?</string>
+    <!-- Invite contacts: body of the dialog confirming a QR scan while a call is ongoing -->
+    <string name="invite_contacts_open_camera_confirmation_message">If you open the camera, your video transmission will be paused in the current call.</string>
+    <!-- Invite contacts: confirm button of the dialog that opens the camera to scan a QR code -->
+    <string name="invite_contacts_open_camera_confirmation_confirm">Open</string>
     <!-- Message of the dialog shown when opening a link to content that is not available for the logged in account -->
     <string name="deep_link_content_unavailable_dialog_message">The content you are trying to access is not available for this account.</string>
     <!-- Share link revamp: notice under the link showing the date it stops working. %1$s is a date, for example "Jan 11, 2026" -->
