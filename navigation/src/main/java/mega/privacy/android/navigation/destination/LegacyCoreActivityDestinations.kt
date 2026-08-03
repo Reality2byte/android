@@ -10,6 +10,7 @@ import mega.privacy.android.domain.entity.SortOrder
 import mega.privacy.android.domain.entity.node.NodeContentUri
 import mega.privacy.android.domain.entity.sync.SyncType
 import mega.privacy.android.domain.entity.texteditor.TextEditorMode
+import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.contract.navkey.NoSessionNavKey
 import mega.privacy.android.navigation.payment.QuotaWarningTrigger
 import mega.privacy.android.navigation.payment.QuotaWarningType
@@ -107,7 +108,7 @@ data class ShowChatMessagesNavKey(val chatId: Long) : NoSessionNavKey.Optional, 
 data class ChatListNavKey(
     val createNewChat: Boolean = false,
     val showMeetingTab: Boolean = false,
-) : NavKey, Parcelable
+) : MainNavItemNavKey, Parcelable
 
 /**
  * Navigation key for ManageChatHistoryActivity

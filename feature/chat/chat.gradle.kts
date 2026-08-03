@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":shared:chats"))
 
     implementation(lib.mega.core.ui)
+    implementation(lib.mega.analytics)
     implementation(lib.kotlinx.collections.immutable)
     implementation(androidx.material3.window)
     implementation(androidx.bundles.compose.bom)

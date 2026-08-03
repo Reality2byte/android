@@ -5,9 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import mega.privacy.android.feature.chat.list.ChatListViewModel
 import mega.privacy.android.feature.chat.list.view.ChatListScreen
 import mega.privacy.android.navigation.contract.NavigationHandler
+import mega.privacy.android.navigation.destination.ChatListNavKey
 import mega.privacy.android.navigation.destination.ShowChatMessagesNavKey
 
 /**
@@ -34,4 +37,22 @@ fun ChatListEntry(
             navigationHandler.navigate(ShowChatMessagesNavKey(chatId))
         },
     )
+}
+
+/**
+ * Registers the [ChatListNavKey] entry that renders [ChatListEntry] within a
+ * navigation graph. Used by the Chat main navigation item to host the chat list
+ * inside the bottom-navigation bar.
+ *
+ * @param navigationHandler
+ */
+fun EntryProviderScope<NavKey>.chatListScreen(
+    navigationHandler: NavigationHandler,
+) {
+    entry<ChatListNavKey> { key ->
+        ChatListEntry(
+            navigationHandler = navigationHandler,
+            showMeetingTab = key.showMeetingTab,
+        )
+    }
 }

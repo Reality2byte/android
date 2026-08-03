@@ -5,10 +5,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import mega.privacy.android.domain.usecase.chat.GetNumUnreadChatsUseCase
 import mega.privacy.android.feature.chat.meeting.recording.initialiser.CallRecordingMonitoringInitialiser
 import mega.privacy.android.feature.chat.navigation.ChatFeatureDestination
+import mega.privacy.android.feature.chat.navigation.ChatNavItem
 import mega.privacy.android.feature.chat.navigation.ChatsDeepLinkHandler
 import mega.privacy.android.navigation.contract.FeatureDestination
+import mega.privacy.android.navigation.contract.MainNavItem
 import mega.privacy.android.navigation.contract.deeplinks.DeepLinkHandler
 import mega.privacy.android.navigation.contract.initialisation.initialisers.PostLoginInitialiser
 
@@ -27,4 +30,9 @@ class ChatModule {
     @IntoSet
     fun provideCallRecordingMonitoringInitialiser(initialiser: CallRecordingMonitoringInitialiser): PostLoginInitialiser =
         initialiser
+
+    @Provides
+    @IntoSet
+    fun provideChatNavItem(getNumUnreadChatsUseCase: GetNumUnreadChatsUseCase): MainNavItem =
+        ChatNavItem(getNumUnreadChatsUseCase)
 }
