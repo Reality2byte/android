@@ -51,6 +51,7 @@ import mega.privacy.android.app.appstate.content.navigation.NavigationResultMana
 import mega.privacy.android.app.appstate.content.navigation.PendingBackStack
 import mega.privacy.android.app.appstate.content.navigation.PendingBackStackNavigationHandler
 import mega.privacy.android.app.appstate.content.navigation.rememberPendingBackStack
+import mega.privacy.android.app.appstate.content.navigation.view.StorageQuotaWarningEffect
 import mega.privacy.android.app.appstate.content.transfer.AppTransferViewModel
 import mega.privacy.android.app.appstate.content.transfer.TransferHandlerImpl
 import mega.privacy.android.app.appstate.global.GlobalStateViewModel
@@ -382,6 +383,12 @@ class MegaActivity : FragmentActivity() {
                                 }
 
                                 StreamOverQuotaEffect(navigationHandler)
+
+                                // The storage state is only readable once the nodes are fetched,
+                                // and re-entering per session restarts the monitoring.
+                                if (rootNodeState.exists) {
+                                    StorageQuotaWarningEffect(navigationHandler = navigationHandler)
+                                }
 
                                 CompositionLocalProvider(
                                     LocalSnackBarHostState provides snackbarHostState

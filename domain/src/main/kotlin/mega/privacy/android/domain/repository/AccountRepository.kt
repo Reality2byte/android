@@ -9,6 +9,7 @@ import mega.privacy.android.domain.entity.UserAccount
 import mega.privacy.android.domain.entity.account.AccountDetail
 import mega.privacy.android.domain.entity.account.AccountInactivity
 import mega.privacy.android.domain.entity.account.AccountSession
+import mega.privacy.android.domain.entity.account.StorageQuotaWarningTrigger
 import mega.privacy.android.domain.entity.achievement.AchievementType
 import mega.privacy.android.domain.entity.achievement.AchievementsOverview
 import mega.privacy.android.domain.entity.achievement.MegaAchievement
@@ -265,6 +266,25 @@ interface AccountRepository {
      * @return the list of warning timestamps in seconds.
      */
     suspend fun getOverDiskQuotaWarningTimestamps(): List<Long>
+
+    /**
+     * Get the calendar day the storage almost full warning was last shown on for the given trigger.
+     *
+     * @param trigger [StorageQuotaWarningTrigger]
+     * @return the epoch day, or null if it has never been shown for that trigger.
+     */
+    suspend fun getStorageQuotaWarningShownDay(trigger: StorageQuotaWarningTrigger): Long?
+
+    /**
+     * Set the calendar day the storage almost full warning was last shown on for the given trigger.
+     *
+     * @param trigger  [StorageQuotaWarningTrigger]
+     * @param epochDay the calendar day it was shown on.
+     */
+    suspend fun setStorageQuotaWarningShownDay(
+        trigger: StorageQuotaWarningTrigger,
+        epochDay: Long,
+    )
 
     /**
      * Monitor account detail

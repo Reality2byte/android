@@ -74,6 +74,7 @@ import mega.privacy.android.domain.entity.UserAccount
 import mega.privacy.android.domain.entity.LastPurgeEvent
 import mega.privacy.android.domain.entity.account.AccountDetail
 import mega.privacy.android.domain.entity.account.AccountInactivity
+import mega.privacy.android.domain.entity.account.StorageQuotaWarningTrigger
 import mega.privacy.android.domain.entity.achievement.AchievementType
 import mega.privacy.android.domain.entity.achievement.AchievementsOverview
 import mega.privacy.android.domain.entity.achievement.MegaAchievement
@@ -653,6 +654,14 @@ internal class DefaultAccountRepository @Inject constructor(
     override suspend fun getOverDiskQuotaWarningTimestamps(): List<Long> = withContext(ioDispatcher) {
         megaApiGateway.getOverquotaWarningsTs()
     }
+
+    override suspend fun getStorageQuotaWarningShownDay(trigger: StorageQuotaWarningTrigger) =
+        accountPreferencesGateway.getStorageQuotaWarningShownDay(trigger.name)
+
+    override suspend fun setStorageQuotaWarningShownDay(
+        trigger: StorageQuotaWarningTrigger,
+        epochDay: Long,
+    ) = accountPreferencesGateway.setStorageQuotaWarningShownDay(trigger.name, epochDay)
 
     private suspend fun handleAccountDetail(request: MegaRequest): AccountDetail {
         val newDetail = accountDetailMapper(

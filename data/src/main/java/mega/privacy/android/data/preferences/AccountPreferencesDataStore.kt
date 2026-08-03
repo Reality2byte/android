@@ -14,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import mega.privacy.android.data.cryptography.DecryptData
@@ -33,6 +34,7 @@ private const val LATEST_TARGET_MOVE = "LATEST_TARGET_PATH_MOVE"
 private const val LATEST_TARGET_TIMESTAMP_COPY = "LATEST_TARGET_PATH_TIMESTAMP_COPY"
 private const val LATEST_TARGET_TIMESTAMP_MOVE = "LATEST_TARGET_PATH_TIMESTAMP_MOVE"
 private const val LAST_REGISTERED_EMAIL = "LAST_REGISTERED_EMAIL"
+private const val STORAGE_QUOTA_WARNING_SHOWN_DAY = "STORAGE_QUOTA_WARNING_SHOWN_DAY"
 
 private val Context.accountPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(
     name = accountPreferenceFileName,
@@ -114,6 +116,21 @@ class AccountPreferencesDataStore @Inject constructor(
     override fun getLatestTargetTimestampMovePreference(): Flow<Long?> =
         context.accountPreferencesDataStore.monitor(latestTargetTimestampMovePreferenceKey)
 
+    override suspend fun getStorageQuotaWarningShownDay(trigger: String): Long? =
+        withContext(ioDispatcher) {
+            context.accountPreferencesDataStore
+                .monitor(storageQuotaWarningShownDayKey(trigger))
+                .firstOrNull()
+        }
+
+    override suspend fun setStorageQuotaWarningShownDay(trigger: String, epochDay: Long) {
+        withContext(ioDispatcher) {
+            context.accountPreferencesDataStore.edit {
+                it[storageQuotaWarningShownDayKey(trigger)] = epochDay
+            }
+        }
+    }
+
     override suspend fun clearPreferences() {
         withContext(ioDispatcher) {
             // After clearing all preferences, restore the last registered email if it exists.
@@ -145,4 +162,7 @@ class AccountPreferencesDataStore @Inject constructor(
             it.remove(lastRegisteredEmailPreferenceKey)
         }
     }
+
+    private fun storageQuotaWarningShownDayKey(trigger: String) =
+        longPreferencesKey("${STORAGE_QUOTA_WARNING_SHOWN_DAY}_$trigger")
 }

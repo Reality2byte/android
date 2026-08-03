@@ -33,26 +33,19 @@ import mega.android.core.ui.components.LocalSnackBarHostState
 import mega.android.core.ui.extensions.LaunchedOnceEffect
 import mega.privacy.android.analytics.decorator.rememberAnalyticNavEntryDecorator
 import mega.privacy.android.app.appstate.content.navigation.MainNavigationStateViewModel
-import mega.privacy.android.app.appstate.content.navigation.StorageStatusViewModel
 import mega.privacy.android.app.appstate.content.navigation.TopLevelBackStackNavigationHandler
 import mega.privacy.android.app.appstate.content.navigation.model.MainNavState
 import mega.privacy.android.app.appstate.content.navigation.rememberTopLevelBackStack
 import mega.privacy.android.app.presentation.search.view.MiniAudioPlayerView
 import mega.privacy.android.core.sharedcomponents.requeststatus.RequestStatusProgressContainer
-import mega.privacy.android.domain.entity.StorageState
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.TransferHandler
-import mega.privacy.android.navigation.contract.navOptions
 import mega.privacy.android.navigation.contract.shared.LocalSharedViewModelStoreOwner
 import mega.privacy.android.navigation.contract.state.LocalNavigationRailVisible
 import mega.privacy.android.navigation.contract.state.LocalSelectionModeController
 import mega.privacy.android.navigation.contract.state.SelectionModeController
 import mega.privacy.android.navigation.contract.transition.fadeTransition
 import mega.privacy.android.navigation.destination.HomeScreensNavKey
-import mega.privacy.android.navigation.destination.OverQuotaDialogNavKey
-import mega.privacy.android.navigation.destination.QuotaWarningUpgradeNavKey
-import mega.privacy.android.navigation.payment.QuotaWarningTrigger
-import mega.privacy.android.navigation.payment.QuotaWarningType
 import mega.privacy.android.shared.ads.NewAdsContainer
 import mega.privacy.android.shared.original.core.ui.theme.extensions.conditional
 import mega.privacy.mobile.home.presentation.home.Home
@@ -69,43 +62,9 @@ fun HomeScreens(
     modifier: Modifier = Modifier,
 ) {
     val viewModel = hiltViewModel<MainNavigationStateViewModel>()
-    val storageStateViewModel = hiltViewModel<StorageStatusViewModel>()
-    val storageUiState by storageStateViewModel.state.collectAsStateWithLifecycle()
-    var handledStorageState by rememberSaveable { mutableStateOf(StorageState.Unknown) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     var isNetworkChangeHandled by rememberSaveable { mutableStateOf(false) }
     var isSelectionMode by remember { mutableStateOf(false) }
-
-    LaunchedEffect(storageUiState.storageState) {
-        if (storageUiState.storageState == StorageState.Red
-            || storageUiState.storageState == StorageState.Orange
-        ) {
-            if (storageUiState.storageState.ordinal > handledStorageState.ordinal) {
-                if (storageUiState.isQuotaWarningUpsellEnabled) {
-                    outerNavigationHandler.navigate(
-                        QuotaWarningUpgradeNavKey(
-                            type = QuotaWarningType.Storage,
-                            trigger = QuotaWarningTrigger.General,
-                        ),
-                        navOptions {
-                            dropIfAlreadyShown = true
-                        }
-                    )
-                } else {
-                    outerNavigationHandler.navigate(
-                        OverQuotaDialogNavKey(
-                            isOverQuota = storageUiState.storageState == StorageState.Red,
-                            overQuotaAlert = false
-                        ),
-                        navOptions {
-                            popUpTo(OverQuotaDialogNavKey::class) { inclusive = true }
-                        }
-                    )
-                }
-                handledStorageState = storageUiState.storageState
-            }
-        }
-    }
 
     val snackbarHostState = LocalSnackBarHostState.current
 
