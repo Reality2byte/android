@@ -263,3 +263,33 @@ Only justified when genuinely sharing complex logic across multiple use cases (r
 - **Direct SDK/gateway access** — must go through repository interfaces.
 - **Scope annotations** (`@Singleton`, `@ViewModelScoped`) — use cases are lightweight; don't scope them.
 - **Catching and swallowing exceptions** — let them propagate to the caller.
+- **Accepting another use case as a parameter or lambda** — inject it in the constructor instead. A
+  dependency passed in at the call site is invisible to Hilt, can't be verified by the compiler, and
+  forces every caller to know the internals. Where the behaviour is genuinely optional, take a
+  `Boolean` flag and let the injected use case decide:
+
+  ```kotlin
+  // ❌ Dependency smuggled in through the signature
+  class ChatLocalLogoutUseCase @Inject constructor(private val loginRepository: LoginRepository) {
+      suspend operator fun invoke(disableChatApi: (suspend () -> Unit)?) { ... }
+  }
+
+  // ✅ Injected, with a flag for the optional step
+  class ChatLocalLogoutUseCase @Inject constructor(
+      private val loginRepository: LoginRepository,
+      private val disableChatApiUseCase: DisableChatApiUseCase,
+  ) {
+      suspend operator fun invoke(disableChatApi: Boolean) {
+          loginRepository.chatLocalLogout()
+          if (disableChatApi) disableChatApiUseCase()
+      }
+  }
+  ```
+- **Screen-context parameters** — the domain layer must not know which screen is calling it. Where
+  a fallback differs per screen (Cloud Drive vs Folder Link vs Outgoing Shares), the presentation
+  layer supplies it; do not add a `screenType` parameter to the use case.
+- **Unfiltered global monitors** — a use case wrapping a global event stream (node updates, account
+  events) must let the caller narrow it to the items in view. A monitor that re-emits for every
+  change anywhere in the app will refresh screens constantly.
+- **A manual `flow { }` builder over an existing Flow** — compose with operators instead
+  (`onStart`, `takeWhile`, `filter`, `distinctUntilChanged`), so the result stays cold and cancellable.

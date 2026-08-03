@@ -51,8 +51,53 @@ internal class MyFeatureViewModel @Inject constructor(
   - **Never use the old `MutableStateFlow` + `_uiState.update {}` pattern** — flag for migration when encountered.
 - **No `init` block** — trigger initial loading through lazy state evaluation or explicit UI calls.
 - **Error handling**: `runCatching { ... }.onSuccess { ... }.onFailure { Timber.e(it, "msg") }` for suspend actions; `.catch { }` in flow chains.
-- **Coroutines**: `viewModelScope.launch { }`.
+  - Handle errors **at the call site**. Do not assume the use case handles them internally — open it and check.
+  - When releasing several resources, give each its own `runCatching` so a failure on the first doesn't strand the rest.
+- **Coroutines**: `viewModelScope.launch { }` — never pass `mainDispatcher` to it, `viewModelScope` already runs on `Dispatchers.Main.immediate`.
 - **Logging**: `Timber` only — never `android.util.Log`.
+- **No `LiveData`** in new code — `StateFlow` only. `postValue` can drop emissions when called in quick succession, and `value` crashes off the main thread.
+
+## State Update Rules
+
+When working with a `MutableStateFlow` (in legacy ViewModels not yet migrated to `asUiStateFlow`):
+
+- **The `update { }` lambda must be pure.** Under contention the block re-runs, so any side effect
+  inside it can execute more than once. Do the work first, then apply the state transformation.
+
+  ```kotlin
+  // ❌ requestAccountDeletion() may be called several times
+  state.update { it.copy(deleteAccountEvent = triggered(runCatching { requestAccountDeletion() }.isSuccess)) }
+
+  // ✅
+  val isSuccess = runCatching { requestAccountDeletion() }.isSuccess
+  state.update { it.copy(deleteAccountEvent = triggered(isSuccess)) }
+  ```
+
+- **Conversely, read-modify-write belongs inside the lambda.** Reading the current value outside
+  `update { }` lets another writer slip in between the read and the write.
+
+  ```kotlin
+  // ❌ `removed` can be stale by the time the update applies
+  val removed = session.value.pages.first { it.id == id }
+  session.update { it.withoutPage(id) }
+
+  // ✅ Capture inside the lambda so read and write are atomic
+  var removed: Page? = null
+  session.update { current ->
+      removed = current.pages.firstOrNull { it.id == id }
+      current.withoutPage(id)
+  }
+  ```
+
+## Coroutine Scope Selection
+
+- **`viewModelScope`** — read-only work, and anything that is safe (or preferable) to cancel when
+  the user leaves the screen: loading, checks, name-collision lookups.
+- **`applicationScope`** — mutations that must complete regardless of navigation: copies, moves,
+  uploads. Cancelling one of these halfway leaves the user's data in an inconsistent state.
+- **`NonCancellable`** — cleanup that must not be lost once a state change has been committed
+  (e.g. deleting a file after removing its entry from state). Combine with the dispatcher:
+  `withContext(ioDispatcher + NonCancellable) { ... }`.
 
 ## One-Shot Event Channels
 

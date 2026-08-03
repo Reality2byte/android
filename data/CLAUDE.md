@@ -44,4 +44,8 @@ JUnit 5 + Mockito + Turbine + Truth, `runTest` for coroutines. Tests live under 
 - Never bypass the gateway/facade abstraction to call the SDK from a repository — always go through a gateway interface.
 - Encrypt sensitive fields with `EncryptData` (and `DecryptData`) when persisting to the database; mappers commonly return null when encryption fails.
 - Room schemas are exported to `data/schemas`; update/verify them when changing entities or migrations.
+  - **Bump the database version for any entity/DAO schema change.** Without it, anyone already running version N crashes when the schema underneath it changes. A modified older `N.json` in the diff is the tell-tale sign the bump was missed — the previous version's file must stay untouched and a new `N+1.json` added.
+- Room column names are snake_case, with an `_at` suffix for timestamps (`pinned_at`, matching the existing `created_at`). Default timestamps on the entity (`val pinnedAt: Long = System.currentTimeMillis()`) instead of repeating the call at every insert site.
+- Gateways are data-layer only. They may be injected across `:data` (repositories, facades, other gateways), but never into presentation — expose a repository method and a use case for that.
+- Destructive file operations must not delete the source before the copy is verified. Better still, avoid the copy: handing back a `content://` URI is usually simpler and lossless.
 - Global conventions (naming, DI, mapper/repository patterns) live in the root `.claude/CLAUDE.md` — follow them; this file only covers `:data` specifics.
