@@ -47,9 +47,11 @@ internal class EnvironmentRepositoryImpl @Inject constructor(
     private val isHistoricalProcessExitReasonsFetched = AtomicBoolean(false)
 
     override suspend fun getDeviceInfo() =
-        withContext(ioDispatcher) { DeviceInfo(getDeviceName(), getLanguage()) }
+        withContext(ioDispatcher) { DeviceInfo(getDeviceInfoName(), getLanguage()) }
 
-    private fun getDeviceName(): String {
+    override fun getDeviceName(): String = deviceGateway.getDeviceName()
+
+    private fun getDeviceInfoName(): String {
         val manufacturer = deviceGateway.getManufacturerName().run {
             if (this.equals("HTC", true)) uppercase() else this
         }

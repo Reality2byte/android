@@ -52,16 +52,17 @@ import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_COLLISION_RESULTS
 import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_PARENT_NODE_HANDLE
 import mega.privacy.android.app.utils.Constants.ORDER_OFFLINE
 import mega.privacy.android.app.utils.MenuUtils.setupSearchView
-import mega.privacy.android.app.utils.Util
 import mega.privacy.android.core.R as CoreUiR
 import mega.privacy.android.core.sharedcomponents.parcelableArrayList
 import mega.privacy.android.core.sharedcomponents.serializable
 import mega.privacy.android.domain.entity.node.NameCollision
 import mega.privacy.android.domain.entity.preference.ViewType
 import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
+import mega.privacy.android.domain.usecase.environment.GetLocalDeviceNameUseCase
 import mega.privacy.android.navigation.ExtraConstant.EXTRA_ACTION_RESULT
 import nz.mega.sdk.MegaApiJava.INVALID_HANDLE
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Activity which shows the content of a local folder picked via system picker to upload all its content
@@ -79,6 +80,9 @@ class UploadFolderActivity : PasscodeActivity(), Scrollable {
          */
         const val UPLOAD_FOLDER_TYPE = "UPLOAD_FOLDER_TYPE"
     }
+
+    @Inject
+    lateinit var getLocalDeviceNameUseCase: GetLocalDeviceNameUseCase
 
     private val viewModel: UploadFolderViewModel by viewModels()
     private val sortByHeaderViewModel: SortByHeaderViewModel by viewModels()
@@ -108,7 +112,7 @@ class UploadFolderActivity : PasscodeActivity(), Scrollable {
     }
 
     private val deviceName by lazy(LazyThreadSafetyMode.NONE) {
-        Util.getDeviceName()
+        getLocalDeviceNameUseCase()
     }
 
     private lateinit var searchMenuItem: MenuItem

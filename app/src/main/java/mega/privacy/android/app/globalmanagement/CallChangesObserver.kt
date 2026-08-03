@@ -2,6 +2,7 @@ package mega.privacy.android.app.globalmanagement
 
 import android.Manifest
 import android.app.Application
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.PowerManager
@@ -568,9 +569,11 @@ class CallChangesObserver @Inject constructor(
         callStatus: ChatCallStatus?,
     ) {
         Timber.d("Chat ID of incoming call is %s", incomingCallChatId)
+        val notificationManager = application
+            .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (!isChatNotifiableUseCase(incomingCallChatId) ||
             chatManagement.isNotificationShown(incomingCallChatId) ||
-            !CallUtil.areNotificationsSettingsEnabled()
+            !notificationManager.areNotificationsEnabled()
         ) {
             Timber.d("The chat is not notifiable or the notification is already being displayed")
             return

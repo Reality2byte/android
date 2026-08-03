@@ -22,6 +22,14 @@ interface EnvironmentRepository {
     suspend fun getDeviceInfo(): DeviceInfo
 
     /**
+     * Get the consumer friendly device name, always starting with the manufacturer
+     * followed by the user set device name.
+     *
+     * @return device name
+     */
+    fun getDeviceName(): String
+
+    /**
      * Get app info
      *
      * @return app info

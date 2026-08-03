@@ -1322,15 +1322,4 @@ object CallUtil {
         return checkPermissionsCall(context)
     }
 
-    /**
-     * Method to find out if device's notification settings are enabled
-     *
-     * @return True, if they are enabled. False, if they are not.
-     */
-    @JvmStatic
-    fun areNotificationsSettingsEnabled(): Boolean {
-        val notificationManager = MegaApplication.getInstance().applicationContext
-            .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        return notificationManager.areNotificationsEnabled()
-    }
 }

@@ -54,6 +54,9 @@ internal class AndroidDeviceGateway @Inject constructor(
         Settings.Global.DEVICE_NAME
     )
 
+    override fun getDeviceName(): String =
+        Build.MANUFACTURER + " " + getDeviceModelPost25()
+
     override fun getCurrentDeviceLanguage(): String = Locale.getDefault().displayLanguage
 
     override fun getSdkVersionInt() = Build.VERSION.SDK_INT

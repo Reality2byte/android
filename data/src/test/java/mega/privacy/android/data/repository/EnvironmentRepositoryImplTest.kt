@@ -101,6 +101,14 @@ internal class EnvironmentRepositoryImplTest {
     }
 
     @Test
+    fun `test that getDeviceName returns the device name from the gateway`() = runTest {
+        val expected = "manufacturer deviceName"
+        whenever(deviceGateway.getDeviceName()).thenReturn(expected)
+
+        assertThat(underTest.getDeviceName()).isEqualTo(expected)
+    }
+
+    @Test
     fun `test that application information is returned`() = runTest {
         val expectedVersion = "expectedVersion"
         val expectedSdkVersion = "expectedSdkVersion"

@@ -23,7 +23,6 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Handler
 import android.provider.MediaStore
-import android.provider.Settings
 import android.telephony.PhoneNumberUtils
 import android.telephony.TelephonyManager
 import android.util.DisplayMetrics
@@ -491,20 +490,6 @@ object Util {
             Timber.e(ex, "Error getting local IP address")
         }
         return null
-    }
-
-    /**
-     * Returns the consumer friendly device name.
-     * If Android version is above 7, the name is manufacturer + custom name set by user, otherwise, will be manufacturer + model.
-     *
-     * @return Device name, always starts with manufacturer, prefer user set name.
-     */
-    @JvmStatic
-    fun getDeviceName(): String {
-        return Build.MANUFACTURER + " " + Settings.Global.getString(
-            MegaApplication.getInstance().contentResolver,
-            Settings.Global.DEVICE_NAME
-        )
     }
 
     @JvmStatic

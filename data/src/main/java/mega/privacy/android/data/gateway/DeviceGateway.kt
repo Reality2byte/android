@@ -21,6 +21,14 @@ interface DeviceGateway {
     fun getDeviceModel(): String
 
     /**
+     * Get the consumer friendly device name, always starting with the manufacturer
+     * and followed by the user set device name.
+     *
+     * @return device name
+     */
+    fun getDeviceName(): String
+
+    /**
      * Get current device language
      */
     fun getCurrentDeviceLanguage(): String
