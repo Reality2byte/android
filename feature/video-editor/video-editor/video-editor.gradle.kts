@@ -20,6 +20,7 @@ dependencies {
     lintChecks(project(":lint"))
 
     implementation(project(":feature:video-editor:video-editor-snowflakes"))
+    implementation(project(":core:analytics:analytics-tracker"))
     implementation(project(":core:formatter"))
     implementation(project(":core:navigation-contract"))
     implementation(project(":navigation"))
@@ -31,6 +32,7 @@ dependencies {
     // core-ui brings the Compose runtime/foundation; this module uses no
     // DSTokens/core-ui components directly — those live in the snowflakes module.
     implementation(lib.mega.core.ui)
+    implementation(lib.mega.analytics)
     implementation(lib.logging.timber)
     implementation(lib.compose.state.events)
     implementation(lib.coil3)

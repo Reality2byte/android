@@ -118,6 +118,7 @@ import mega.privacy.mobile.analytics.event.PhotoEditorMenuItemEvent
 import mega.privacy.mobile.analytics.event.PhotoPreviewSaveToDeviceMenuToolbarEvent
 import mega.privacy.mobile.analytics.event.PhotoPreviewScreenEvent
 import mega.privacy.mobile.analytics.event.PlaySlideshowMenuToolbarEvent
+import mega.privacy.mobile.analytics.event.VideoEditorMenuItemEvent
 import nz.mega.sdk.MegaApiJava
 import nz.mega.sdk.MegaApiJava.INVALID_HANDLE
 import timber.log.Timber
@@ -262,7 +263,7 @@ class ImagePreviewActivity : BaseActivity() {
                 onClickBack = ::finish,
                 onClickEdit = { imageNode ->
                     if (imageNode.type is VideoFileTypeInfo) {
-                        // TODO add analytics event
+                        Analytics.tracker.trackEvent(VideoEditorMenuItemEvent)
                         onEditVideo(imageNode)
                     } else {
                         Analytics.tracker.trackEvent(PhotoEditorMenuItemEvent)

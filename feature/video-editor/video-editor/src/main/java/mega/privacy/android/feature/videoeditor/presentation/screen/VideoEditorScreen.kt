@@ -42,6 +42,7 @@ import mega.android.core.ui.components.button.PrimaryFilledButtonM3XSmall
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
 import mega.android.core.ui.theme.AndroidTheme
+import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.core.sharedcomponents.systemui.DarkSystemBarsEffect
 import mega.privacy.android.core.sharedcomponents.systemui.LockPortraitOrientationEffect
 import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
@@ -66,6 +67,12 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.ui.ToolActio
 import mega.privacy.android.feature.videoeditor.presentation.editor.ui.ToolDeck
 import mega.privacy.android.feature.videoeditor.presentation.screen.model.VideoEditorUiState
 import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.analytics.event.VideoEditorCropToolPressedEvent
+import mega.privacy.mobile.analytics.event.VideoEditorRotateToolPressedEvent
+import mega.privacy.mobile.analytics.event.VideoEditorSaveButtonPressedEvent
+import mega.privacy.mobile.analytics.event.VideoEditorSpeedToolPressedEvent
+import mega.privacy.mobile.analytics.event.VideoEditorTrimToolPressedEvent
+import mega.privacy.mobile.analytics.event.VideoEditorVolumeToolPressedEvent
 import java.io.File
 
 /**
@@ -225,7 +232,10 @@ internal fun VideoEditorScreen(
                             PrimaryFilledButtonM3XSmall(
                                 modifier = Modifier.padding(end = 16.dp),
                                 text = stringResource(sharedR.string.video_editor_save_copy_button),
-                                onClick = onSave,
+                                onClick = {
+                                    Analytics.tracker.trackEvent(VideoEditorSaveButtonPressedEvent)
+                                    onSave()
+                                },
                                 enabled = saveEnabled
                             )
                         }
@@ -373,7 +383,11 @@ private fun BottomSlot(
     Box(modifier = Modifier.fillMaxWidth()) {
         ToolTabBar(
             items = tabs,
-            onSelect = { onAction(EditorAction.EnterTool(ToolId(it))) },
+            onSelect = {
+                val toolId = ToolId(it)
+                trackToolPressed(toolId)
+                onAction(EditorAction.EnterTool(toolId))
+            },
             modifier = Modifier.align(Alignment.BottomCenter),
         )
 
@@ -421,4 +435,15 @@ private fun BottomSlot(
             }
         }
     }
+}
+
+private fun trackToolPressed(tool: ToolId) {
+    when (tool) {
+        BuiltInToolIds.Trim -> VideoEditorTrimToolPressedEvent
+        BuiltInToolIds.Crop -> VideoEditorCropToolPressedEvent
+        BuiltInToolIds.Rotate -> VideoEditorRotateToolPressedEvent
+        BuiltInToolIds.Speed -> VideoEditorSpeedToolPressedEvent
+        BuiltInToolIds.Volume -> VideoEditorVolumeToolPressedEvent
+        else -> null
+    }?.let { Analytics.tracker.trackEvent(it) }
 }
