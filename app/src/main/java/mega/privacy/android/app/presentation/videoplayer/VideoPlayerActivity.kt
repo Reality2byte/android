@@ -15,6 +15,7 @@ import android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALW
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +40,6 @@ import mega.android.core.ui.model.SnackbarAttributes
 import mega.android.core.ui.model.SnackbarDuration
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.app.R
-import mega.privacy.android.app.activities.PasscodeActivity
 import mega.privacy.android.app.appstate.content.navigation.LegacyActivityScaffold
 import mega.privacy.android.app.appstate.content.navigation.NavigationResultManager
 import mega.privacy.android.app.arch.extensions.collectFlow
@@ -83,7 +83,7 @@ import javax.inject.Inject
  * The activity for the revamped video player
  */
 @AndroidEntryPoint
-class VideoPlayerActivity : PasscodeActivity(), MegaSnackbarShower {
+class VideoPlayerActivity : AppCompatActivity(), MegaSnackbarShower {
     @Inject
     lateinit var monitorThemeModeUseCase: MonitorThemeModeUseCase
 
