@@ -18,6 +18,9 @@ data class AudioControllerState(
     val shuffleEnabled: Boolean = false,
     val mediaItemCount: Int = 0,
     val isBuffering: Boolean = false,
+    /** True when [androidx.media3.common.Player.STATE_IDLE] is active, which indicates the player
+     *  has stopped and is no longer holding any playback session. */
+    val isIdle: Boolean = false,
     val title: String? = null,
     val artist: String? = null,
     val artworkUri: String? = null,

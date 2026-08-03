@@ -10,8 +10,10 @@ import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControlle
 /**
  * Hilt module that binds [AudioMediaControllerGateway] to [AudioMediaControllerFacade].
  *
- * No scope annotation — each injection site (i.e. each [mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerViewModel])
- * receives its own instance, which is tied to the ViewModel's lifetime via [AudioMediaControllerGateway.release].
+ * No scope annotation — a new [AudioMediaControllerFacade] is created per injection site.
+ * [mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerViewModel] is
+ * activity-scoped, so one instance is shared for the Activity's lifetime;
+ * [AudioMediaControllerGateway.release] is called when the Activity is destroyed.
  */
 @Module
 @InstallIn(SingletonComponent::class)

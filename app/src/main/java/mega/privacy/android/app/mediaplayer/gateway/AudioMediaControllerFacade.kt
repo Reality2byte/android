@@ -67,7 +67,14 @@ internal class AudioMediaControllerFacade @Inject constructor(
             return
         }
         controllerFuture =
-            MediaController.Builder(context, sessionToken).buildAsync().also { future ->
+            MediaController.Builder(context, sessionToken)
+                .setListener(object : MediaController.Listener {
+                    override fun onDisconnected(controller: MediaController) {
+                        updateState { copy(isIdle = true) }
+                        stopPositionPolling()
+                    }
+                })
+                .buildAsync().also { future ->
                 Futures.addCallback(
                     future,
                     object : FutureCallback<MediaController> {
@@ -101,6 +108,7 @@ internal class AudioMediaControllerFacade @Inject constructor(
             shuffleEnabled = c.shuffleModeEnabled,
             mediaItemCount = c.mediaItemCount,
             isBuffering = c.playbackState == Player.STATE_BUFFERING,
+            isIdle = c.playbackState == Player.STATE_IDLE,
             title = c.mediaMetadata.title?.toString(),
             artist = c.mediaMetadata.artist?.toString(),
             artworkUri = c.mediaMetadata.artworkUri?.toString(),
@@ -137,7 +145,12 @@ internal class AudioMediaControllerFacade @Inject constructor(
         }
 
         override fun onPlaybackStateChanged(state: Int) {
-            updateState { copy(isBuffering = state == Player.STATE_BUFFERING) }
+            updateState {
+                copy(
+                    isBuffering = state == Player.STATE_BUFFERING,
+                    isIdle = state == Player.STATE_IDLE,
+                )
+            }
         }
 
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {

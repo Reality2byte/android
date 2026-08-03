@@ -7,6 +7,9 @@ import androidx.media3.common.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.Job
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +29,8 @@ import mega.privacy.android.feature.mediaplayer.data.gateway.AudioMediaControlle
 import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.feature.mediaplayer.data.model.AudioControllerState
 import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
+import mega.privacy.android.feature.mediaplayer.presentation.model.SleepTimerOption
+import mega.privacy.android.feature.mediaplayer.presentation.model.SleepTimerState
 import mega.privacy.android.shared.nodes.model.NodeSourceTypeInt.FILE_LINK_ADAPTER
 import mega.privacy.android.shared.nodes.model.NodeSourceTypeInt.RUBBISH_BIN_ADAPTER
 import mega.privacy.mobile.analytics.event.AudioPlayerLoopPlayingItemEnabledEvent
@@ -68,10 +73,17 @@ class AudioPlayerViewModel @Inject constructor(
      * intent is processed, before Media3 finishes connecting. */
     val isPodcastMode: StateFlow<Boolean> = _isPodcastMode.asStateFlow()
 
+    private val _sleepTimerState = MutableStateFlow<SleepTimerState>(SleepTimerState.Inactive)
+
+    /** Current sleep timer state. Updated every second while a countdown is running. */
+    val sleepTimerState: StateFlow<SleepTimerState> = _sleepTimerState.asStateFlow()
+
     private var currentControllerState: AudioControllerState? = null
     private var lastMediaItemId: String? = null
     private var userOverriddenMode: Boolean? = null
     private var prefetchJob: Job? = null
+    private var sleepTimerJob: Job? = null
+    private var endOfTrackSourceItemId: String? = null
 
     private data class IntentData(
         val adapterType: Int,
@@ -126,8 +138,28 @@ class AudioPlayerViewModel @Inject constructor(
             viewModelScope.launch { setAudioRepeatModeUseCase(toggleMode.ordinal) }
         }
 
+        if (prev.mediaItemCount > 0 && current.isIdle) {
+            cancelSleepTimer()
+        }
+
         if (prev.currentMediaItemId != current.currentMediaItemId) {
             current.currentMediaItemHandle?.let { fetchNodeName(it) }
+            if (_sleepTimerState.value is SleepTimerState.EndOfTrack &&
+                current.currentMediaItemId != endOfTrackSourceItemId
+            ) {
+                gateway.pause()
+                _sleepTimerState.value = SleepTimerState.Inactive
+                endOfTrackSourceItemId = null
+            }
+        }
+
+        if (_sleepTimerState.value is SleepTimerState.EndOfTrack &&
+            prev.isPlaying && !current.isPlaying &&
+            current.durationMs > 0 &&
+            current.currentPositionMs >= current.durationMs - END_OF_TRACK_THRESHOLD_MS
+        ) {
+            _sleepTimerState.value = SleepTimerState.Inactive
+            endOfTrackSourceItemId = null
         }
     }
 
@@ -304,6 +336,51 @@ class AudioPlayerViewModel @Inject constructor(
             else -> NodeSourceType.MEDIA_PLAYER_DEFAULT
         }
 
+    /**
+     * Starts or replaces the sleep timer with the given [option].
+     *
+     * For timed options a countdown coroutine is launched that ticks every second and pauses
+     * playback when it reaches zero. For [SleepTimerOption.EndOfTrack], playback pauses
+     * automatically when the current track finishes. Calling this while a timer is already
+     * active replaces it.
+     */
+    fun setSleepTimer(option: SleepTimerOption) {
+        sleepTimerJob?.cancel()
+        sleepTimerJob = null
+        endOfTrackSourceItemId = null
+
+        when (option) {
+            SleepTimerOption.EndOfTrack -> {
+                endOfTrackSourceItemId = currentControllerState?.currentMediaItemId
+                _sleepTimerState.value = SleepTimerState.EndOfTrack
+            }
+
+            else -> {
+                var remaining = option.duration
+                _sleepTimerState.value = SleepTimerState.CountingDown(remaining, option)
+                sleepTimerJob = viewModelScope.launch {
+                    while (remaining > Duration.ZERO) {
+                        delay(SLEEP_TIMER_TICK)
+                        remaining = maxOf(Duration.ZERO, remaining - SLEEP_TIMER_TICK)
+                        _sleepTimerState.value = SleepTimerState.CountingDown(remaining, option)
+                    }
+                    gateway.pause()
+                    _sleepTimerState.value = SleepTimerState.Inactive
+                }
+            }
+        }
+    }
+
+    /**
+     * Cancels any active sleep timer and resets the state to [SleepTimerState.Inactive].
+     */
+    fun cancelSleepTimer() {
+        sleepTimerJob?.cancel()
+        sleepTimerJob = null
+        endOfTrackSourceItemId = null
+        _sleepTimerState.value = SleepTimerState.Inactive
+    }
+
     fun setPlaybackSpeed(speed: Float) {
         gateway.setPlaybackSpeed(speed)
     }
@@ -322,6 +399,8 @@ class AudioPlayerViewModel @Inject constructor(
         // The 12-minute threshold is defined in the design specification.
         private const val PODCAST_MODE_DURATION_MS = 12 * 60 * 1_000L
         private const val SEEK_15_SECONDS_MS = 15_000L
+        private val SLEEP_TIMER_TICK = 1.seconds
+        private const val END_OF_TRACK_THRESHOLD_MS = 1_500L
 
         // Intent extra keys — must match values used in :app when building the launch intent
         private const val INTENT_EXTRA_KEY_HANDLE = "HANDLE"

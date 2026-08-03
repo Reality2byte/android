@@ -3611,6 +3611,20 @@
     <string name="subscription_quota_no_connection_description">Check your storage and transfer details later, or try again</string>
     <!-- Label of the button that retries loading the quota-warning upsell screen -->
     <string name="subscription_quota_no_connection_retry_button">Try again</string>
+    <!-- Audio player: sleep timer bottom sheet title (no timer active) -->
+    <string name="audio_player_sleep_timer_title">Sleep timer</string>
+    <!-- Audio player: sleep timer bottom sheet title when a countdown is active (%s = MM:SS remaining) -->
+    <string name="audio_player_sleep_timer_active_title">Sleep timer - %s left</string>
+    <string name="audio_player_sleep_timer_end_of_track">End of track</string>
+    <!-- Audio player: sleep timer option to cancel an active timer -->
+    <string name="audio_player_sleep_timer_turn_off">Turn off timer</string>
+    <!-- Audio player: countdown label shown below the seek bar when a sleep timer is active (%s = MM:SS remaining) -->
+    <string name="audio_player_sleep_timer_countdown_label">Sleep timer %s</string>
+    <!-- Audio player: sleep timer option label for minute-based options (%1$d = number of minutes) -->
+    <plurals name="audio_player_sleep_timer_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
     <!-- Title of the dialog shown when the discount offer countdown reaches zero while the user is on the subscription page -->
     <string name="subscription_offer_expired_dialog_title">This offer has ended</string>
     <!-- Body of the dialog shown when the discount offer countdown reaches zero, pointing the user at the currently available plans -->

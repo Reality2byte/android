@@ -123,14 +123,14 @@ class AudioPlayerScreenTest {
 
     @Test
     fun `test that previous button is disabled when uiState is Loading`() {
-        setContent(uiState = AudioPlayerUiState.Loading)
+        setContent(uiState = AudioPlayerUiState.Loading, isPodcastMode = false)
 
         composeTestRule.onNodeWithContentDescription("Previous").assertIsNotEnabled()
     }
 
     @Test
     fun `test that next button is disabled when uiState is Loading`() {
-        setContent(uiState = AudioPlayerUiState.Loading)
+        setContent(uiState = AudioPlayerUiState.Loading, isPodcastMode = false)
 
         composeTestRule.onNodeWithContentDescription("Next").assertIsNotEnabled()
     }
@@ -235,6 +235,7 @@ class AudioPlayerScreenTest {
         val onNextClicked = mock<() -> Unit>()
         setContent(
             uiState = defaultData(isLoading = false),
+            isPodcastMode = false,
             onNextClicked = onNextClicked,
         )
 
@@ -248,6 +249,7 @@ class AudioPlayerScreenTest {
         val onPreviousClicked = mock<() -> Unit>()
         setContent(
             uiState = defaultData(isLoading = false),
+            isPodcastMode = false,
             onPreviousClicked = onPreviousClicked,
         )
 
@@ -261,6 +263,7 @@ class AudioPlayerScreenTest {
         val onShuffleClicked = mock<() -> Unit>()
         setContent(
             uiState = defaultData(),
+            isPodcastMode = false,
             onShuffleClicked = onShuffleClicked,
         )
 
@@ -274,6 +277,7 @@ class AudioPlayerScreenTest {
         val onRepeatClicked = mock<() -> Unit>()
         setContent(
             uiState = defaultData(repeatMode = Player.REPEAT_MODE_OFF),
+            isPodcastMode = false,
             onRepeatClicked = onRepeatClicked,
         )
 

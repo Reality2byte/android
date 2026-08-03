@@ -1,6 +1,8 @@
 package mega.privacy.android.feature.mediaplayer.navigation
 
 import android.os.Parcelable
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +23,7 @@ import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.feature.mediaplayer.components.PlaybackSpeedBottomSheet
 import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerScreen
 import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerViewModel
+import mega.privacy.android.feature.mediaplayer.presentation.SleepTimerBottomSheet
 import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 import mega.privacy.android.navigation.contract.NavigationHandler
 
@@ -45,7 +48,9 @@ internal fun EntryProviderScope<NavKey>.audioPlayerScreen(
     onTransfer: (TransferTriggerEvent) -> Unit,
 ) {
     entry<AudioPlayerScreenNavKey> { navKey ->
-        val viewModel = hiltViewModel<AudioPlayerViewModel>()
+        val activity = LocalActivity.current as? ComponentActivity
+            ?: error("AudioPlayerScreen must be hosted in a ComponentActivity")
+        val viewModel = hiltViewModel<AudioPlayerViewModel>(activity)
 
         LaunchedEffect(navKey.launchId) {
             val intent = launchSourceHolder.consume(navKey.launchId) ?: return@LaunchedEffect
@@ -75,7 +80,9 @@ internal fun EntryProviderScope<NavKey>.audioPlayerScreen(
         )
 
         val isPodcastMode by viewModel.isPodcastMode.collectAsStateWithLifecycle()
+        val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
         var showSpeedSheet by remember { mutableStateOf(false) }
+        var showSleepTimerSheet by remember { mutableStateOf(false) }
 
         AudioPlayerScreen(
             uiState = uiState,
@@ -97,8 +104,24 @@ internal fun EntryProviderScope<NavKey>.audioPlayerScreen(
             onSeekForward15 = viewModel::seekForward15,
             onSeekBackward15 = viewModel::seekBackward15,
             onSpeedClicked = { showSpeedSheet = true },
-            onSleepTimerClicked = {},
+            onSleepTimerClicked = { showSleepTimerSheet = true },
+            sleepTimerState = sleepTimerState,
         )
+
+        if (showSleepTimerSheet) {
+            SleepTimerBottomSheet(
+                sleepTimerState = sleepTimerState,
+                onOptionSelected = { option ->
+                    viewModel.setSleepTimer(option)
+                    showSleepTimerSheet = false
+                },
+                onTurnOff = {
+                    viewModel.cancelSleepTimer()
+                    showSleepTimerSheet = false
+                },
+                onDismiss = { showSleepTimerSheet = false },
+            )
+        }
 
         if (showSpeedSheet) {
             val currentSpeed = (uiState as? AudioPlayerUiState.Data)?.currentPlaybackSpeed ?: 1f
