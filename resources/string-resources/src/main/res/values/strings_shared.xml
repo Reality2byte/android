@@ -3722,4 +3722,20 @@
     <string name="video_editor_tooltip_title">Edit your video</string>
     <!-- Body of the onboarding tooltip pointing at the edit button when previewing a video -->
     <string name="video_editor_tooltip_description">Trim, crop, rotate, or adjust the speed and volume.</string>
+    <!-- Customise navigation settings screen: title shown in the top app bar -->
+    <string name="settings_customise_navigation_title">Customise navigation</string>
+    <!-- Customise navigation settings screen: subtitle shown below the screen title -->
+    <string name="settings_customise_navigation_subtitle">Drag to reorder items</string>
+    <!-- Customise navigation settings screen: header of the card listing the sections currently shown in the navigation bar -->
+    <string name="settings_customise_navigation_your_navigation">Your navigation</string>
+    <!-- Customise navigation settings screen: counter of selected sections, e.g. "4 out of 5". First placeholder is the current count, second is the maximum -->
+    <string name="settings_customise_navigation_items_counter">%1$d out of %2$d</string>
+    <!-- Customise navigation settings screen: header of the card listing the sections that can be added to the navigation bar -->
+    <string name="settings_customise_navigation_available_to_add">Add to your navigation</string>
+    <!-- Customise navigation settings screen: subtitle of the first section in the list, indicating it is shown when the app launches -->
+    <string name="settings_customise_navigation_start_screen">Start screen</string>
+    <!-- Customise navigation settings screen: snackbar shown when trying to add a section while the maximum is already reached. Placeholder is the maximum number of sections -->
+    <string name="settings_customise_navigation_max_items_snackbar">Max %1$d items reached. Remove an item to add another.</string>
+    <!-- Customise navigation settings screen: snackbar shown when trying to remove a section while at the minimum. Placeholder is the minimum number of sections -->
+    <string name="settings_customise_navigation_min_items_snackbar">Minimum of %1$d items required</string>
 </resources>

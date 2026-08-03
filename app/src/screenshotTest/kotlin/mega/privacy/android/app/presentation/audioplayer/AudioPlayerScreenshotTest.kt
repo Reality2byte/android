@@ -5,6 +5,7 @@ import androidx.media3.common.Player
 import com.android.tools.screenshot.PreviewTest
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
+import mega.privacy.android.domain.entity.node.NodeSourceType
 import mega.privacy.android.feature.mediaplayer.presentation.AudioPlayerScreen
 import mega.privacy.android.feature.mediaplayer.presentation.model.AudioPlayerUiState
 
@@ -227,5 +228,10 @@ class AudioPlayerScreenshotTest {
         currentAdapterType = -1,
         thumbnailData = null,
         currentPlaybackSpeed = 1f,
+        nodeSourceType = NodeSourceType.MEDIA_PLAYER_DEFAULT,
+        fileLinkUrl = null,
+        localFilePath = null,
+        chatId = null,
+        msgId = null,
     )
 }

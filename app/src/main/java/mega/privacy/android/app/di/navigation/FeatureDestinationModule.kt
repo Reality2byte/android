@@ -25,6 +25,7 @@ import mega.privacy.android.app.presentation.meeting.navigation.MeetingFeatureDe
 import mega.privacy.android.app.presentation.notification.navigation.NotificationsFeatureDestination
 import mega.privacy.android.app.presentation.psa.PsaFeatureDestinations
 import mega.privacy.android.app.presentation.settings.SettingsCameraUploadsFeatureDestination
+import mega.privacy.android.app.presentation.settings.customisenavigation.CustomiseNavigationFeatureDestination
 import mega.privacy.android.app.mediaplayer.Nav3AudioPlayerRouteLauncher
 import mega.privacy.android.app.presentation.videoplayer.VideoPlayerLaunchSourceHolder
 import mega.privacy.android.app.presentation.videoplayer.Nav3VideoPlayerRouteLauncher
@@ -132,6 +133,11 @@ class FeatureDestinationModule {
     @IntoSet
     fun provideSettingsCameraUploadsFeatureDestination(): FeatureDestination =
         SettingsCameraUploadsFeatureDestination()
+
+    @Provides
+    @IntoSet
+    fun provideCustomiseNavigationFeatureDestination(): FeatureDestination =
+        CustomiseNavigationFeatureDestination()
 
     @Provides
     @IntoSet
