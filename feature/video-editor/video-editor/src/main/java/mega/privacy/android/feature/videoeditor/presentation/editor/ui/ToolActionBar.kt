@@ -1,32 +1,27 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.MegaText
-import mega.android.core.ui.components.image.MegaIcon
 import mega.android.core.ui.components.surface.BoxSurface
 import mega.android.core.ui.components.surface.SurfaceColor
+import mega.android.core.ui.theme.AndroidTheme
 import mega.android.core.ui.theme.AppTheme
-import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.feature.videoeditor.components.CancelButton
+import mega.privacy.android.feature.videoeditor.components.SaveButton
 import mega.privacy.android.shared.resources.R as sharedR
 
 /**
@@ -42,51 +37,51 @@ fun ToolActionBar(
     modifier: Modifier = Modifier,
 ) {
     BoxSurface(
-        surfaceColor = SurfaceColor.Surface1,
+        surfaceColor = SurfaceColor.PageBackground,
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 8.dp)
-                .height(72.dp),
+                .padding(horizontal = 20.dp)
+                .height(60.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onCancel),
-                contentAlignment = Alignment.Center,
-            ) {
-                MegaIcon(
-                    imageVector = Icons.Filled.Close,
-                    tint = IconColor.Primary,
-                    contentDescription = stringResource(sharedR.string.general_dialog_cancel_button),
-                )
-            }
+            CancelButton(
+                onClick = onCancel,
+                contentDescription = stringResource(sharedR.string.general_dialog_cancel_button),
+            )
             MegaText(
                 text = toolLabel,
                 style = AppTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.W400
                 ),
                 textColor = TextColor.Primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
             )
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onApply),
-                contentAlignment = Alignment.Center,
-            ) {
-                MegaIcon(
-                    imageVector = Icons.Filled.Check,
-                    tint = IconColor.Brand,
-                    contentDescription = stringResource(sharedR.string.video_editor_apply_button),
-                )
-            }
+            SaveButton(
+                onClick = onApply,
+                contentDescription = stringResource(sharedR.string.video_editor_apply_button),
+            )
         }
+    }
+}
+
+
+
+@Preview(showBackground = true, widthDp = 400)
+@Composable
+private fun ToolActionBarPreview() {
+    AndroidTheme(
+        isDark = true
+    ) {
+        ToolActionBar(
+            toolLabel = "Crop",
+            onApply = {},
+            onCancel = {}
+        )
     }
 }

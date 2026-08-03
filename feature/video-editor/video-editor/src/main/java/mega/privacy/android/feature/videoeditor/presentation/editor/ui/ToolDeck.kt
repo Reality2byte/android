@@ -26,11 +26,11 @@ fun ToolDeck(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ColumnSurface(
-        surfaceColor = SurfaceColor.Surface1,
+        surfaceColor = SurfaceColor.PageBackground,
         modifier = modifier
             .fillMaxWidth()
             .systemGestureExclusion(),
     ) {
-        Column(modifier = Modifier.padding(vertical = 20.dp), content = content)
+        Column(modifier = Modifier.padding(top = 20.dp, bottom = 24.dp), content = content)
     }
 }

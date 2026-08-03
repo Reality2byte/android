@@ -21,7 +21,6 @@ dependencies {
 
     // Compose
     implementation(androidx.material3)
-    implementation(androidx.compose.icons.extended)
     implementation(androidx.compose.ui.tooling.preview)
 
     testImplementation(project(":core-test"))

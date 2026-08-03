@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -33,6 +31,7 @@ import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
 import mega.android.core.ui.tokens.theme.DSTokens
+import mega.privacy.android.icon.pack.IconPack
 
 /** A single tab in the [ToolTabBar]. */
 @Immutable
@@ -57,7 +56,7 @@ fun ToolTabBar(
     modifier: Modifier = Modifier,
 ) {
     BoxSurface(
-        surfaceColor = SurfaceColor.Surface1,
+        surfaceColor = SurfaceColor.PageBackground,
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
@@ -125,14 +124,14 @@ private fun ToolTabBarPreview() {
             items = listOf(
                 ToolTabUiItem(
                     id = "trim",
-                    icon = Icons.Filled.ContentCut,
+                    icon = IconPack.Medium.Thin.Outline.Video,
                     label = "Trim",
                     selected = true,
                     applied = false
                 ),
                 ToolTabUiItem(
                     id = "crop",
-                    icon = Icons.Filled.ContentCut,
+                    icon = IconPack.Medium.Thin.Outline.Maximize02,
                     label = "Crop",
                     selected = false,
                     applied = true
