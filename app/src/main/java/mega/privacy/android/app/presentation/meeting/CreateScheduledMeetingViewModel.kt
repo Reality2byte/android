@@ -237,6 +237,7 @@ class CreateScheduledMeetingViewModel @Inject constructor(
                                 scheduledMeeting = schedMeet,
                                 meetingTitle = title,
                                 descriptionText = description,
+                                isEditingDescription = description.isNotEmpty(),
                                 isEmptyTitleError = if (title.isNotEmpty()) false else state.isEmptyTitleError,
                                 enabledSendCalendarInviteOption = sendCalendarInvite,
                                 initialSendCalendarInviteOption = sendCalendarInvite,

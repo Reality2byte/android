@@ -238,7 +238,7 @@ internal fun CreateScheduledMeetingView(
 
                 val keyItemDescription = "Schedule meeting add description"
                 item(key = keyItemDescription) {
-                    if (state.isEditingDescription || state.descriptionText.isNotEmpty()) {
+                    if (state.isEditingDescription) {
                         AddDescriptionButton(
                             description = state.descriptionText,
                             onValueChange = onDescriptionValueChange,
@@ -449,7 +449,7 @@ private fun ActionButton(
                 onButtonClicked(action)
             }
         }) {
-        if ((action != ScheduleMeetingAction.AddDescription || (!state.isEditingDescription && state.descriptionText.isEmpty())) && (action != ScheduleMeetingAction.EndRecurrence || state.rulesSelected.freq != OccurrenceFrequencyType.Invalid)) {
+        if ((action != ScheduleMeetingAction.AddDescription || !state.isEditingDescription) && (action != ScheduleMeetingAction.EndRecurrence || state.rulesSelected.freq != OccurrenceFrequencyType.Invalid)) {
             ActionOption(
                 state = state,
                 action = action,

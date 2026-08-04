@@ -1,18 +1,20 @@
 package mega.privacy.android.app.presentation.meeting
 
+import app.cash.turbine.test
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mega.privacy.android.app.presentation.mapper.GetPluralStringFromStringResMapper
 import mega.privacy.android.app.presentation.mapper.GetStringFromStringResMapper
 import mega.privacy.android.app.presentation.meeting.mapper.RecurrenceDialogOptionMapper
 import mega.privacy.android.app.presentation.meeting.mapper.WeekDayMapper
-import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.test.runTest
 import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
 import mega.privacy.android.data.gateway.DeviceGateway
 import mega.privacy.android.domain.entity.account.AccountDetail
+import mega.privacy.android.domain.entity.chat.ChatScheduledMeeting
 import mega.privacy.android.domain.entity.contacts.ContactItem
 import mega.privacy.android.domain.usecase.GetChatRoomUseCase
 import mega.privacy.android.domain.usecase.GetVisibleContactsUseCase
@@ -176,5 +178,66 @@ class CreateScheduledMeetingViewModelTest {
     @Test
     fun `test that getParticipantHandles returns an empty list when there are no participants`() {
         assertThat(underTest.getParticipantHandles()).isEmpty()
+    }
+
+    @Test
+    fun `test that getChatRoom emits isEditingDescription true when the scheduled meeting has a description`() =
+        runTest {
+            stubScheduledMeeting(description = "Meeting description")
+
+            underTest.getChatRoom(chatId = CHAT_ID)
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.descriptionText).isEqualTo("Meeting description")
+                assertThat(state.isEditingDescription).isTrue()
+            }
+        }
+
+    @Test
+    fun `test that getChatRoom emits isEditingDescription false when the scheduled meeting has no description`() =
+        runTest {
+            stubScheduledMeeting(description = "")
+
+            underTest.getChatRoom(chatId = CHAT_ID)
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.descriptionText).isEmpty()
+                assertThat(state.isEditingDescription).isFalse()
+            }
+        }
+
+    @Test
+    fun `test that onDescriptionChange keeps isEditingDescription true when an existing description is cleared`() =
+        runTest {
+            stubScheduledMeeting(description = "Meeting description")
+            underTest.getChatRoom(chatId = CHAT_ID)
+
+            underTest.onDescriptionChange("")
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.descriptionText).isEmpty()
+                assertThat(state.isEditingDescription).isTrue()
+            }
+        }
+
+    private suspend fun stubScheduledMeeting(description: String) {
+        whenever(getScheduledMeetingByChatUseCase(CHAT_ID)).thenReturn(
+            listOf(
+                ChatScheduledMeeting(
+                    chatId = CHAT_ID,
+                    schedId = SCHED_ID,
+                    parentSchedId = -1L,
+                    description = description,
+                )
+            )
+        )
+    }
+
+    private companion object {
+        const val CHAT_ID = 123L
+        const val SCHED_ID = 456L
     }
 }
