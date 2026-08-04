@@ -2,6 +2,7 @@ package mega.privacy.android.app.utils
 
 import android.content.Context
 import androidx.annotation.Keep
+import androidx.annotation.VisibleForTesting
 import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.listeners.ChatChangeVideoStreamListener
 import org.webrtc.Camera2Enumerator
@@ -27,7 +28,27 @@ object VideoCaptureUtils {
     @Volatile
     private var cachedIsFrontCamera: Boolean = false
 
-    private fun context(): Context = MegaApplication.getInstance().applicationContext
+    @Volatile
+    private var applicationContext: Context? = null
+
+    /**
+     * Sets the application context used to enumerate camera devices.
+     *
+     * This object is invoked from JNI and cannot be Hilt-injected, so its application context is
+     * handed to it explicitly during `Application.onCreate` by the app-create initialiser tier
+     * instead of reaching through `MegaApplication.getInstance()`.
+     */
+    @JvmStatic
+    fun setApplicationContext(context: Context) {
+        applicationContext = context
+    }
+
+    private fun context(): Context = requireNotNull(applicationContext) {
+        "VideoCaptureUtils application context has not been set"
+    }
+
+    @VisibleForTesting
+    internal fun getApplicationContextForTesting(): Context? = applicationContext
 
     /**
      * Indicates if show video is allowed. The default value is TRUE, but this value will change to

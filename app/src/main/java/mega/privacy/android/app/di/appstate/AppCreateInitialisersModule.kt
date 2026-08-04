@@ -23,6 +23,7 @@ import mega.privacy.android.app.appstate.global.initialisation.appcreate.Notific
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.PasscodeInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.RemoteConfigInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.SdkSetupInitialiser
+import mega.privacy.android.app.appstate.global.initialisation.appcreate.StaticContextInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.SyncMonitorInitialiser
 import mega.privacy.android.app.appstate.global.initialisation.appcreate.ThemeInitialiser
 import mega.privacy.android.navigation.contract.initialisation.AsyncAppCreateInitialiser
@@ -73,6 +74,7 @@ internal class AppCreateInitialisersModule {
         callObserverInitialiser: CallObserverInitialiser,
         chatApiInitialiser: ChatApiInitialiser,
         coilImageLoaderInitialiser: CoilImageLoaderInitialiser,
+        staticContextInitialiser: StaticContextInitialiser,
         analyticsInitialiser: AnalyticsInitialiser,
         passcodeInitialiser: PasscodeInitialiser,
         notificationChannelsInitialiser: NotificationChannelsInitialiser,
@@ -85,6 +87,7 @@ internal class AppCreateInitialisersModule {
         callObserverInitialiser,
         chatApiInitialiser,
         coilImageLoaderInitialiser,
+        staticContextInitialiser,
         analyticsInitialiser,
         passcodeInitialiser,
         notificationChannelsInitialiser,

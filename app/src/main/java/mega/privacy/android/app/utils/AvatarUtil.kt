@@ -48,6 +48,15 @@ import java.util.Locale
 object AvatarUtil {
 
     /**
+     * Application context set once at app boot by the app-create initialiser tier.
+     *
+     * This object is a legacy `@JvmStatic` util with many Java/Kotlin callers and cannot be
+     * Hilt-injected, so its application context is handed to it explicitly during
+     * `Application.onCreate` instead of reaching through `MegaApplication.getInstance()`.
+     */
+    internal lateinit var applicationContext: Context
+
+    /**
      * Retrieve the first letter of a String.
      *
      * @param text String to obtain the first letter.
@@ -178,8 +187,7 @@ object AvatarUtil {
      */
     @JvmStatic
     fun getSpecificAvatarColor(typeColor: String): Int {
-        val context: Context = MegaApplication.getInstance().currentActivity
-            ?: MegaApplication.getInstance().baseContext
+        val context: Context = applicationContext
 
         return when (typeColor) {
             AVATAR_GROUP_CHAT_COLOR -> ContextCompat.getColor(context, R.color.grey_012_white_012)
