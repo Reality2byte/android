@@ -65,4 +65,15 @@ interface MediaPlayerCallback {
      * indicating a silent decoder failure (e.g. hardware decoder exceeds capabilities).
      */
     fun onVideoNotRenderedCallback()
+
+    /**
+     * Callback fired once per media item when a WebM/MKV file with oversized Matroska
+     * clusters is detected. Such files require ExoPlayer to read an entire cluster
+     * (~50 s of content) before playback can resume after a seek, and the delay cannot
+     * be reduced on the client side.
+     *
+     * Called at the moment the user initiates the first seek on the affected file, so
+     * the warning reaches the user just before the long loading begins.
+     */
+    fun onLargeClusterSeekWarning() = Unit
 }

@@ -3754,4 +3754,6 @@
     <string name="settings_customise_navigation_max_items_snackbar">Max %1$d items reached. Remove an item to add another.</string>
     <!-- Customise navigation settings screen: snackbar shown when trying to remove a section while at the minimum. Placeholder is the minimum number of sections -->
     <string name="settings_customise_navigation_min_items_snackbar">Minimum of %1$d items required</string>
+    <!-- Snackbar warning shown when seeking in a video with large keyframe clusters, which may cause slow seek performance -->
+    <string name="video_player_large_cluster_seek_warning">Seeking in this video may be slow.</string>
 </resources>

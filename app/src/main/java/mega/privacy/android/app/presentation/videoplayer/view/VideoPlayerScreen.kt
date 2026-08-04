@@ -11,7 +11,6 @@ import android.os.Environment.getExternalStoragePublicDirectory
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -35,6 +34,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -116,7 +117,6 @@ import mega.privacy.android.core.transfers.widget.TransfersToolbarWidget
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import mega.privacy.android.domain.entity.mediaplayer.SubtitleFileInfo
 import mega.privacy.android.icon.pack.IconPack
-import mega.privacy.android.navigation.contract.queue.snackbar.rememberSnackBarQueue
 import mega.privacy.android.shared.original.core.ui.controls.dialogs.MegaAlertDialog
 import mega.privacy.android.shared.original.core.ui.utils.rememberPermissionState
 import mega.privacy.android.shared.resources.R as sharedR
@@ -128,6 +128,8 @@ import mega.privacy.mobile.analytics.event.SnapshotButtonPressedEvent
 import mega.privacy.mobile.analytics.event.SpeedSelectedDialogEvent
 
 private val VIDEO_NOT_RENDERED_TEXT_OFFSET_Y = 44.dp
+private val SNACKBAR_BOTTOM_PADDING_PORTRAIT = 86.dp
+private val SNACKBAR_BOTTOM_PADDING_LANDSCAPE = 50.dp
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(
@@ -228,7 +230,14 @@ internal fun VideoPlayerScreen(
         rememberModalBottomSheetState(skipPartiallyExpanded = true)
     }
 
-    val snackBarQueue = rememberSnackBarQueue()
+    val localSnackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.snackBarMessage) {
+        uiState.snackBarMessage?.let { message ->
+            localSnackbarHostState.showSnackbar(message)
+            viewModel.updateSnackBarMessage(null)
+        }
+    }
 
     LaunchedEffect(uiState.showSubTitlesOptions) {
         if (uiState.showSubTitlesOptions) {
@@ -351,7 +360,7 @@ internal fun VideoPlayerScreen(
             scale.snapTo(1f)
             scale.animateTo(if (orientation == ORIENTATION_LANDSCAPE) 0.3f else 0.4f, tween(1000))
             coroutineScope.launch {
-                snackBarQueue.queueMessage(resource.getString(R.string.media_player_video_snackbar_screenshot_saved))
+                localSnackbarHostState.showSnackbar(resource.getString(R.string.media_player_video_snackbar_screenshot_saved))
             }
             delay(1000)
             resizedBitmap?.recycle()
@@ -426,426 +435,441 @@ internal fun VideoPlayerScreen(
                 testTagsAsResourceId = true
             },
     ) { _ ->
-        key(orientation) {
-            AndroidViewBinding(
-                modifier = Modifier.fillMaxSize(),
-                factory = { inflater, parent, attachToParent ->
-                    VideoPlayerRevampPlayerViewBinding.inflate(inflater, parent, attachToParent)
-                        .apply {
-                            playerView = playerComposeView
-                            fun updateResizeMode(isFullscreen: Boolean) {
-                                playerComposeView.resizeMode = if (isFullscreen) {
-                                    RESIZE_MODE_ZOOM
-                                } else {
-                                    RESIZE_MODE_FIT
+        Box(modifier = Modifier.fillMaxSize()) {
+            key(orientation) {
+                AndroidViewBinding(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { inflater, parent, attachToParent ->
+                        VideoPlayerRevampPlayerViewBinding.inflate(inflater, parent, attachToParent)
+                            .apply {
+                                playerView = playerComposeView
+                                fun updateResizeMode(isFullscreen: Boolean) {
+                                    playerComposeView.resizeMode = if (isFullscreen) {
+                                        RESIZE_MODE_ZOOM
+                                    } else {
+                                        RESIZE_MODE_FIT
+                                    }
                                 }
-                            }
 
-                            fun applyPlayPauseIcon() {
-                                playerComposeView.findViewById<ImageButton>(Media3R.id.exo_play_pause)
-                                    ?.setImageDrawable(
-                                        ContextCompat.getDrawable(
-                                            context,
-                                            if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play
+                                fun applyPlayPauseIcon() {
+                                    playerComposeView.findViewById<ImageButton>(Media3R.id.exo_play_pause)
+                                        ?.setImageDrawable(
+                                            ContextCompat.getDrawable(
+                                                context,
+                                                if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play
+                                            )
                                         )
-                                    )
-                            }
-
-                            val prevDrawable = checkNotNull(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    R.drawable.media_player_prev
-                                )
-                            )
-                            val rewDrawable = checkNotNull(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    R.drawable.media_player_15_minus
-                                )
-                            )
-                            val nextDrawable = checkNotNull(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    R.drawable.media_player_next
-                                )
-                            )
-                            val ffwdDrawable = checkNotNull(
-                                ContextCompat.getDrawable(
-                                    context,
-                                    R.drawable.media_player_15_plus
-                                )
-                            )
-
-                            fun applyControlIcons() {
-                                playerComposeView.apply {
-                                    findViewById<ImageButton>(R.id.exo_prev)?.setImageDrawable(
-                                        prevDrawable
-                                    )
-                                    findViewById<ImageButton>(R.id.exo_rew)?.setImageDrawable(
-                                        rewDrawable
-                                    )
-                                    findViewById<ImageButton>(R.id.exo_next)?.setImageDrawable(
-                                        nextDrawable
-                                    )
-                                    findViewById<ImageButton>(R.id.exo_ffwd)?.setImageDrawable(
-                                        ffwdDrawable
-                                    )
                                 }
-                            }
 
-                            videoPlayerController = VideoPlayerController(
-                                context = context,
-                                uiState = uiState,
-                                container = root,
-                                updateRepeatToggleMode = {
-                                    val repeatToggleMode =
-                                        uiState.repeatToggleMode.let { repeatToggleMode ->
-                                            if (repeatToggleMode == RepeatToggleMode.REPEAT_NONE) {
-                                                Analytics.tracker.trackEvent(
-                                                    LoopButtonPressedEvent
-                                                )
-                                                RepeatToggleMode.REPEAT_ONE
+                                val prevDrawable = checkNotNull(
+                                    ContextCompat.getDrawable(
+                                        context,
+                                        R.drawable.media_player_prev
+                                    )
+                                )
+                                val rewDrawable = checkNotNull(
+                                    ContextCompat.getDrawable(
+                                        context,
+                                        R.drawable.media_player_15_minus
+                                    )
+                                )
+                                val nextDrawable = checkNotNull(
+                                    ContextCompat.getDrawable(
+                                        context,
+                                        R.drawable.media_player_next
+                                    )
+                                )
+                                val ffwdDrawable = checkNotNull(
+                                    ContextCompat.getDrawable(
+                                        context,
+                                        R.drawable.media_player_15_plus
+                                    )
+                                )
 
-                                            } else {
-                                                RepeatToggleMode.REPEAT_NONE
+                                fun applyControlIcons() {
+                                    playerComposeView.apply {
+                                        findViewById<ImageButton>(R.id.exo_prev)?.setImageDrawable(
+                                            prevDrawable
+                                        )
+                                        findViewById<ImageButton>(R.id.exo_rew)?.setImageDrawable(
+                                            rewDrawable
+                                        )
+                                        findViewById<ImageButton>(R.id.exo_next)?.setImageDrawable(
+                                            nextDrawable
+                                        )
+                                        findViewById<ImageButton>(R.id.exo_ffwd)?.setImageDrawable(
+                                            ffwdDrawable
+                                        )
+                                    }
+                                }
+
+                                videoPlayerController = VideoPlayerController(
+                                    context = context,
+                                    uiState = uiState,
+                                    container = root,
+                                    updateRepeatToggleMode = {
+                                        val repeatToggleMode =
+                                            uiState.repeatToggleMode.let { repeatToggleMode ->
+                                                if (repeatToggleMode == RepeatToggleMode.REPEAT_NONE) {
+                                                    Analytics.tracker.trackEvent(
+                                                        LoopButtonPressedEvent
+                                                    )
+                                                    RepeatToggleMode.REPEAT_ONE
+
+                                                } else {
+                                                    RepeatToggleMode.REPEAT_NONE
+                                                }
+                                            }
+                                        viewModel.setRepeatToggleModeForPlayer(repeatToggleMode)
+                                    },
+                                    updateIsVideoOptionPopupShown = { value ->
+                                        viewModel.updateIsMoreOptionShown(value)
+                                    },
+                                    updateIsSpeedOptionsShown = { value ->
+                                        isSpeedOptionsShown = value
+                                    },
+                                    updateLockStatus = { isLock ->
+                                        viewModel.updateLockStatus(isLock)
+                                    },
+                                    fullscreenClickedCallback = { isFullscreen ->
+                                        viewModel.updateFullscreen(isFullscreen)
+                                        updateResizeMode(isFullscreen)
+                                    },
+                                    lockStateChanged = { isLock ->
+                                        autoHideJob?.cancel()
+                                        if (isLock) {
+                                            isControllerViewVisible = true
+                                            systemUiController.isSystemBarsVisible = false
+                                            playerComposeView.showWithFade()
+                                            scheduleAutoHide(false)
+                                        } else {
+                                            isControllerViewVisible = true
+                                            systemUiController.isSystemBarsVisible = true
+                                            playerComposeView.showWithFade()
+                                            if (isPlaying) {
+                                                scheduleAutoHide(true)
                                             }
                                         }
-                                    viewModel.setRepeatToggleModeForPlayer(repeatToggleMode)
-                                },
-                                updateIsVideoOptionPopupShown = { value ->
-                                    viewModel.updateIsMoreOptionShown(value)
-                                },
-                                updateIsSpeedOptionsShown = { value ->
-                                    isSpeedOptionsShown = value
-                                },
-                                updateLockStatus = { isLock ->
-                                    viewModel.updateLockStatus(isLock)
-                                },
-                                fullscreenClickedCallback = { isFullscreen ->
-                                    viewModel.updateFullscreen(isFullscreen)
-                                    updateResizeMode(isFullscreen)
-                                },
-                                lockStateChanged = { isLock ->
-                                    autoHideJob?.cancel()
-                                    if (isLock) {
-                                        isControllerViewVisible = true
-                                        systemUiController.isSystemBarsVisible = false
-                                        playerComposeView.showWithFade()
-                                        scheduleAutoHide(false)
-                                    } else {
-                                        isControllerViewVisible = true
-                                        systemUiController.isSystemBarsVisible = true
-                                        playerComposeView.showWithFade()
-                                        if (isPlaying) {
+                                    },
+                                    playerViewClicked = {
+                                        autoHideJob?.cancel()
+                                        if (isControllerViewVisible) {
+                                            isControllerViewVisible = false
+                                            if (!uiState.isLocked) {
+                                                systemUiController.isSystemBarsVisible = false
+                                            }
+                                            playerComposeView.hideWithFade()
+                                        } else {
+                                            isControllerViewVisible = true
+                                            if (!uiState.isLocked) {
+                                                systemUiController.isSystemBarsVisible = true
+                                            }
+                                            playerComposeView.showWithFade()
+                                            if (uiState.isLocked) {
+                                                scheduleAutoHide(false)
+                                            } else if (isPlaying) {
+                                                scheduleAutoHide(true)
+                                            }
+                                        }
+                                    },
+                                    onSnapshotSelected = {
+                                        writeStoragePermission?.launchPermissionRequest() ?: run {
+                                            snapshotScreen = true
+                                        }
+                                    },
+                                    resetAutoHideTimer = {
+                                        if (isPlaying && isControllerViewVisible && !uiState.isLocked) {
                                             scheduleAutoHide(true)
                                         }
-                                    }
-                                },
-                                playerViewClicked = {
-                                    autoHideJob?.cancel()
-                                    if (isControllerViewVisible) {
-                                        isControllerViewVisible = false
-                                        if (!uiState.isLocked) {
-                                            systemUiController.isSystemBarsVisible = false
-                                        }
-                                        playerComposeView.hideWithFade()
-                                    } else {
-                                        isControllerViewVisible = true
-                                        if (!uiState.isLocked) {
-                                            systemUiController.isSystemBarsVisible = true
-                                        }
-                                        playerComposeView.showWithFade()
-                                        if (uiState.isLocked) {
-                                            scheduleAutoHide(false)
-                                        } else if (isPlaying) {
-                                            scheduleAutoHide(true)
+                                    },
+                                ).also { controller ->
+                                    playerComposeView.tag = controller
+                                }
+
+                                playerComposeView.setControllerVisibilityListener(
+                                    PlayerView.ControllerVisibilityListener { visibility ->
+                                        if (visibility == View.VISIBLE) {
+                                            applyPlayPauseIcon()
+                                            applyControlIcons()
                                         }
                                     }
-                                },
-                                onSnapshotSelected = {
-                                    writeStoragePermission?.launchPermissionRequest() ?: run {
-                                        snapshotScreen = true
-                                    }
-                                },
-                                resetAutoHideTimer = {
-                                    if (isPlaying && isControllerViewVisible && !uiState.isLocked) {
+                                )
+
+                                playerComposeView.player = player
+                                applyControlIcons()
+                                playerComposeView.controllerShowTimeoutMs = 0
+                                updateResizeMode(uiState.isFullscreen)
+
+                                autoHideJob?.cancel()
+                                if (isControllerViewVisible) {
+                                    systemUiController.isSystemBarsVisible = true
+                                    playerComposeView.showWithFade()
+                                    if (isPlaying && !uiState.isLocked) {
                                         scheduleAutoHide(true)
                                     }
-                                },
-                            ).also { controller ->
-                                playerComposeView.tag = controller
-                            }
-
-                            playerComposeView.setControllerVisibilityListener(
-                                PlayerView.ControllerVisibilityListener { visibility ->
-                                    if (visibility == View.VISIBLE) {
-                                        applyPlayPauseIcon()
-                                        applyControlIcons()
-                                    }
                                 }
-                            )
 
-                            playerComposeView.player = player
-                            applyControlIcons()
-                            playerComposeView.controllerShowTimeoutMs = 0
-                            updateResizeMode(uiState.isFullscreen)
-
-                            autoHideJob?.cancel()
-                            if (isControllerViewVisible) {
-                                systemUiController.isSystemBarsVisible = true
-                                playerComposeView.showWithFade()
-                                if (isPlaying && !uiState.isLocked) {
-                                    scheduleAutoHide(true)
-                                }
+                                playerComposeView.controllerAutoShow = false
                             }
-
-                            playerComposeView.controllerAutoShow = false
+                    },
+                    onRelease = {
+                        (playerComposeView.tag as? VideoPlayerController)?.release()
+                        if (uiState.isMoreOptionShown) {
+                            viewModel.updateIsMoreOptionShown(false)
                         }
-                },
-                onRelease = {
-                    (playerComposeView.tag as? VideoPlayerController)?.release()
-                    if (uiState.isMoreOptionShown) {
-                        viewModel.updateIsMoreOptionShown(false)
+                    }
+                ) {
+                    val controllerView = root.findViewById<View>(R.id.controls_view)
+
+                    playerComposeView.keepScreenOn =
+                        uiState.mediaPlaybackState == MediaPlaybackState.Playing
+
+                    updateControllerViewPadding(
+                        controllerView = controllerView,
+                        orientation = orientation,
+                        padding = navigationBarHeightPx,
+                        navigationBarPosition = navigationBarPosition
+                    )
+                    root.findViewById<View>(R.id.navigation_bar_bg).isVisible =
+                        orientation != ORIENTATION_PORTRAIT
+
+                    root.findViewById<View>(R.id.loading_video_player_controller_view).isVisible =
+                        playbackState <= STATE_BUFFERING
+
+                    (playerComposeView.findViewById<View>(Media3R.id.exo_progress) as? PulsingTimeBar)
+                        ?.setSeekBuffering(playbackState <= STATE_BUFFERING)
+
+                    root.findViewById<View>(R.id.exo_play_pause).isVisible =
+                        playbackState > STATE_BUFFERING
+                    root.findViewById<ImageButton>(Media3R.id.exo_play_pause)
+                        ?.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                context,
+                                if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play
+                            )
+                        )
+                }
+
+                AnimatedVisibility(
+                    visible = isControllerViewVisible && !uiState.isLocked,
+                    enter = fadeIn(
+                        animationSpec = tween(
+                            CONTROLLER_FADE_DURATION_MS.toInt(),
+                            easing = LinearEasing
+                        )
+                    ),
+                    exit = fadeOut(
+                        animationSpec = tween(
+                            CONTROLLER_FADE_DURATION_MS.toInt(),
+                            easing = LinearEasing
+                        )
+                    ),
+                ) {
+                    val horizontalPadding = when (orientation) {
+                        ORIENTATION_LANDSCAPE if navigationBarPosition == NavigationBarPosition.Left ->
+                            PaddingValues(start = navigationBarHeight)
+
+                        ORIENTATION_LANDSCAPE if navigationBarPosition == NavigationBarPosition.Right ->
+                            PaddingValues(end = navigationBarHeight)
+
+                        else -> PaddingValues(0.dp)
+                    }
+                    VideoPlayerTopBar(
+                        modifier = Modifier.padding(horizontalPadding),
+                        title = uiState.metadata.title ?: uiState.metadata.nodeName,
+                        onBackPressed = { backDispatcher?.onBackPressed() },
+                        onMoreActionsClicked = onMoreActionsClicked,
+                        trailingContent = {
+                            TransfersToolbarWidget {
+                                navigateToTransfers()
+                            }
+                        },
+                    )
+                }
+
+                if (uiState.isVideoNotRendered) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        MegaText(
+                            text = stringResource(sharedR.string.video_player_video_not_rendered),
+                            textColor = if (isControllerViewVisible) TextColor.Secondary else TextColor.Primary,
+                            modifier = Modifier.offset(y = VIDEO_NOT_RENDERED_TEXT_OFFSET_Y),
+                        )
                     }
                 }
-            ) {
-                val controllerView = root.findViewById<View>(R.id.controls_view)
 
-                playerComposeView.keepScreenOn =
-                    uiState.mediaPlaybackState == MediaPlaybackState.Playing
-
-                updateControllerViewPadding(
-                    controllerView = controllerView,
-                    orientation = orientation,
-                    padding = navigationBarHeightPx,
-                    navigationBarPosition = navigationBarPosition
-                )
-                root.findViewById<View>(R.id.navigation_bar_bg).isVisible =
-                    orientation != ORIENTATION_PORTRAIT
-
-                root.findViewById<ProgressBar>(R.id.loading_video_player_controller_view).isVisible =
-                    playbackState <= STATE_BUFFERING
-
-                root.findViewById<View>(R.id.exo_play_pause).isVisible =
-                    playbackState > STATE_BUFFERING
-                root.findViewById<ImageButton>(Media3R.id.exo_play_pause)
-                    ?.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            context,
-                            if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play
+                resizedBitmap?.let {
+                    if (isScreenshotVisible) {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Screenshot Animation",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    scaleX = scale.value,
+                                    scaleY = scale.value,
+                                    transformOrigin =
+                                        if (orientation == ORIENTATION_LANDSCAPE)
+                                            TransformOrigin(0.9f, 0.9f)
+                                        else {
+                                            TransformOrigin(0.9f, 0.8f)
+                                        }
+                                )
                         )
-                    )
-            }
-
-            AnimatedVisibility(
-                visible = isControllerViewVisible && !uiState.isLocked,
-                enter = fadeIn(
-                    animationSpec = tween(
-                        CONTROLLER_FADE_DURATION_MS.toInt(),
-                        easing = LinearEasing
-                    )
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(
-                        CONTROLLER_FADE_DURATION_MS.toInt(),
-                        easing = LinearEasing
-                    )
-                ),
-            ) {
-                val horizontalPadding = when (orientation) {
-                    ORIENTATION_LANDSCAPE if navigationBarPosition == NavigationBarPosition.Left ->
-                        PaddingValues(start = navigationBarHeight)
-
-                    ORIENTATION_LANDSCAPE if navigationBarPosition == NavigationBarPosition.Right ->
-                        PaddingValues(end = navigationBarHeight)
-
-                    else -> PaddingValues(0.dp)
+                    }
                 }
-                VideoPlayerTopBar(
-                    modifier = Modifier.padding(horizontalPadding),
-                    title = uiState.metadata.title ?: uiState.metadata.nodeName,
-                    onBackPressed = { backDispatcher?.onBackPressed() },
-                    onMoreActionsClicked = onMoreActionsClicked,
-                    trailingContent = {
-                        TransfersToolbarWidget {
-                            navigateToTransfers()
-                        }
-                    },
-                )
-            }
 
-            if (uiState.isVideoNotRendered) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MegaText(
-                        text = stringResource(sharedR.string.video_player_video_not_rendered),
-                        textColor = if (isControllerViewVisible) TextColor.Secondary else TextColor.Primary,
-                        modifier = Modifier.offset(y = VIDEO_NOT_RENDERED_TEXT_OFFSET_Y),
-                    )
-                }
-            }
-
-            resizedBitmap?.let {
-                if (isScreenshotVisible) {
-                    Image(
-                        bitmap = it.asImageBitmap(),
-                        contentDescription = "Screenshot Animation",
+                if (isSpeedOptionsShown) {
+                    LaunchedEffect(Unit) {
+                        Analytics.tracker.trackEvent(SpeedSelectedDialogEvent)
+                    }
+                    val speedSheetState =
+                        rememberModalBottomSheetState(skipPartiallyExpanded = false)
+                    MegaModalBottomSheet(
+                        bottomSheetBackground = MegaModalBottomSheetBackground.Surface1,
+                        sheetState = speedSheetState,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer(
-                                scaleX = scale.value,
-                                scaleY = scale.value,
-                                transformOrigin =
-                                    if (orientation == ORIENTATION_LANDSCAPE)
-                                        TransformOrigin(0.9f, 0.9f)
-                                    else {
-                                        TransformOrigin(0.9f, 0.8f)
-                                    }
-                            )
-                    )
+                            .fillMaxWidth()
+                            .statusBarsPadding(),
+                        onDismissRequest = { isSpeedOptionsShown = false },
+                    ) {
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                            VideoSpeedPlaybackMenuAction.entries.forEach { action ->
+                                val isSelected = action.playbackItem == uiState.currentSpeedPlayback
+                                FlexibleLineListItem(
+                                    modifier = Modifier.testTag(action.testTag),
+                                    title = action.getDescription(),
+                                    trailingElement = {
+                                        if (isSelected) {
+                                            MegaIcon(
+                                                modifier = Modifier.size(24.dp),
+                                                painter = rememberVectorPainter(
+                                                    IconPack.Small.Thin.Outline.Check
+                                                ),
+                                                contentDescription = null,
+                                                tint = IconColor.Secondary,
+                                            )
+                                        }
+                                    },
+                                    onClickListener = {
+                                        Analytics.tracker.trackEvent(action.speedOptionPressedEvent)
+                                        viewModel.updateCurrentSpeedPlaybackItem(action.playbackItem)
+                                        coroutineScope.launch {
+                                            speedSheetState.hide()
+                                            isSpeedOptionsShown = false
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
-            }
 
-            if (isSpeedOptionsShown) {
-                LaunchedEffect(Unit) {
-                    Analytics.tracker.trackEvent(SpeedSelectedDialogEvent)
-                }
-                val speedSheetState =
-                    rememberModalBottomSheetState(skipPartiallyExpanded = false)
-                MegaModalBottomSheet(
-                    bottomSheetBackground = MegaModalBottomSheetBackground.Surface1,
-                    sheetState = speedSheetState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding(),
-                    onDismissRequest = { isSpeedOptionsShown = false },
-                ) {
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                        VideoSpeedPlaybackMenuAction.entries.forEach { action ->
-                            val isSelected = action.playbackItem == uiState.currentSpeedPlayback
-                            FlexibleLineListItem(
-                                modifier = Modifier.testTag(action.testTag),
-                                title = action.getDescription(),
-                                trailingElement = {
-                                    if (isSelected) {
-                                        MegaIcon(
-                                            modifier = Modifier.size(24.dp),
-                                            painter = rememberVectorPainter(
-                                                IconPack.Small.Thin.Outline.Check
-                                            ),
-                                            contentDescription = null,
-                                            tint = IconColor.Secondary,
+                if (uiState.showSubTitlesOptions) {
+                    MegaModalBottomSheet(
+                        bottomSheetBackground = MegaModalBottomSheetBackground.Surface1,
+                        sheetState = subtitleSheetState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding(),
+                        windowInsets = WindowInsets.navigationBars,
+                        onDismissRequest = {
+                            viewModel.updateShowSubtitleDialog(false)
+                        },
+                    ) {
+                        VideoPlayerSubtitleBottomSheetContent(
+                            rows = subtitleSheetRows,
+                            selectOptionState = uiState.subtitleSelectedStatus.id,
+                            onOffClicked = {
+                                viewModel.updateSubtitleSelectedStatus(SubtitleSelectedStatus.Off)
+                            },
+                            onAddedSubtitleClicked = {
+                                viewModel.updateSubtitleSelectedStatus(SubtitleSelectedStatus.AddSubtitleItem)
+                            },
+                            onAutoMatch = { info ->
+                                if (info.url == null) {
+                                    coroutineScope.launch {
+                                        localSnackbarHostState.showSnackbar(
+                                            resource.getString(R.string.media_player_video_message_adding_subtitle_failed)
                                         )
                                     }
-                                },
-                                onClickListener = {
-                                    Analytics.tracker.trackEvent(action.speedOptionPressedEvent)
-                                    viewModel.updateCurrentSpeedPlaybackItem(action.playbackItem)
-                                    coroutineScope.launch {
-                                        speedSheetState.hide()
-                                        isSpeedOptionsShown = false
-                                    }
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (uiState.showSubTitlesOptions) {
-                MegaModalBottomSheet(
-                    bottomSheetBackground = MegaModalBottomSheetBackground.Surface1,
-                    sheetState = subtitleSheetState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding(),
-                    windowInsets = WindowInsets.navigationBars,
-                    onDismissRequest = {
-                        viewModel.updateShowSubtitleDialog(false)
-                    },
-                ) {
-                    VideoPlayerSubtitleBottomSheetContent(
-                        rows = subtitleSheetRows,
-                        selectOptionState = uiState.subtitleSelectedStatus.id,
-                        onOffClicked = {
-                            viewModel.updateSubtitleSelectedStatus(SubtitleSelectedStatus.Off)
-                        },
-                        onAddedSubtitleClicked = {
-                            viewModel.updateSubtitleSelectedStatus(SubtitleSelectedStatus.AddSubtitleItem)
-                        },
-                        onAutoMatch = { info ->
-                            if (info.url == null) {
-                                coroutineScope.launch {
-                                    snackBarQueue.queueMessage(
-                                        resource.getString(R.string.media_player_video_message_adding_subtitle_failed)
+                                } else {
+                                    Analytics.tracker.trackEvent(AutoMatchSubtitleOptionPressedEvent)
+                                    viewModel.updateSubtitleSelectedStatus(
+                                        SubtitleSelectedStatus.SelectMatchedItem,
+                                        info
                                     )
                                 }
-                            } else {
-                                Analytics.tracker.trackEvent(AutoMatchSubtitleOptionPressedEvent)
-                                viewModel.updateSubtitleSelectedStatus(
-                                    SubtitleSelectedStatus.SelectMatchedItem,
-                                    info
+                            },
+                            onToSelectSubtitle = {
+                                Analytics.tracker.trackEvent(AddSubtitlesOptionPressedEvent)
+                                viewModel.navigateToSelectSubtitle()
+                            },
+                        )
+                    }
+                }
+
+                if (uiState.isMoreOptionShown) {
+                    MegaModalBottomSheet(
+                        modifier = Modifier.fillMaxWidth(),
+                        sheetState = moreOptionsSheetState,
+                        bottomSheetBackground = MegaModalBottomSheetBackground.PageBackground,
+                        onDismissRequest = {
+                            // Called after a swipe/outside-tap gesture — the sheet is already
+                            // animating away, so just sync the ViewModel state.
+                            viewModel.updateIsMoreOptionShown(false)
+                        },
+                        content = {
+                            moreOptionActions.forEach { action ->
+                                NodeActionListTile(
+                                    modifier = Modifier.testTag(action.testTag),
+                                    menuAction = action,
+                                    onActionClicked = {
+                                        // Animate the sheet away first, then perform the action
+                                        // so the hide animation is not skipped.
+                                        coroutineScope.launch {
+                                            moreOptionsSheetState.hide()
+                                        }.invokeOnCompletion { cause ->
+                                            if (cause == null && !moreOptionsSheetState.isVisible) {
+                                                when (action) {
+                                                    VideoPlayerMoreOption.Snapshot ->
+                                                        videoPlayerController?.onSnapshotOptionSelected()
+
+                                                    VideoPlayerMoreOption.Subtitle ->
+                                                        viewModel.updateShowSubtitleDialog(true)
+
+                                                    VideoPlayerMoreOption.Playlist -> {
+                                                        autoHideJob?.cancel()
+                                                        playQueueButtonClicked()
+                                                    }
+
+                                                    VideoPlayerMoreOption.Lock ->
+                                                        videoPlayerController?.onLockOptionSelected()
+
+                                                    VideoPlayerMoreOption.PIP -> onEnterPip()
+                                                }
+                                                viewModel.updateIsMoreOptionShown(false)
+                                            }
+                                        }
+                                    },
                                 )
                             }
                         },
-                        onToSelectSubtitle = {
-                            Analytics.tracker.trackEvent(AddSubtitlesOptionPressedEvent)
-                            viewModel.navigateToSelectSubtitle()
-                        },
                     )
                 }
             }
 
-            if (uiState.isMoreOptionShown) {
-                MegaModalBottomSheet(
-                    modifier = Modifier.fillMaxWidth(),
-                    sheetState = moreOptionsSheetState,
-                    bottomSheetBackground = MegaModalBottomSheetBackground.PageBackground,
-                    onDismissRequest = {
-                        // Called after a swipe/outside-tap gesture — the sheet is already
-                        // animating away, so just sync the ViewModel state.
-                        viewModel.updateIsMoreOptionShown(false)
-                    },
-                    content = {
-                        moreOptionActions.forEach { action ->
-                            NodeActionListTile(
-                                modifier = Modifier.testTag(action.testTag),
-                                menuAction = action,
-                                onActionClicked = {
-                                    // Animate the sheet away first, then perform the action
-                                    // so the hide animation is not skipped.
-                                    coroutineScope.launch {
-                                        moreOptionsSheetState.hide()
-                                    }.invokeOnCompletion { cause ->
-                                        if (cause == null && !moreOptionsSheetState.isVisible) {
-                                            when (action) {
-                                                VideoPlayerMoreOption.Snapshot ->
-                                                    videoPlayerController?.onSnapshotOptionSelected()
-
-                                                VideoPlayerMoreOption.Subtitle ->
-                                                    viewModel.updateShowSubtitleDialog(true)
-
-                                                VideoPlayerMoreOption.Playlist -> {
-                                                    autoHideJob?.cancel()
-                                                    playQueueButtonClicked()
-                                                }
-
-                                                VideoPlayerMoreOption.Lock ->
-                                                    videoPlayerController?.onLockOptionSelected()
-
-                                                VideoPlayerMoreOption.PIP -> onEnterPip()
-                                            }
-                                            viewModel.updateIsMoreOptionShown(false)
-                                        }
-                                    }
-                                },
-                            )
-                        }
-                    },
-                )
-            }
+            val snackbarBottomPadding =
+                if (orientation == ORIENTATION_LANDSCAPE) SNACKBAR_BOTTOM_PADDING_LANDSCAPE
+                else SNACKBAR_BOTTOM_PADDING_PORTRAIT
+            SnackbarHost(
+                hostState = localSnackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = navBarInsets.bottom + snackbarBottomPadding),
+            )
         }
     }
 

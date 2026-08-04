@@ -17,7 +17,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -34,8 +33,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import mega.android.core.ui.components.LocalSnackBarHostState
-import mega.android.core.ui.extensions.showAutoDurationSnackbar
 import mega.android.core.ui.model.SnackbarAttributes
 import mega.android.core.ui.model.SnackbarDuration
 import mega.privacy.android.analytics.Analytics
@@ -75,6 +72,7 @@ import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import mega.privacy.android.domain.usecase.MonitorThemeModeUseCase
 import mega.privacy.android.navigation.contract.FeatureDestination
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
+import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.event.VideoPlayerScreenEvent
 import nz.mega.sdk.MegaApiJava.INVALID_HANDLE
 import javax.inject.Inject
@@ -220,19 +218,6 @@ class VideoPlayerActivity : AppCompatActivity(), MegaSnackbarShower {
                 initialKey = VideoPlayerScreenNavKey,
                 navigationResultManager = navigationResultManager,
                 featureDestinations = featureDestinations,
-                overlayContent = {
-                    // LegacyActivityScaffold always installs LocalSnackBarHostState before
-                    // composing overlayContent — fail fast if that invariant ever breaks.
-                    val snackbarHostState = requireNotNull(LocalSnackBarHostState.current) {
-                        "LocalSnackBarHostState not provided"
-                    }
-                    LaunchedEffect(uiState.snackBarMessage) {
-                        uiState.snackBarMessage?.let { message ->
-                            snackbarHostState.showAutoDurationSnackbar(message)
-                            videoPlayerViewModelV2.updateSnackBarMessage(null)
-                        }
-                    }
-                },
             ) { navigationHandler, transferHandler ->
                 videoPlayerEntryProvider(
                     navigationHandler = navigationHandler,
@@ -324,6 +309,12 @@ class VideoPlayerActivity : AppCompatActivity(), MegaSnackbarShower {
                     if (videoWidth == 0 || videoHeight == 0) return
                     videoPlayerViewModelV2.updateCurrentPlayingVideoSize(
                         VideoSize(videoWidth, videoHeight)
+                    )
+                }
+
+                override fun onLargeClusterSeekWarning() {
+                    videoPlayerViewModelV2.updateSnackBarMessage(
+                        getString(sharedR.string.video_player_large_cluster_seek_warning)
                     )
                 }
             }

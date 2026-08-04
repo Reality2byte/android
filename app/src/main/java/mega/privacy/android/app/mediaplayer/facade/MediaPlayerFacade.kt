@@ -53,8 +53,6 @@ import kotlinx.coroutines.flow.flowOf
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.app.mediaplayer.MediaMegaPlayer
 import mega.privacy.android.app.mediaplayer.gateway.MediaPlayerGateway
-import mega.privacy.android.feature.mediaplayer.data.mapper.ExoPlayerRepeatModeMapper
-import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.app.mediaplayer.model.MediaPlaySources
 import mega.privacy.android.app.mediaplayer.model.PlayerNotificationCreatedParams
 import mega.privacy.android.app.mediaplayer.model.SpeedPlaybackItem
@@ -63,6 +61,8 @@ import mega.privacy.android.app.mediaplayer.service.MetadataExtractor
 import mega.privacy.android.app.utils.Constants.INVALID_VALUE
 import mega.privacy.android.domain.entity.mediaplayer.RepeatToggleMode
 import mega.privacy.android.domain.monitoring.CrashReporter
+import mega.privacy.android.feature.mediaplayer.data.mapper.ExoPlayerRepeatModeMapper
+import mega.privacy.android.feature.mediaplayer.data.mapper.RepeatToggleModeByExoPlayerMapper
 import mega.privacy.android.icon.pack.R
 import mega.privacy.mobile.analytics.event.VideoBufferingExceeded_1_SecondEvent
 import timber.log.Timber
@@ -269,9 +269,12 @@ class MediaPlayerFacade @Inject constructor(
     }
 
     private var bufferingStartTime: Long = 0L
+    private var hasLargeCluster = false
+    private var playerCallback: MediaPlayerCallback? = null
 
     private fun buildLoadControl(): DefaultLoadControl {
-        val isLowRam = context.getSystemService(ActivityManager::class.java)?.isLowRamDevice ?: false
+        val isLowRam =
+            context.getSystemService(ActivityManager::class.java)?.isLowRamDevice ?: false
         return if (isLowRam) {
             DefaultLoadControl.Builder()
                 .setTargetBufferBytes(LOW_RAM_TARGET_BUFFER_BYTES)
@@ -295,6 +298,7 @@ class MediaPlayerFacade @Inject constructor(
         nameChangeCallback: (title: String?, artist: String?, album: String?) -> Unit,
         mediaPlayerCallback: MediaPlayerCallback,
     ): ExoPlayer {
+        this.playerCallback = mediaPlayerCallback
         trackSelector = DefaultTrackSelector(context)
         val renderersFactory = LegacySubtitleRenderersFactory(context).setExtensionRendererMode(
             DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
@@ -315,6 +319,7 @@ class MediaPlayerFacade @Inject constructor(
                             isUpdateName = reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
                         )
                         hasSwitchTrackOnInit = false
+                        hasLargeCluster = false
                     }
 
                     override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
@@ -386,7 +391,7 @@ class MediaPlayerFacade @Inject constructor(
             exoPlayer.shuffleModeEnabled = it
         }
         shuffleOrder?.let {
-            exoPlayer.setShuffleOrder(it)
+            exoPlayer.shuffleOrder = it
         }
         player = MediaMegaPlayer(exoPlayer)
         playerNotificationManager?.setPlayer(player)
@@ -395,12 +400,31 @@ class MediaPlayerFacade @Inject constructor(
 
     private fun startSavingBufferingState(playbackState: Int) {
         when (playbackState) {
-            Player.STATE_BUFFERING -> bufferingStartTime = System.currentTimeMillis()
+            Player.STATE_BUFFERING -> {
+                bufferingStartTime = System.currentTimeMillis()
+            }
+
             Player.STATE_READY -> {
                 if (bufferingStartTime > 0) {
-                    val duration = System.currentTimeMillis() - bufferingStartTime
-                    if (duration > 1000) {
-                        logBufferingEvent(duration)
+                    val bufferingDuration = System.currentTimeMillis() - bufferingStartTime
+                    val bufferedAheadMs = exoPlayer.bufferedPosition - exoPlayer.currentPosition
+                    // Large-cluster detection: for WebM/MKV files with large Matroska clusters,
+                    // ExoPlayer must read an entire cluster (~50 s) before bufferedDurationUs
+                    // becomes non-zero, so bufferedAheadMs at STATE_READY is ~50,000 ms instead
+                    // of the normal ~2,500–5,000 ms target.
+                    // We also require bufferingDuration to be long, because small files may be
+                    // fully cached on disk — cluster parsing from cache is near-instant even for
+                    // large clusters, so those seeks do not cause a noticeable delay.
+                    if (!hasLargeCluster
+                        && bufferedAheadMs > LARGE_CLUSTER_THRESHOLD_MS
+                        && bufferingDuration > LARGE_CLUSTER_MIN_BUFFERING_MS
+                    ) {
+                        hasLargeCluster = true
+                        Timber.d("LARGE_CLUSTER_DETECTED: bufferedAheadMs=$bufferedAheadMs, bufferingDuration=${bufferingDuration}ms")
+                        playerCallback?.onLargeClusterSeekWarning()
+                    }
+                    if (bufferingDuration > 1000) {
+                        logBufferingEvent(bufferingDuration)
                     }
                     bufferingStartTime = 0L
                 }
@@ -524,7 +548,7 @@ class MediaPlayerFacade @Inject constructor(
     override fun setShuffleOrder(newShuffleOrder: ShuffleOrder) {
         if (exoPlayer.shuffleModeEnabled && newShuffleOrder.length > 2) {
             runCatching {
-                exoPlayer.setShuffleOrder(newShuffleOrder)
+                exoPlayer.shuffleOrder = newShuffleOrder
             }.recover {
                 Timber.e(it)
             }
@@ -572,6 +596,7 @@ class MediaPlayerFacade @Inject constructor(
     }
 
     override fun playerRelease() {
+        playerCallback = null
         player?.release()
         if (::exoPlayer.isInitialized) {
             exoPlayer.release()
@@ -735,7 +760,7 @@ class MediaPlayerFacade @Inject constructor(
                 playerStop()
                 exoPlayer.setMediaSource(mergedSource, oldPosition)
                 exoPlayer.prepare()
-                player?.play()
+                player.play()
                 showSubtitle()
                 true
             } else {
@@ -747,13 +772,13 @@ class MediaPlayerFacade @Inject constructor(
     override fun showSubtitle() {
         isSubtitleHidden = false
         if (!hasSwitchTrackOnInit) hasSwitchTrackOnInit = true
-        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
+        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder()
             .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false).build()
     }
 
     override fun hideSubtitle() {
         isSubtitleHidden = true
-        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder(context)
+        trackSelector.parameters = DefaultTrackSelector.Parameters.Builder()
             .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
     }
 
@@ -787,7 +812,7 @@ class MediaPlayerFacade @Inject constructor(
     // into the middle of an active cue does not correctly restore the cue state.
     // Re-enabling legacy decoding keeps TextRenderer responsible for cue-timing selection,
     // which works correctly for any seek position. Can be removed once media3 fixes the
-    // backward seek behaviour in SubtitleTranscodingMediaPeriod / ReplacingCuesResolver.
+    // backward seek behavior in SubtitleTranscodingMediaPeriod / ReplacingCuesResolver.
     private class LegacySubtitleRenderersFactory(context: Context) :
         DefaultRenderersFactory(context) {
 
@@ -796,7 +821,7 @@ class MediaPlayerFacade @Inject constructor(
             output: TextOutput,
             outputLooper: Looper,
             extensionRendererMode: Int,
-            out: ArrayList<Renderer>
+            out: ArrayList<Renderer>,
         ) {
             out.add(TextRenderer(output, outputLooper).apply {
                 @Suppress("DEPRECATION")
@@ -808,8 +833,14 @@ class MediaPlayerFacade @Inject constructor(
     companion object {
         private const val INCREMENT_TIME_IN_MS = 15000L
 
+        // If bufferedAheadMs exceeds this threshold after STATE_READY, the file
+        // likely has oversized Matroska clusters. Normal files buffer ~5 s before
+        // starting playback; a large-cluster file buffers a full cluster (~50 s).
+        private const val LARGE_CLUSTER_THRESHOLD_MS = 15_000L
+        private const val LARGE_CLUSTER_MIN_BUFFERING_MS = 10_000L
+
         // ExoPlayer buffer configuration for low-RAM devices (heap growth limit ≤ 128 MB).
-        // Prioritises byte-size limits over time-based buffers to avoid OOM during video playback.
+        // Prioritizes byte-size limits over time-based buffers to avoid OOM during video playback.
         private const val LOW_RAM_TARGET_BUFFER_BYTES = 12 * 1024 * 1024 // 12 MB
         private const val LOW_RAM_MIN_BUFFER_MS = 15_000
         private const val LOW_RAM_MAX_BUFFER_MS = 30_000

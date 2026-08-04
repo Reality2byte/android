@@ -12,7 +12,6 @@ import android.os.Environment.getExternalStoragePublicDirectory
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
-import android.widget.ProgressBar
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -690,7 +689,7 @@ internal fun ComposeVideoPlayerScreen(
                 root.findViewById<View>(R.id.navigation_bar_bg).isVisible =
                     orientation != ORIENTATION_PORTRAIT
 
-                root.findViewById<ProgressBar>(R.id.loading_video_player_controller_view).isVisible =
+                root.findViewById<View>(R.id.loading_video_player_controller_view).isVisible =
                     playbackState <= STATE_BUFFERING
 
                 root.findViewById<View>(R.id.exo_play_pause).isVisible =

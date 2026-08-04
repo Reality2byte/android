@@ -29,11 +29,10 @@
                 android:background="@null" />
         </FrameLayout>
 
-        <ProgressBar
+        <mega.privacy.android.app.presentation.videoplayer.view.BarSpinnerView
             android:id="@+id/loading_video_player_controller_view"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:indeterminateDrawable="@drawable/video_player_progress_indeterminate_anim_material"
             app:layout_constraintBottom_toBottomOf="@+id/play_pause_placeholder"
             app:layout_constraintEnd_toEndOf="@+id/play_pause_placeholder"
             app:layout_constraintStart_toStartOf="@+id/play_pause_placeholder"
@@ -138,7 +137,7 @@
                     tools:text="04:30" />
             </LinearLayout>
 
-            <androidx.media3.ui.DefaultTimeBar
+            <mega.privacy.android.app.presentation.videoplayer.view.PulsingTimeBar
                 android:id="@id/exo_progress"
                 style="@style/Widget.Mega.TimeBar"
                 android:layout_width="0dp"
