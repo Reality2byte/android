@@ -495,16 +495,9 @@ class SpeakerViewCallFragment : MeetingBaseFragment(),
                 inMeetingViewModel.removePreviousSpeakers()
 
             } else {
-                currentSpeaker.videoListener?.let { listener ->
+                currentSpeaker.videoListener?.let {
                     Timber.d("Remove speaker video listener clientID ${currentSpeaker.clientId}")
-                    inMeetingViewModel.removeChatRemoteVideoListener(
-                        listener,
-                        currentSpeaker.clientId,
-                        inMeetingViewModel.getChatId(),
-                        currentSpeaker.hasHiRes
-                    )
-
-                    removeSpeakerListener()
+                    removeSpeakerListener(currentSpeaker)
                 }
             }
         }
@@ -823,26 +816,29 @@ class SpeakerViewCallFragment : MeetingBaseFragment(),
 
     /**
      * Method for removing the video listener of Speaker
+     *
+     * @param speaker The speaker whose video listener is to be removed
      */
-    private fun removeSpeakerListener() {
-        inMeetingViewModel.getCurrentSpeakerParticipant()?.let { speaker ->
-            Timber.d("Remove texture view of speaker")
-            if (surfaceContainer.childCount > 0) {
-                surfaceContainer.removeAllViews()
-            }
-
-            speaker.videoListener?.let { listener ->
-                listener.textureView?.let { textureView ->
-                    textureView.parent?.let { surfaceParent ->
-                        (surfaceParent as ViewGroup).removeView(textureView)
-                    }
-                    textureView.isVisible = false
-                }
-            }
-
-            Timber.d("Speaker ${speaker.clientId} video listener null")
-            speaker.videoListener = null
+    private fun removeSpeakerListener(speaker: Participant) {
+        Timber.d("Remove texture view of speaker")
+        if (surfaceContainer.childCount > 0) {
+            surfaceContainer.removeAllViews()
         }
+
+        speaker.videoListener?.let { listener ->
+            // Releasing a listener means removing both the SDK registration and the
+            // texture view; keep the two steps together so neither one is missed.
+            inMeetingViewModel.removeChatRemoteVideoListener(listener)
+            listener.textureView?.let { textureView ->
+                textureView.parent?.let { surfaceParent ->
+                    (surfaceParent as ViewGroup).removeView(textureView)
+                }
+                textureView.isVisible = false
+            }
+        }
+
+        Timber.d("Speaker ${speaker.clientId} video listener null")
+        speaker.videoListener = null
     }
 
     /**
@@ -858,7 +854,7 @@ class SpeakerViewCallFragment : MeetingBaseFragment(),
 
             speaker.videoListener?.let { listener ->
                 inMeetingViewModel.removeResolutionAndListener(speaker, listener)
-                removeSpeakerListener()
+                removeSpeakerListener(speaker)
             }
         }
 

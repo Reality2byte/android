@@ -657,12 +657,7 @@ class IndividualCallFragment : MeetingBaseFragment() {
 
         Timber.d("Remove remove video listener of client ID $clientId")
 
-        inMeetingViewModel.removeChatRemoteVideoListener(
-            videoListener!!,
-            clientId,
-            chatId,
-            true
-        )
+        videoListener?.let { inMeetingViewModel.removeChatRemoteVideoListener(it) }
 
         videoListener = null
         Timber.d("Participant $clientId video listener null")

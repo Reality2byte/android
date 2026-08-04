@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mega.privacy.android.app.MegaApplication
 import mega.privacy.android.app.R
 import mega.privacy.android.app.components.ChatManagement
@@ -253,6 +255,28 @@ class InMeetingViewModel @Inject constructor(
 
     private val _pinItemEvent = MutableLiveData<Event<Participant>>()
     val pinItemEvent: LiveData<Event<Participant>> = _pinItemEvent
+
+    /**
+     * The key each video listener is currently registered with in the SDK. Removal must use
+     * the same key as registration, or the native entry is left dangling and crashes on a
+     * later frame. Mutable state such as [Participant.hasHiRes] cannot be trusted for this,
+     * so the key is recorded here at registration time and read back at removal time.
+     */
+    private val videoListenerKeys =
+        mutableMapOf<MegaChatVideoListenerInterface, VideoListenerKey>()
+
+    /**
+     * Guards [videoListenerKeys] and keeps the SDK add/remove calls in the order they were
+     * requested. Add and remove are launched in independent coroutines dispatched to an IO
+     * pool, so without this lock a remove-then-add sequence could reach the SDK reversed.
+     */
+    private val videoListenerMutex = Mutex()
+
+    private data class VideoListenerKey(
+        val chatId: Long,
+        val clientId: Long,
+        val isHiRes: Boolean,
+    )
 
     private var meetingLeftTimerJob: Job? = null
 
@@ -2075,12 +2099,7 @@ class InMeetingViewModel @Inject constructor(
         listener: MegaChatVideoListenerInterface,
     ) {
         Timber.d("Remove the remote video listener of clientID ${participant.clientId}")
-        removeChatRemoteVideoListener(
-            listener,
-            participant.clientId,
-            _state.value.currentChatId,
-            participant.hasHiRes
-        )
+        removeChatRemoteVideoListener(listener)
     }
 
     /**
@@ -2092,8 +2111,6 @@ class InMeetingViewModel @Inject constructor(
         participant: Participant,
         listener: MegaChatVideoListenerInterface,
     ) {
-        if (participant.videoListener == null) return
-
         removeRemoteVideoResolution(participant)
         removeRemoteVideoListener(participant, listener)
     }
@@ -2545,6 +2562,10 @@ class InMeetingViewModel @Inject constructor(
     /**
      * Method of obtaining the remote video
      *
+     * Idempotent: if [listener] is already registered with the same key nothing happens, and
+     * if it is registered with a different key the old registration is removed before the new
+     * one is added, so a listener never holds more than one SDK registration at a time.
+     *
      * @param listener MegaChatVideoListenerInterface
      * @param clientId Client ID of participant
      * @param chatId Chat ID
@@ -2556,49 +2577,68 @@ class InMeetingViewModel @Inject constructor(
         chatId: Long,
         isHiRes: Boolean,
     ) {
-        Timber.d("Adding remote video listener, clientId $clientId, isHiRes $isHiRes")
+        val newKey = VideoListenerKey(chatId = chatId, clientId = clientId, isHiRes = isHiRes)
         viewModelScope.launch {
-            runCatching {
-                inMeetingRepository.addChatRemoteVideoListener(
-                    chatId = chatId,
-                    clientId = clientId,
-                    hiRes = isHiRes,
-                    listener = listener
-                )
-            }.onFailure {
-                Timber.d(it, "Failed to add remote video listener for client $clientId")
-            }
+            videoListenerMutex.withLock {
+                val previousKey = videoListenerKeys[listener]
+                if (previousKey == newKey) {
+                    Timber.d("Video listener already registered, clientId $clientId, isHiRes $isHiRes")
+                    return@withLock
+                }
 
+                videoListenerKeys[listener] = newKey
+                Timber.d("Adding remote video listener, clientId $clientId, isHiRes $isHiRes")
+                runCatching {
+                    previousKey?.let { key ->
+                        inMeetingRepository.removeChatRemoteVideoListener(
+                            chatId = key.chatId,
+                            clientId = key.clientId,
+                            hiRes = key.isHiRes,
+                            listener = listener
+                        )
+                    }
+                    inMeetingRepository.addChatRemoteVideoListener(
+                        chatId = chatId,
+                        clientId = clientId,
+                        hiRes = isHiRes,
+                        listener = listener
+                    )
+                }.onFailure {
+                    Timber.d(it, "Failed to add remote video listener for client $clientId")
+                }
+            }
         }
     }
 
     /**
      * Method of remove the remote video
      *
+     * The SDK registration is removed with the exact key recorded when [listener] was added,
+     * so the removal cannot miss the native entry. If the listener is not registered this is
+     * a no-op.
+     *
      * @param listener MegaChatVideoListenerInterface
-     * @param clientId Client ID of participant
-     * @param chatId Chat ID
-     * @param isHiRes True, if it has HiRes. False, if it has LowRes
      */
-    fun removeChatRemoteVideoListener(
-        listener: MegaChatVideoListenerInterface,
-        clientId: Long,
-        chatId: Long,
-        isHiRes: Boolean,
-    ) {
-        Timber.d("Removing remote video listener, clientId $clientId, isHiRes $isHiRes")
+    fun removeChatRemoteVideoListener(listener: MegaChatVideoListenerInterface) {
         viewModelScope.launch {
-            runCatching {
-                inMeetingRepository.removeChatRemoteVideoListener(
-                    chatId,
-                    clientId,
-                    isHiRes,
-                    listener
-                )
-            }.onFailure {
-                Timber.e(it, "Failed to remove remote video listener for client $clientId")
-            }
+            videoListenerMutex.withLock {
+                val key = videoListenerKeys.remove(listener) ?: run {
+                    Timber.d("No registered video listener to remove")
+                    return@withLock
+                }
 
+                Timber.d("Removing remote video listener, clientId ${key.clientId}, isHiRes ${key.isHiRes}")
+                runCatching {
+                    inMeetingRepository.removeChatRemoteVideoListener(
+                        key.chatId,
+                        key.clientId,
+                        key.isHiRes,
+                        listener
+                    )
+                }.onFailure {
+                    Timber.e(it, "Failed to remove remote video listener for client ${key.clientId}")
+                }
+            }
         }
     }
 

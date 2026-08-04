@@ -115,12 +115,7 @@ class VideoMeetingViewHolder(
             inMeetingViewModel.getSessionByClientId(participant.clientId)?.let {
                 participant.videoListener?.let { listener ->
                     Timber.d("Removing listener, clientID ${participant.clientId}")
-                    inMeetingViewModel.removeChatRemoteVideoListener(
-                        listener,
-                        participant.clientId,
-                        inMeetingViewModel.getChatId(),
-                        participant.hasHiRes
-                    )
+                    inMeetingViewModel.removeChatRemoteVideoListener(listener)
                     removeListener(participant)
                 }
             }
