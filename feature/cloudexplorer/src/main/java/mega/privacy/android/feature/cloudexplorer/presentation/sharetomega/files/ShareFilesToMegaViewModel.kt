@@ -13,21 +13,23 @@ import kotlinx.coroutines.flow.flow
 import mega.privacy.android.core.coroutine.asUiStateFlow
 import mega.privacy.android.domain.entity.uri.UriPath
 import mega.privacy.android.domain.usecase.GetRootNodeIdUseCase
-import mega.privacy.android.domain.usecase.file.FilePrepareUseCase
+import mega.privacy.android.domain.usecase.file.GetDocumentEntityUseCase
 import mega.privacy.android.shared.nodes.extension.orInvalid
 import timber.log.Timber
 
 @HiltViewModel(assistedFactory = ShareFilesToMegaViewModel.Factory::class)
 class ShareFilesToMegaViewModel @AssistedInject constructor(
     private val getRootNodeIdUseCase: GetRootNodeIdUseCase,
-    private val filePrepareUseCase: FilePrepareUseCase,
+    private val getDocumentEntityUseCase: GetDocumentEntityUseCase,
     @Assisted val args: Args,
 ) : ViewModel() {
 
     val uiState: StateFlow<ShareFilesToMegaUiState> by lazy(LazyThreadSafetyMode.NONE) {
         combine(
             flow { emit(getRootNodeIdUseCase.orInvalid()) },
-            flow { emit(filePrepareUseCase(args.shareUris).isEmpty()) },
+            // Resolving a document costs several ContentResolver IPC round-trips per uri,
+            // so short-circuit on the first uploadable one instead of preparing all of them.
+            flow { emit(args.shareUris.none { getDocumentEntityUseCase(it) != null }) },
         ) { rootNodeId, hasNoFilesToUpload ->
             ShareFilesToMegaUiState.Data(
                 rootNodeId = rootNodeId,

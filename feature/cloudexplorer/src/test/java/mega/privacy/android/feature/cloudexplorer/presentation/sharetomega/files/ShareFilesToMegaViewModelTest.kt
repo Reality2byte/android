@@ -10,7 +10,7 @@ import mega.privacy.android.domain.entity.document.DocumentEntity
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.uri.UriPath
 import mega.privacy.android.domain.usecase.GetRootNodeIdUseCase
-import mega.privacy.android.domain.usecase.file.FilePrepareUseCase
+import mega.privacy.android.domain.usecase.file.GetDocumentEntityUseCase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -20,6 +20,8 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.stub
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -28,24 +30,24 @@ class ShareFilesToMegaViewModelTest {
     private lateinit var viewModel: ShareFilesToMegaViewModel
 
     private val getRootNodeIdUseCase = mock<GetRootNodeIdUseCase>()
-    private val filePrepareUseCase = mock<FilePrepareUseCase>()
+    private val getDocumentEntityUseCase = mock<GetDocumentEntityUseCase>()
     private val shareUri = UriPath("content://test/uri")
 
     private fun createViewModel(shareUris: List<UriPath> = listOf(shareUri)) =
         ShareFilesToMegaViewModel(
             getRootNodeIdUseCase = getRootNodeIdUseCase,
-            filePrepareUseCase = filePrepareUseCase,
+            getDocumentEntityUseCase = getDocumentEntityUseCase,
             args = ShareFilesToMegaViewModel.Args(shareUris),
         )
 
     @BeforeEach
     fun setUp() {
-        reset(getRootNodeIdUseCase, filePrepareUseCase)
+        reset(getRootNodeIdUseCase, getDocumentEntityUseCase)
         getRootNodeIdUseCase.stub {
             on { invoke() } doReturn NodeId(100L)
         }
-        filePrepareUseCase.stub {
-            on { invoke(any()) } doReturn listOf(mock<DocumentEntity>())
+        getDocumentEntityUseCase.stub {
+            on { invoke(any()) } doReturn mock<DocumentEntity>()
         }
         viewModel = createViewModel()
     }
@@ -53,6 +55,11 @@ class ShareFilesToMegaViewModelTest {
     @Test
     fun `test that args expose share uris`() {
         assertThat(viewModel.args.shareUris).containsExactly(shareUri)
+    }
+
+    @Test
+    fun `test that ui state starts as loading`() {
+        assertThat(viewModel.uiState.value).isEqualTo(ShareFilesToMegaUiState.Loading)
     }
 
     @Test
@@ -94,8 +101,8 @@ class ShareFilesToMegaViewModelTest {
     @Test
     fun `test that ui state flags hasNoFilesToUpload when the shared uris resolve to no files`() =
         runTest(testDispatcher) {
-            filePrepareUseCase.stub {
-                on { invoke(any()) } doReturn emptyList()
+            getDocumentEntityUseCase.stub {
+                on { invoke(any()) } doReturn null
             }
             viewModel = createViewModel()
 
@@ -122,6 +129,24 @@ class ShareFilesToMegaViewModelTest {
                 assertThat(data.hasNoFilesToUpload).isFalse()
                 expectNoEvents()
             }
+        }
+
+    @Test
+    fun `test that document resolution stops at the first uploadable uri`() =
+        runTest(testDispatcher) {
+            val shareUris = List(3) { UriPath("content://test/uri/$it") }
+            viewModel = createViewModel(shareUris)
+
+            viewModel.uiState.test {
+                var state: ShareFilesToMegaUiState = awaitItem()
+                if (state is ShareFilesToMegaUiState.Loading) {
+                    state = awaitItem()
+                }
+                assertThat((state as ShareFilesToMegaUiState.Data).hasNoFilesToUpload).isFalse()
+            }
+
+            verify(getDocumentEntityUseCase).invoke(shareUris.first())
+            verifyNoMoreInteractions(getDocumentEntityUseCase)
         }
 
     companion object {

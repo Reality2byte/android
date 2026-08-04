@@ -1,6 +1,7 @@
 package mega.privacy.android.feature.cloudexplorer.presentation.sharetomega.files
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -26,9 +27,23 @@ internal class ShareFilesToMegaScreenTest {
     private val viewModelStoreOwner = explorerViewModelStoreOwner()
 
     @Test
-    fun `test that nothing is rendered while loading`() {
+    fun `test that nothing is rendered immediately while loading`() {
         setContent(uiState = ShareFilesToMegaUiState.Loading)
 
+        composeTestRule.onNodeWithTag(SHARE_FILES_TO_MEGA_PROCESSING_VIEW_TAG)
+            .assertDoesNotExist()
+        composeTestRule.onNodeWithTag(CLOUD_EXPLORER_VIEW_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that processing view is shown when loading outlasts the grace delay`() {
+        composeTestRule.mainClock.autoAdvance = false
+        setContent(uiState = ShareFilesToMegaUiState.Loading)
+
+        composeTestRule.mainClock.advanceTimeBy(250)
+
+        composeTestRule.onNodeWithTag(SHARE_FILES_TO_MEGA_PROCESSING_VIEW_TAG)
+            .assertIsDisplayed()
         composeTestRule.onNodeWithTag(CLOUD_EXPLORER_VIEW_TAG).assertDoesNotExist()
     }
 

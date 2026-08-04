@@ -11,7 +11,7 @@ import mega.privacy.android.domain.entity.uri.UriPath
 sealed interface ShareFilesToMegaUiState {
 
     /**
-     * Initial loading state.
+     * Initial state while the shared files are being processed.
      */
     data object Loading : ShareFilesToMegaUiState
 
