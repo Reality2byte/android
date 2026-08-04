@@ -286,11 +286,13 @@ private fun NodeInfoRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Image(
-            modifier = Modifier.size(32.dp),
-            painter = painterResource(id = node.iconRes),
-            contentDescription = null,
-        )
+        node.iconRes?.let { iconRes ->
+            Image(
+                modifier = Modifier.size(32.dp),
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+            )
+        }
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),

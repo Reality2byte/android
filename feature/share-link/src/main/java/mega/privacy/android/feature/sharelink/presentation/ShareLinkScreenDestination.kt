@@ -48,7 +48,9 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
         ) {
             val viewModel =
                 hiltViewModel<ShareLinkViewModel, ShareLinkViewModel.Factory> { factory ->
-                    factory.create(ShareLinkViewModel.Args(handles = key.handles))
+                    factory.create(
+                        ShareLinkViewModel.Args(ShareLinkSubject.Nodes(handles = key.handles))
+                    )
                 }
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val resources = LocalResources.current

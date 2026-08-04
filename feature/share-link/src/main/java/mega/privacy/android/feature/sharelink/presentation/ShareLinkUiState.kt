@@ -55,6 +55,7 @@ sealed interface ShareLinkUiState {
      * @property password The current plaintext password, kept in-session so Link settings can
      * pre-fill it for change/remove; null when not protected. Not rendered.
      * @property linkWithPassword The password-encrypted link to share, or null when not protected.
+     * @property album Album header data when an album is being shared, null for nodes.
      */
     data class Data(
         val nodeLinks: List<ShareLinkNodeItem>,
@@ -63,6 +64,7 @@ sealed interface ShareLinkUiState {
         val isPasswordSet: Boolean = false,
         val password: String? = null,
         val linkWithPassword: String? = null,
+        val album: ShareLinkAlbumInfo? = null,
     ) : ShareLinkUiState {
 
         /** Handles of all shared nodes, in selection order. */
@@ -73,8 +75,29 @@ sealed interface ShareLinkUiState {
 
         /** The first shared node, rendered by the single-node layout. */
         val primary: ShareLinkNodeItem get() = nodeLinks.first()
+
+        /** Whether an album is being shared rather than nodes. */
+        val isAlbum: Boolean get() = album != null
     }
 }
+
+/**
+ * The extra header data an album needs, non-null on [ShareLinkUiState.Data] only when an album is
+ * being shared.
+ *
+ * The album's link travels in [ShareLinkUiState.Data.nodeLinks] as its single entry — keyed by the
+ * album id and named by the album title — so the link card, the shareable text and the share
+ * dialogs serve an album with no album branch of their own.
+ *
+ * @property photoCount Number of photos in the album.
+ * @property coverThumbnailPath Local path of the cover photo's thumbnail, or null when the album is
+ * empty or the thumbnail could not be fetched. The header falls back to a placeholder.
+ */
+@Stable
+data class ShareLinkAlbumInfo(
+    val photoCount: Int,
+    val coverThumbnailPath: String?,
+)
 
 /**
  * The kind of hidden/sensitive-items warning to show before creating links, mirroring the legacy
@@ -89,12 +112,13 @@ enum class SensitiveWarningType {
 }
 
 /**
- * A single shared node and its public link.
+ * A single shared subject and its public link — a node, or the album when one is being shared.
  *
- * @property handle Node handle.
- * @property name Display name of the node.
+ * @property handle Node handle, or the album id for an album.
+ * @property name Display name of the node, or the album title.
  * @property isFolder Whether the node is a folder.
- * @property iconRes Header icon: the file-type icon for files, the folder icon for folders.
+ * @property iconRes Header icon: the file-type icon for files, the folder icon for folders. Null
+ * for an album, whose header renders the cover instead.
  * @property sizeInBytes File size in bytes, or null for folders.
  * @property modificationTime File modification time (seconds since epoch), or null for folders.
  * @property childFolderCount Number of child folders, or null for files.
@@ -109,7 +133,7 @@ data class ShareLinkNodeItem(
     val handle: Long,
     val name: String,
     val isFolder: Boolean,
-    @DrawableRes val iconRes: Int,
+    @DrawableRes val iconRes: Int?,
     val sizeInBytes: Long?,
     val modificationTime: Long?,
     val childFolderCount: Int?,

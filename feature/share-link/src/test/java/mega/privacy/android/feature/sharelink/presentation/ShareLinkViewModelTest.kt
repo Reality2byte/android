@@ -20,6 +20,11 @@ import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.NodeUpdate
 import mega.privacy.android.domain.entity.node.TypedFileNode
 import mega.privacy.android.domain.entity.node.TypedFolderNode
+import mega.privacy.android.domain.entity.media.MediaAlbum
+import mega.privacy.android.domain.entity.photos.AlbumId
+import mega.privacy.android.domain.entity.photos.AlbumLink
+import mega.privacy.android.domain.entity.photos.Photo
+import mega.privacy.android.domain.usecase.GetAlbumPhotosUseCase
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveDescendantUseCase
 import mega.privacy.android.domain.usecase.HasSensitiveInheritedUseCase
@@ -29,6 +34,10 @@ import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
 import mega.privacy.android.domain.usecase.link.SplitLinkAndKeyUseCase
 import mega.privacy.android.domain.usecase.node.ExportNodesUseCase
 import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesUseCase
+import mega.privacy.android.domain.usecase.media.MonitorUserAlbumByIdUseCase
+import mega.privacy.android.domain.usecase.photos.AlbumHasSensitiveContentUseCase
+import mega.privacy.android.domain.usecase.photos.ExportAlbumsUseCase
+import mega.privacy.android.domain.usecase.thumbnailpreview.DownloadThumbnailUseCase
 import mega.privacy.android.feature.sharelink.session.LinkPassword
 import mega.privacy.android.feature.sharelink.session.ShareLinkPasswordCache
 import mega.privacy.android.feature.sharelink.session.ShareLinkSeparateKeyCache
@@ -47,6 +56,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import java.io.File
+import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -68,6 +79,11 @@ class ShareLinkViewModelTest {
     private val passwordCache = mock<ShareLinkPasswordCache>()
     private val separateKeyCache = mock<ShareLinkSeparateKeyCache>()
     private val monitorNodeUpdatesUseCase = mock<MonitorNodeUpdatesUseCase>()
+    private val monitorUserAlbumByIdUseCase = mock<MonitorUserAlbumByIdUseCase>()
+    private val getAlbumPhotosUseCase = mock<GetAlbumPhotosUseCase>()
+    private val exportAlbumsUseCase = mock<ExportAlbumsUseCase>()
+    private val albumHasSensitiveContentUseCase = mock<AlbumHasSensitiveContentUseCase>()
+    private val downloadThumbnailUseCase = mock<DownloadThumbnailUseCase>()
     private val nodeUpdates = MutableSharedFlow<NodeUpdate>()
 
     @BeforeEach
@@ -84,8 +100,11 @@ class ShareLinkViewModelTest {
         underTest = buildViewModel(listOf(NODE_HANDLE))
     }
 
-    private fun buildViewModel(handles: List<Long>) = ShareLinkViewModel(
-        args = ShareLinkViewModel.Args(handles = handles),
+    private fun buildViewModel(handles: List<Long>) =
+        buildViewModel(ShareLinkSubject.Nodes(handles))
+
+    private fun buildViewModel(subject: ShareLinkSubject) = ShareLinkViewModel(
+        args = ShareLinkViewModel.Args(subject = subject),
         getNodeByIdUseCase = getNodeByIdUseCase,
         exportNodesUseCase = exportNodesUseCase,
         monitorAccountDetailUseCase = monitorAccountDetailUseCase,
@@ -96,6 +115,11 @@ class ShareLinkViewModelTest {
         shouldShowCopyrightUseCase = shouldShowCopyrightUseCase,
         setShowCopyrightUseCase = setShowCopyrightUseCase,
         monitorNodeUpdatesUseCase = monitorNodeUpdatesUseCase,
+        monitorUserAlbumByIdUseCase = monitorUserAlbumByIdUseCase,
+        getAlbumPhotosUseCase = getAlbumPhotosUseCase,
+        exportAlbumsUseCase = exportAlbumsUseCase,
+        albumHasSensitiveContentUseCase = albumHasSensitiveContentUseCase,
+        downloadThumbnailUseCase = downloadThumbnailUseCase,
         passwordCache = passwordCache,
         separateKeyCache = separateKeyCache,
     )
@@ -113,6 +137,11 @@ class ShareLinkViewModelTest {
             shouldShowCopyrightUseCase,
             setShowCopyrightUseCase,
             monitorNodeUpdatesUseCase,
+            monitorUserAlbumByIdUseCase,
+            getAlbumPhotosUseCase,
+            exportAlbumsUseCase,
+            albumHasSensitiveContentUseCase,
+            downloadThumbnailUseCase,
             passwordCache,
             separateKeyCache,
         )
@@ -637,6 +666,13 @@ class ShareLinkViewModelTest {
         }
     }
 
+    private suspend fun ReceiveTurbine<ShareLinkUiState>.awaitErrorState(): ShareLinkUiState {
+        while (true) {
+            val item = awaitItem()
+            if (item is ShareLinkUiState.Error) return item
+        }
+    }
+
     private suspend fun ReceiveTurbine<ShareLinkUiState>.awaitData(
         predicate: (ShareLinkUiState.Data) -> Boolean = { true },
     ): ShareLinkUiState.Data {
@@ -856,7 +892,249 @@ class ShareLinkViewModelTest {
             verify(shouldShowCopyrightUseCase, times(1)).invoke()
         }
 
+    private fun stubAlbum(
+        title: String = ALBUM_TITLE,
+        cover: Photo? = null,
+        photos: List<Photo> = emptyList(),
+        link: String = ALBUM_LINK,
+    ) {
+        whenever(monitorUserAlbumByIdUseCase(AlbumId(ALBUM_ID)))
+            .thenReturn(flowOf(userAlbum(title = title, cover = cover)))
+        whenever(getAlbumPhotosUseCase(AlbumId(ALBUM_ID), false)).thenReturn(flowOf(photos))
+        whenever { albumHasSensitiveContentUseCase(AlbumId(ALBUM_ID)) }.thenReturn(false)
+        whenever { exportAlbumsUseCase(listOf(AlbumId(ALBUM_ID))) }
+            .thenReturn(listOf(AlbumId(ALBUM_ID) to AlbumLink(link)))
+        whenever(splitLinkAndKeyUseCase(link))
+            .thenReturn(LinkAndKey(ALBUM_LINK_WITHOUT_KEY, ALBUM_KEY))
+    }
+
+    private fun userAlbum(title: String = ALBUM_TITLE, cover: Photo? = null) = MediaAlbum.User(
+        id = AlbumId(ALBUM_ID),
+        title = title,
+        creationTime = 0L,
+        modificationTime = 0L,
+        isExported = true,
+        cover = cover,
+    )
+
+    private fun photo(id: Long, thumbnailFilePath: String?, modifiedYear: Int) = Photo.Image(
+        id = id,
+        parentId = 0L,
+        name = "photo-$id.jpg",
+        isFavourite = false,
+        creationTime = LocalDateTime.of(modifiedYear, 1, 1, 0, 0),
+        modificationTime = LocalDateTime.of(modifiedYear, 1, 1, 0, 0),
+        thumbnailFilePath = thumbnailFilePath,
+        previewFilePath = null,
+        fileTypeInfo = UnknownFileTypeInfo(mimeType = "image/jpeg", extension = "jpg"),
+    )
+
+    private fun buildAlbumViewModel() = buildViewModel(ShareLinkSubject.Album(ALBUM_ID))
+
+    @Test
+    fun `test that uiState is Data with the album title cover and photo count when an album is shared`() =
+        runTest {
+            val thumbnail = File.createTempFile("album-cover", ".jpg").apply { deleteOnExit() }
+            val cover = photo(id = 1L, thumbnailFilePath = thumbnail.absolutePath, modifiedYear = 2024)
+            stubAlbum(cover = cover, photos = listOf(cover, photo(2L, null, 2023)))
+
+            buildAlbumViewModel().uiState.test {
+                val state = awaitData()
+                assertThat(state.primary.name).isEqualTo(ALBUM_TITLE)
+                assertThat(state.primary.handle).isEqualTo(ALBUM_ID)
+                assertThat(state.isAlbum).isTrue()
+                assertThat(state.album?.photoCount).isEqualTo(2)
+                assertThat(state.album?.coverThumbnailPath).isEqualTo(thumbnail.absolutePath)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that the album link is split into the link without key and the key`() = runTest {
+        stubAlbum()
+
+        buildAlbumViewModel().uiState.test {
+            val item = awaitData().primary
+            assertThat(item.link).isEqualTo(ALBUM_LINK)
+            assertThat(item.linkWithoutKey).isEqualTo(ALBUM_LINK_WITHOUT_KEY)
+            assertThat(item.key).isEqualTo(ALBUM_KEY)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that an album carries no expiry and no icon`() = runTest {
+        stubAlbum()
+
+        buildAlbumViewModel().uiState.test {
+            val item = awaitData().primary
+            assertThat(item.expirationTime).isNull()
+            assertThat(item.isExpired).isFalse()
+            assertThat(item.iconRes).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that the cover thumbnail is downloaded when it is not cached`() = runTest {
+        val missing = File.createTempFile("album-missing", ".jpg").apply { delete() }
+        stubAlbum(cover = photo(id = 7L, thumbnailFilePath = missing.absolutePath, modifiedYear = 2024))
+
+        buildAlbumViewModel().uiState.test {
+            assertThat(awaitData().album?.coverThumbnailPath).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(downloadThumbnailUseCase).invoke(7L)
+    }
+
+    @Test
+    fun `test that uiState is Error when the album export returns no link`() = runTest {
+        stubAlbum()
+        whenever { exportAlbumsUseCase(listOf(AlbumId(ALBUM_ID))) }.thenReturn(emptyList())
+
+        buildAlbumViewModel().uiState.test {
+            awaitErrorState()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that uiState is Error when the album export fails`() = runTest {
+        stubAlbum()
+        whenever { exportAlbumsUseCase(listOf(AlbumId(ALBUM_ID))) }
+            .thenThrow(RuntimeException("boom"))
+
+        buildAlbumViewModel().uiState.test {
+            awaitErrorState()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that the copyright consent gates the album export and is asked once`() = runTest {
+        stubAlbum()
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(true)
+
+        val underTest = buildAlbumViewModel()
+        underTest.uiState.test {
+            awaitCopyright()
+            verifyNoInteractions(exportAlbumsUseCase)
+
+            underTest.onCopyrightAgreed()
+            assertThat(awaitData().primary.link).isEqualTo(ALBUM_LINK)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(shouldShowCopyrightUseCase, times(1)).invoke()
+        verify(setShowCopyrightUseCase).invoke(false)
+    }
+
+    @Test
+    fun `test that declining the copyright consent abandons the album export`() = runTest {
+        stubAlbum()
+        whenever { shouldShowCopyrightUseCase() }.thenReturn(true)
+
+        val underTest = buildAlbumViewModel()
+        underTest.uiState.test {
+            awaitCopyright()
+            underTest.onCopyrightDisagreed()
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verifyNoInteractions(exportAlbumsUseCase)
+    }
+
+    @Test
+    fun `test that the hidden items warning gates the album export`() = runTest {
+        stubAlbum()
+        whenever { albumHasSensitiveContentUseCase(AlbumId(ALBUM_ID)) }.thenReturn(true)
+
+        val underTest = buildAlbumViewModel()
+        underTest.uiState.test {
+            val warning = awaitWarning()
+            assertThat(warning.type).isEqualTo(SensitiveWarningType.Items)
+            assertThat(warning.nodeCount).isEqualTo(1)
+            verifyNoInteractions(exportAlbumsUseCase)
+
+            underTest.onSensitiveWarningConfirmed()
+            assertThat(awaitData().primary.link).isEqualTo(ALBUM_LINK)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that dismissing the hidden items warning abandons the album export`() = runTest {
+        stubAlbum()
+        whenever { albumHasSensitiveContentUseCase(AlbumId(ALBUM_ID)) }.thenReturn(true)
+
+        val underTest = buildAlbumViewModel()
+        underTest.uiState.test {
+            awaitWarning()
+            underTest.onSensitiveWarningDismissed()
+            expectNoEvents()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verifyNoInteractions(exportAlbumsUseCase)
+    }
+
+    @Test
+    fun `test that the album separate key option is read from the separate key cache`() = runTest {
+        stubAlbum()
+        whenever(separateKeyCache.monitor(ALBUM_ID)).thenReturn(flowOf(true))
+
+        buildAlbumViewModel().uiState.test {
+            assertThat(awaitData { it.isKeySeparate }.isKeySeparate).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `test that an album never reads the password cache`() = runTest {
+        stubAlbum()
+
+        buildAlbumViewModel().uiState.test {
+            assertThat(awaitData().isPasswordSet).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verifyNoInteractions(passwordCache)
+    }
+
+    @Test
+    fun `test that the album title and photo count follow later album updates`() = runTest {
+        val albums = MutableStateFlow(userAlbum())
+        val photos = MutableStateFlow(emptyList<Photo>())
+        whenever(monitorUserAlbumByIdUseCase(AlbumId(ALBUM_ID))).thenReturn(albums)
+        whenever(getAlbumPhotosUseCase(AlbumId(ALBUM_ID), false)).thenReturn(photos)
+        whenever { albumHasSensitiveContentUseCase(AlbumId(ALBUM_ID)) }.thenReturn(false)
+        whenever { exportAlbumsUseCase(listOf(AlbumId(ALBUM_ID))) }
+            .thenReturn(listOf(AlbumId(ALBUM_ID) to AlbumLink(ALBUM_LINK)))
+        whenever(splitLinkAndKeyUseCase(ALBUM_LINK))
+            .thenReturn(LinkAndKey(ALBUM_LINK_WITHOUT_KEY, ALBUM_KEY))
+
+        buildAlbumViewModel().uiState.test {
+            assertThat(awaitData().album?.photoCount).isEqualTo(0)
+
+            albums.value = albums.value.copy(title = "Renamed")
+            photos.value = listOf(photo(1L, null, 2024))
+
+            val renamed = awaitData { it.primary.name == "Renamed" && it.album?.photoCount == 1 }
+            assertThat(renamed.primary.link).isEqualTo(ALBUM_LINK)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exportAlbumsUseCase, times(1)).invoke(listOf(AlbumId(ALBUM_ID)))
+    }
+
     private companion object {
+        const val ALBUM_ID = 987L
+        const val ALBUM_TITLE = "Holiday"
+        const val ALBUM_LINK = "https://mega.nz/collection/xyz#albumkey"
+        const val ALBUM_LINK_WITHOUT_KEY = "https://mega.nz/collection/xyz"
+        const val ALBUM_KEY = "albumkey"
         const val LINK = "https://mega.nz/file/abc#key123"
         const val LINK_WITHOUT_KEY = "https://mega.nz/file/abc"
         const val NODE_HANDLE = 123L
