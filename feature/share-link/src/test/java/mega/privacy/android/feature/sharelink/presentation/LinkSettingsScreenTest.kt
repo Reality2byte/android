@@ -820,6 +820,49 @@ class LinkSettingsScreenTest {
         assertThat(analyticsRule.events).doesNotContain(LinkSettingsSaveFailedEvent)
     }
 
+    @Test
+    fun `test that an album shows the separate key row and neither the expiry nor the password row`() {
+        setContent(uiState = LinkSettingsUiState(isLoading = false, isAlbum = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_ROW_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_ROW_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_ROW_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that an album shows no Pro badge on any row`() {
+        setContent(
+            uiState = LinkSettingsUiState(
+                isLoading = false,
+                isAlbum = true,
+                accountType = AccountType.FREE,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_EXPIRY_PRO_BADGE_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+        composeRule.onNodeWithTag(LINK_SETTINGS_PASSWORD_PRO_BADGE_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that the album separate key toggle stays interactive for a free account`() {
+        var enabled: Boolean? = null
+        setContent(
+            uiState = LinkSettingsUiState(
+                isLoading = false,
+                isAlbum = true,
+                accountType = AccountType.FREE,
+            ),
+            onSeparateKeyEnabled = { enabled = it },
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(enabled).isTrue()
+        composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertDoesNotExist()
+    }
+
     private fun setContent(
         uiState: LinkSettingsUiState,
         onBack: () -> Unit = {},

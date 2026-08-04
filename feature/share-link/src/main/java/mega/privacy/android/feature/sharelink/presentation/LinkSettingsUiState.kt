@@ -21,11 +21,15 @@ import mega.privacy.android.domain.entity.changepassword.PasswordStrength
  * opened, used as the baseline for detecting an actual change.
  * @property isFolder Whether the node being edited is a folder, selecting the file/folder variant
  * of the link analytics events.
+ * @property isAlbum Whether an album's link is being edited. The SDK supports neither expiry nor
+ * password for album links, so those rows are not rendered at all — there is nothing to unlock and
+ * no upgrade to offer, which is why this is not a Pro gate.
  */
 @Stable
 data class LinkSettingsUiState(
     val isLoading: Boolean = true,
     val isFolder: Boolean = false,
+    val isAlbum: Boolean = false,
     val isSeparateKeyEnabled: Boolean = false,
     val initialSeparateKeyEnabled: Boolean = false,
     val isExpiryEnabled: Boolean = false,

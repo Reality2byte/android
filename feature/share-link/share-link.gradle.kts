@@ -51,6 +51,7 @@ dependencies {
     implementation(androidx.material3)
     implementation(androidx.hilt.navigation)
     implementation(lib.compose.state.events)
+    implementation(lib.coil.compose)
 
     testImplementation(project(":core-test"))
     testImplementation(project(":core-ui-test"))

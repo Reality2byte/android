@@ -48,12 +48,15 @@ class LinkSettingsViewModel @AssistedInject constructor(
     private val separateKeyCache: ShareLinkSeparateKeyCache,
 ) : ViewModel() {
 
-    private val handle: Long? = args.handles.firstOrNull()
-    private val cachedPassword: LinkPassword? = handle?.let(passwordCache::get)
+    private val handle: Long? = args.subject.cacheKey
+    private val isAlbum: Boolean = args.subject is ShareLinkSubject.Album
+    private val cachedPassword: LinkPassword? =
+        handle?.takeUnless { isAlbum }?.let(passwordCache::get)
     private val cachedSeparateKey: Boolean = handle?.let(separateKeyCache::get) ?: false
 
     private val _uiState = MutableStateFlow(
         LinkSettingsUiState(
+            isAlbum = isAlbum,
             isSeparateKeyEnabled = cachedSeparateKey,
             initialSeparateKeyEnabled = cachedSeparateKey,
             isPasswordEnabled = cachedPassword != null,
@@ -91,14 +94,16 @@ class LinkSettingsViewModel @AssistedInject constructor(
         }
     }
 
-    fun onExpiryEnabled(enabled: Boolean) =
-        update { it.copy(isExpiryEnabled = enabled, expiryDate = if (enabled) it.expiryDate else null) }
+    fun onExpiryEnabled(enabled: Boolean) = updateUnlessAlbum {
+        it.copy(isExpiryEnabled = enabled, expiryDate = if (enabled) it.expiryDate else null)
+    }
 
-    fun onExpiryDateChanged(expiryDate: Long) =
-        update { it.copy(expiryDate = expiryDate) }
+    fun onExpiryDateChanged(expiryDate: Long) = updateUnlessAlbum {
+        it.copy(expiryDate = expiryDate)
+    }
 
     /** @see onSeparateKeyEnabled for the invariant this upholds from the other side. */
-    fun onPasswordEnabled(enabled: Boolean) = update {
+    fun onPasswordEnabled(enabled: Boolean) = updateUnlessAlbum {
         if (enabled) {
             it.copy(
                 isSeparateKeyEnabled = false,
@@ -114,6 +119,7 @@ class LinkSettingsViewModel @AssistedInject constructor(
     }
 
     fun onPasswordChanged(password: String) {
+        if (isAlbum) return
         update { it.copy(password = password) }
         computeStrength(password)
     }
@@ -133,7 +139,7 @@ class LinkSettingsViewModel @AssistedInject constructor(
 
         update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            runCatching { applyChanges(handle, NodeId(handle), current) }
+            runCatching { applyChanges(handle, current) }
                 .onSuccess { update { it.copy(isSaving = false, savedEvent = triggered) } }
                 .onFailure { throwable ->
                     Timber.e(throwable, "Failed to save link settings")
@@ -152,7 +158,6 @@ class LinkSettingsViewModel @AssistedInject constructor(
      */
     private suspend fun applyChanges(
         handle: Long,
-        nodeId: NodeId,
         state: LinkSettingsUiState,
     ) {
         if (state.isSeparateKeyDirty) {
@@ -163,7 +168,7 @@ class LinkSettingsViewModel @AssistedInject constructor(
                 ?.takeIf { state.isExpiryEnabled }
                 ?.milliseconds?.inWholeSeconds
             exportNodeUseCase(
-                nodeToExport = nodeId,
+                nodeToExport = NodeId(handle),
                 expireTime = expireTimeSeconds,
                 callerName = CALLER_NAME,
             )
@@ -181,8 +186,9 @@ class LinkSettingsViewModel @AssistedInject constructor(
         }
     }
 
+    /** No-op for an album: it is not a node, and only the separate-key option applies to it. */
     private fun loadNode() {
-        val handle = handle ?: return
+        val handle = handle?.takeUnless { isAlbum } ?: return
         viewModelScope.launch {
             val node = runCatching { getNodeByIdUseCase(NodeId(handle)) }
                 .onFailure { Timber.e(it, "Failed to load node for link settings") }
@@ -219,6 +225,19 @@ class LinkSettingsViewModel @AssistedInject constructor(
     private fun update(transform: (LinkSettingsUiState) -> LinkSettingsUiState) =
         _uiState.update { transform(it).withComputedFlags() }
 
+    /**
+     * Applies [transform] only for a node subject.
+     *
+     * An album link supports neither an expiry nor a password, so the state must never be able to
+     * describe one — the rows are absent from the screen, but the invariant belongs here rather
+     * than resting on the UI. Ignoring the change keeps [LinkSettingsUiState.isSaveEnabled] false
+     * too, so Save can never offer to apply something that would be dropped.
+     */
+    private fun updateUnlessAlbum(transform: (LinkSettingsUiState) -> LinkSettingsUiState) {
+        if (isAlbum) return
+        update(transform)
+    }
+
     private fun LinkSettingsUiState.withComputedFlags() =
         copy(hasUnsavedChanges = isDirty, isSaveEnabled = isDirty && isValid && !isSaving)
 
@@ -252,9 +271,9 @@ class LinkSettingsViewModel @AssistedInject constructor(
     /**
      * Assisted factory arguments.
      *
-     * @property handles Node handles whose link settings are being edited.
+     * @property subject Whose link settings are being edited: node handles or an album.
      */
-    data class Args(val handles: List<Long>)
+    data class Args(val subject: ShareLinkSubject)
 
     @AssistedFactory
     interface Factory {

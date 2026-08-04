@@ -106,8 +106,10 @@ class LinkSettingsViewModelTest {
         whenever(separateKeyCache.get(NODE_HANDLE)).thenReturn(true)
     }
 
-    private fun createUnderTest() = LinkSettingsViewModel(
-        args = LinkSettingsViewModel.Args(handles = listOf(NODE_HANDLE)),
+    private fun createUnderTest(
+        subject: ShareLinkSubject = ShareLinkSubject.Nodes(listOf(NODE_HANDLE)),
+    ) = LinkSettingsViewModel(
+        args = LinkSettingsViewModel.Args(subject = subject),
         getNodeByIdUseCase = getNodeByIdUseCase,
         exportNodeUseCase = exportNodeUseCase,
         encryptLinkWithPasswordUseCase = encryptLinkWithPasswordUseCase,
@@ -891,8 +893,84 @@ class LinkSettingsViewModelTest {
             verify(separateKeyCache).set(NODE_HANDLE, false)
         }
 
+    @Test
+    fun `test that an album never reads the node or the password cache`() =
+        runTest(extension.testDispatcher) {
+            val underTest = createUnderTest(ShareLinkSubject.Album(ALBUM_ID))
+
+            underTest.uiState.test {
+                val state = awaitUntil { !it.isLoading }
+                assertThat(state.isAlbum).isTrue()
+                assertThat(state.isPasswordAlreadySet).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verifyNoInteractions(getNodeByIdUseCase)
+            verifyNoInteractions(passwordCache)
+        }
+
+    @Test
+    fun `test that the album separate key preference is seeded from the cache by album id`() =
+        runTest(extension.testDispatcher) {
+            whenever(separateKeyCache.get(ALBUM_ID)).thenReturn(true)
+
+            val underTest = createUnderTest(ShareLinkSubject.Album(ALBUM_ID))
+
+            underTest.uiState.test {
+                val state = awaitUntil { !it.isLoading }
+                assertThat(state.isSeparateKeyEnabled).isTrue()
+                assertThat(state.initialSeparateKeyEnabled).isTrue()
+                assertThat(state.isSaveEnabled).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that an album ignores expiry and password changes and keeps Save disabled`() =
+        runTest(extension.testDispatcher) {
+            val underTest = createUnderTest(ShareLinkSubject.Album(ALBUM_ID))
+
+            underTest.uiState.test {
+                awaitUntil { !it.isLoading }
+
+                underTest.onExpiryEnabled(true)
+                underTest.onExpiryDateChanged(EXPIRY_TIME)
+                underTest.onPasswordEnabled(true)
+                underTest.onPasswordChanged(PASSWORD)
+                expectNoEvents()
+
+                val state = underTest.uiState.value
+                assertThat(state.isExpiryEnabled).isFalse()
+                assertThat(state.expiryDate).isNull()
+                assertThat(state.isPasswordEnabled).isFalse()
+                assertThat(state.password).isNull()
+                assertThat(state.isSaveEnabled).isFalse()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that saving an album writes only the separate key preference`() =
+        runTest(extension.testDispatcher) {
+            val underTest = createUnderTest(ShareLinkSubject.Album(ALBUM_ID))
+
+            underTest.uiState.test {
+                awaitUntil { !it.isLoading }
+                underTest.onSeparateKeyEnabled(true)
+                awaitUntil { it.isSaveEnabled }
+                underTest.onSave()
+                awaitUntil { it.savedEvent == triggered }
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            verify(separateKeyCache).set(ALBUM_ID, true)
+            verifyNoInteractions(exportNodeUseCase)
+            verifyNoInteractions(encryptLinkWithPasswordUseCase)
+        }
+
     private companion object {
         const val NODE_HANDLE = 123L
+        const val ALBUM_ID = 987L
         const val PUBLIC_LINK = "https://mega.nz/file/abc"
         const val ENCRYPTED_LINK = "https://mega.nz/#P!encrypted"
         const val PASSWORD = "Str0ngP@ss"

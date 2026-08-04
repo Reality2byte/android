@@ -390,76 +390,80 @@ private fun LinkSettingsContent(
                 )
             },
         )
-        FlexibleLineListItem(
-            modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_ROW_TAG),
-            title = stringResource(sharedR.string.share_link_set_expiry_date),
-            subtitle = stringResource(sharedR.string.share_link_expiry_subtitle),
-            titleTrailingElement = if (uiState.isProFeatureLocked) {
-                { ProBadge(Modifier.testTag(LINK_SETTINGS_EXPIRY_PRO_BADGE_TAG)) }
-            } else null,
-            enableClick = true,
-            onClickListener = { onExpiryToggled(!uiState.isExpiryEnabled) },
-            trailingElement = {
-                Toggle(
-                    modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG),
-                    isChecked = uiState.isExpiryEnabled,
-                    onCheckedChange = onExpiryToggled,
-                )
-            },
-        )
-        AnimatedVisibility(visible = uiState.isExpiryEnabled) {
-            ExpiryDateField(
-                expiryDate = uiState.expiryDate,
-                onClick = { showDatePicker = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+        // Album links support neither expiry nor a password, so those rows are omitted rather than
+        // disabled — there is nothing to unlock and no upgrade to offer.
+        if (!uiState.isAlbum) {
+            FlexibleLineListItem(
+                modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_ROW_TAG),
+                title = stringResource(sharedR.string.share_link_set_expiry_date),
+                subtitle = stringResource(sharedR.string.share_link_expiry_subtitle),
+                titleTrailingElement = if (uiState.isProFeatureLocked) {
+                    { ProBadge(Modifier.testTag(LINK_SETTINGS_EXPIRY_PRO_BADGE_TAG)) }
+                } else null,
+                enableClick = true,
+                onClickListener = { onExpiryToggled(!uiState.isExpiryEnabled) },
+                trailingElement = {
+                    Toggle(
+                        modifier = Modifier.testTag(LINK_SETTINGS_EXPIRY_TOGGLE_TAG),
+                        isChecked = uiState.isExpiryEnabled,
+                        onCheckedChange = onExpiryToggled,
+                    )
+                },
             )
-        }
-        FlexibleLineListItem(
-            modifier = Modifier.testTag(LINK_SETTINGS_PASSWORD_ROW_TAG),
-            title = stringResource(sharedR.string.share_link_set_password),
-            subtitle = stringResource(sharedR.string.share_link_password_subtitle),
-            titleTrailingElement = if (uiState.isProFeatureLocked) {
-                { ProBadge(Modifier.testTag(LINK_SETTINGS_PASSWORD_PRO_BADGE_TAG)) }
-            } else null,
-            enableClick = true,
-            onClickListener = { onPasswordEnabled(!uiState.isPasswordEnabled) },
-            trailingElement = {
-                Toggle(
-                    modifier = Modifier.testTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG),
-                    isChecked = uiState.isPasswordEnabled,
-                    onCheckedChange = onPasswordEnabled,
-                )
-            },
-        )
-        AnimatedVisibility(visible = uiState.isPasswordEnabled) {
-            // The field sits at the bottom of the screen, so on focus the whole block — strength
-            // help text included — is scrolled above the keyboard.
-            Column(modifier = Modifier.bringIntoViewRequester(passwordFieldPosition)) {
-                PasswordTextInputField(
+            AnimatedVisibility(visible = uiState.isExpiryEnabled) {
+                ExpiryDateField(
+                    expiryDate = uiState.expiryDate,
+                    onClick = { showDatePicker = true },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .testTag(LINK_SETTINGS_PASSWORD_FIELD_TAG),
-                    label = null,
-                    placeholder = stringResource(sharedR.string.password_placeholder),
-                    text = uiState.password.orEmpty(),
-                    showClearIcon = true,
-                    onValueChanged = onPasswordChanged,
-                    onFocusChanged = { focused ->
-                        if (focused) {
-                            coroutineScope.launch { passwordFieldPosition.bringIntoView() }
-                        }
-                    },
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 )
-                PasswordStrengthHelpText(
-                    strength = uiState.passwordStrength,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp)
-                        .testTag(LINK_SETTINGS_PASSWORD_STRENGTH_TAG),
-                )
+            }
+            FlexibleLineListItem(
+                modifier = Modifier.testTag(LINK_SETTINGS_PASSWORD_ROW_TAG),
+                title = stringResource(sharedR.string.share_link_set_password),
+                subtitle = stringResource(sharedR.string.share_link_password_subtitle),
+                titleTrailingElement = if (uiState.isProFeatureLocked) {
+                    { ProBadge(Modifier.testTag(LINK_SETTINGS_PASSWORD_PRO_BADGE_TAG)) }
+                } else null,
+                enableClick = true,
+                onClickListener = { onPasswordEnabled(!uiState.isPasswordEnabled) },
+                trailingElement = {
+                    Toggle(
+                        modifier = Modifier.testTag(LINK_SETTINGS_PASSWORD_TOGGLE_TAG),
+                        isChecked = uiState.isPasswordEnabled,
+                        onCheckedChange = onPasswordEnabled,
+                    )
+                },
+            )
+            AnimatedVisibility(visible = uiState.isPasswordEnabled) {
+                // The field sits at the bottom of the screen, so on focus the whole block —
+                // strength help text included — is scrolled above the keyboard.
+                Column(modifier = Modifier.bringIntoViewRequester(passwordFieldPosition)) {
+                    PasswordTextInputField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .testTag(LINK_SETTINGS_PASSWORD_FIELD_TAG),
+                        label = null,
+                        placeholder = stringResource(sharedR.string.password_placeholder),
+                        text = uiState.password.orEmpty(),
+                        showClearIcon = true,
+                        onValueChanged = onPasswordChanged,
+                        onFocusChanged = { focused ->
+                            if (focused) {
+                                coroutineScope.launch { passwordFieldPosition.bringIntoView() }
+                            }
+                        },
+                    )
+                    PasswordStrengthHelpText(
+                        strength = uiState.passwordStrength,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 8.dp)
+                            .testTag(LINK_SETTINGS_PASSWORD_STRENGTH_TAG),
+                    )
+                }
             }
         }
     }
@@ -716,6 +720,25 @@ private class PasswordStrengthPreviewProvider : PreviewParameterProvider<Passwor
         PasswordStrength.GOOD,
         PasswordStrength.STRONG,
     )
+}
+
+@CombinedThemePreviews
+@Composable
+private fun LinkSettingsScreenAlbumPreview() {
+    AndroidThemeForPreviews {
+        LinkSettingsScreen(
+            uiState = previewData.copy(isAlbum = true),
+            onBack = {},
+            onSeparateKeyEnabled = {},
+            onLearnMore = {},
+            onExpiryEnabled = {},
+            onExpiryDateChanged = {},
+            onPasswordEnabled = {},
+            onPasswordChanged = {},
+            onSave = {},
+            onUpgrade = {},
+        )
+    }
 }
 
 @CombinedThemePreviews

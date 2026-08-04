@@ -32,6 +32,7 @@ import mega.privacy.mobile.analytics.event.LinkHiddenItemsWarningDialogEvent
 import mega.privacy.mobile.analytics.event.LinkShareButtonPressedEvent
 import mega.privacy.mobile.analytics.event.ShareLinkScreenEvent
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_DETAILS_TAG
+import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_EXPIRED_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_COPY_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_DETAILS_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_PASSWORD_COPY_TAG
@@ -112,6 +113,26 @@ class ShareLinkScreenTest {
     )
 
     private val separateKeyData = data.copy(isKeySeparate = true)
+
+    private val albumData = ShareLinkUiState.Data(
+        nodeLinks = listOf(
+            ShareLinkNodeItem(
+                handle = 99L,
+                name = "Lisbon",
+                isFolder = false,
+                iconRes = null,
+                sizeInBytes = null,
+                modificationTime = null,
+                childFolderCount = null,
+                childFileCount = null,
+                link = "https://mega.nz/collection/xyz#albumKey",
+                linkWithoutKey = "https://mega.nz/collection/xyz",
+                key = "albumKey",
+            ),
+        ),
+        accountType = null,
+        album = ShareLinkAlbumInfo(photoCount = 6, coverThumbnailPath = null),
+    )
 
     @Test
     fun `test that every shared node and one access banner are displayed in the multi-node state`() {
@@ -787,6 +808,61 @@ class ShareLinkScreenTest {
 
         composeRule.onNodeWithTag(SHARE_LINK_KEY_DIALOG_TAG).assertIsDisplayed()
         assertThat(analyticsRule.events.count { it == LinkShareButtonPressedEvent }).isEqualTo(1)
+    }
+
+    @Test
+    fun `test that the album header shows the album title and photo count`() {
+        setContent(uiState = albumData)
+
+        composeRule.onNodeWithTag(SHARE_LINK_ALBUM_HEADER_TAG, useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_NODE_HEADER_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("Lisbon").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.resources.getQuantityString(sharedR.plurals.general_num_items_template, 6, 6)
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that the album header falls back to the placeholder when there is no cover`() {
+        setContent(uiState = albumData)
+
+        composeRule.onNodeWithTag(SHARE_LINK_ALBUM_COVER_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that an album shows the link card and no password card`() {
+        setContent(uiState = albumData)
+
+        composeRule.onNodeWithText("https://mega.nz/collection/xyz#albumKey").assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(SHARE_LINK_PASSWORD_DETAILS_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that an album shows the key card only when the key is separate`() {
+        setContent(uiState = albumData.copy(isKeySeparate = true))
+
+        composeRule.onNodeWithText("https://mega.nz/collection/xyz").assertIsDisplayed()
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DETAILS_TAG).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that an album shows no expiry notice`() {
+        setContent(uiState = albumData)
+
+        composeRule.onNodeWithTag(SHARE_LINK_EXPIRED_TAG, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that tapping Share on an album with a separate key opens the share key dialog`() {
+        setContent(uiState = albumData.copy(isKeySeparate = true))
+
+        composeRule.onNodeWithTag(SHARE_LINK_SHARE_BUTTON_TAG).performClick()
+
+        composeRule.onNodeWithTag(SHARE_LINK_KEY_DIALOG_TAG).assertIsDisplayed()
     }
 
     private fun setContent(

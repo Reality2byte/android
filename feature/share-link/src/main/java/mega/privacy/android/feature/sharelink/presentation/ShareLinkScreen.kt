@@ -320,6 +320,8 @@ internal data object ShareLinkSettingsAction : MenuActionWithIcon {
 internal const val SHARE_LINK_APP_BAR_TAG = "share_link_screen:app_bar"
 internal const val SHARE_LINK_SHARE_BUTTON_TAG = "share_link_screen:button_share"
 internal const val SHARE_LINK_NODE_HEADER_TAG = "share_link_screen:node_header"
+internal const val SHARE_LINK_ALBUM_HEADER_TAG = "share_link_screen:album_header"
+internal const val SHARE_LINK_ALBUM_COVER_TAG = "share_link_screen:album_cover"
 internal const val SHARE_LINK_MULTI_NODE_LIST_TAG = "share_link_screen:multi_node_list"
 internal const val SHARE_LINK_SENSITIVE_WARNING_TAG = "share_link_screen:sensitive_warning"
 internal const val SHARE_LINK_ACCESS_BANNER_TAG = "share_link_screen:access_banner"

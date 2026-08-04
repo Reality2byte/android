@@ -132,7 +132,9 @@ fun EntryProviderScope<NavKey>.linkSettingsScreen(
     entry<LinkSettingsNavKey> { key ->
         val viewModel =
             hiltViewModel<LinkSettingsViewModel, LinkSettingsViewModel.Factory> { factory ->
-                factory.create(LinkSettingsViewModel.Args(handles = key.handles))
+                factory.create(
+                    LinkSettingsViewModel.Args(ShareLinkSubject.Nodes(handles = key.handles))
+                )
             }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val resources = LocalResources.current

@@ -27,7 +27,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mega.android.core.ui.components.MegaText
 import mega.android.core.ui.components.banner.InlineInfoBanner
@@ -55,6 +58,7 @@ import mega.privacy.android.core.formatter.formatModifiedDate
 import mega.privacy.android.feature.sharelink.presentation.component.ShareLinkDetails
 import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.shared.resources.R as sharedR
+import java.io.File
 
 @Composable
 internal fun SensitiveItemsWarningDialog(
@@ -108,7 +112,7 @@ internal fun ShareLinkContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        NodeHeader(node = primary)
+        SubjectHeader(uiState = uiState)
 
         Column(
             modifier = Modifier
@@ -238,16 +242,29 @@ internal fun MultiNodeContent(
     }
 }
 
+/**
+ * The header above the link card: the album's cover, title and photo count when an album is being
+ * shared, otherwise the node row.
+ */
 @Composable
-private fun NodeHeader(
-    node: ShareLinkNodeItem,
+private fun SubjectHeader(
+    uiState: ShareLinkUiState.Data,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        NodeInfoRow(
-            node = node,
-            modifier = Modifier.testTag(SHARE_LINK_NODE_HEADER_TAG),
-        )
+        val album = uiState.album
+        if (album != null) {
+            AlbumInfoRow(
+                title = uiState.primary.name,
+                album = album,
+                modifier = Modifier.testTag(SHARE_LINK_ALBUM_HEADER_TAG),
+            )
+        } else {
+            NodeInfoRow(
+                node = uiState.primary,
+                modifier = Modifier.testTag(SHARE_LINK_NODE_HEADER_TAG),
+            )
+        }
         SubtleDivider()
     }
 }
@@ -279,6 +296,82 @@ private fun NodeInfoRow(
         }
     }
 
+    SubjectInfoRow(
+        title = node.name,
+        subtitle = subtitle,
+        modifier = modifier,
+        leading = {
+            node.iconRes?.let { iconRes ->
+                Image(
+                    modifier = Modifier.size(32.dp),
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                )
+            }
+        },
+    )
+}
+
+@Composable
+private fun AlbumInfoRow(
+    title: String,
+    album: ShareLinkAlbumInfo,
+    modifier: Modifier = Modifier,
+) {
+    SubjectInfoRow(
+        title = title,
+        subtitle = pluralStringResource(
+            sharedR.plurals.general_num_items_template,
+            album.photoCount,
+            album.photoCount,
+        ),
+        modifier = modifier,
+        leading = { AlbumCover(thumbnailPath = album.coverThumbnailPath) },
+    )
+}
+
+/**
+ * The album cover thumbnail, falling back to a placeholder while it loads and when the album is
+ * empty or the thumbnail could not be fetched.
+ */
+@Composable
+private fun AlbumCover(
+    thumbnailPath: String?,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(RoundedCornerShape(4.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (thumbnailPath == null) {
+            MegaIcon(
+                modifier = Modifier.fillMaxSize(),
+                painter = rememberVectorPainter(IconPack.Medium.Thin.Outline.Image01),
+                tint = IconColor.Secondary,
+                contentDescription = null,
+            )
+        } else {
+            AsyncImage(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(SHARE_LINK_ALBUM_COVER_TAG),
+                model = File(thumbnailPath),
+                contentScale = ContentScale.Crop,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubjectInfoRow(
+    title: String,
+    subtitle: String,
+    leading: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -286,19 +379,13 @@ private fun NodeInfoRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        node.iconRes?.let { iconRes ->
-            Image(
-                modifier = Modifier.size(32.dp),
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-            )
-        }
+        leading()
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             MegaText(
-                text = node.name,
+                text = title,
                 textColor = TextColor.Primary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,

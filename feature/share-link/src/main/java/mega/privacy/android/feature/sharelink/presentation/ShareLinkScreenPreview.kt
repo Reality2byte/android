@@ -45,6 +45,8 @@ internal class ShareLinkUiStateProvider : PreviewParameterProvider<ShareLinkUiSt
             linkWithPassword = "https://mega.nz/#P!encryptedLink",
         ),
         multiNode,
+        album,
+        album.copy(isKeySeparate = true),
     )
 
     private companion object {
@@ -97,6 +99,28 @@ internal class ShareLinkUiStateProvider : PreviewParameterProvider<ShareLinkUiSt
                 ),
             ),
             accountType = null,
+        )
+
+        // No cover path, so the header renders its placeholder — a real thumbnail cannot be
+        // loaded from disk in a preview.
+        val album = ShareLinkUiState.Data(
+            nodeLinks = listOf(
+                ShareLinkNodeItem(
+                    handle = 99L,
+                    name = "Lisbon",
+                    isFolder = false,
+                    iconRes = null,
+                    sizeInBytes = null,
+                    modificationTime = null,
+                    childFolderCount = null,
+                    childFileCount = null,
+                    link = "https://mega.nz/collection/xyz789#albumKey",
+                    linkWithoutKey = "https://mega.nz/collection/xyz789",
+                    key = "albumKey",
+                ),
+            ),
+            accountType = null,
+            album = ShareLinkAlbumInfo(photoCount = 6, coverThumbnailPath = null),
         )
     }
 }
