@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,7 +39,7 @@ import timber.log.Timber
  *
  * Connects to [AudioPlayerService] via a [MediaController], translates all [Player.Listener]
  * callbacks into [AudioControllerState] emissions, and polls position/duration every
- * [POSITION_POLLING_INTERVAL_MS] milliseconds.
+ * [POSITION_POLLING_INTERVAL].
  */
 internal class AudioMediaControllerFacade @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -72,31 +73,45 @@ internal class AudioMediaControllerFacade @Inject constructor(
                     override fun onDisconnected(controller: MediaController) {
                         updateState { copy(isIdle = true) }
                         stopPositionPolling()
+                        controller.removeListener(playerListener)
+                        this@AudioMediaControllerFacade.controller = null
+                        val oldFuture = controllerFuture
+                        controllerFuture = null
+                        runCatching { oldFuture?.let { MediaController.releaseFuture(it) } }
+                            .onFailure {
+                                Timber.e(
+                                    it,
+                                    "Failed to release MediaController after disconnect"
+                                )
+                            }
                     }
                 })
                 .buildAsync().also { future ->
-                Futures.addCallback(
-                    future,
-                    object : FutureCallback<MediaController> {
-                        override fun onSuccess(result: MediaController) {
-                            // Guard against delivery after release() was already called.
-                            if (controllerFuture == null) {
-                                result.release()
-                                return
+                    Futures.addCallback(
+                        future,
+                        object : FutureCallback<MediaController> {
+                            override fun onSuccess(result: MediaController) {
+                                // Guard against delivery after release() was already called.
+                                if (controllerFuture == null) {
+                                    result.release()
+                                    return
+                                }
+                                controller = result
+                                result.addListener(playerListener)
+                                syncAndEmit(result)
+                                startPositionPolling()
                             }
-                            controller = result
-                            result.addListener(playerListener)
-                            syncAndEmit(result)
-                            startPositionPolling()
-                        }
 
-                        override fun onFailure(t: Throwable) {
-                            Timber.e(t, "Failed to connect MediaController to AudioPlayerService")
-                        }
-                    },
-                    ContextCompat.getMainExecutor(context),
-                )
-            }
+                            override fun onFailure(t: Throwable) {
+                                Timber.e(
+                                    t,
+                                    "Failed to connect MediaController to AudioPlayerService"
+                                )
+                            }
+                        },
+                        ContextCompat.getMainExecutor(context),
+                    )
+                }
     }
 
     private fun syncAndEmit(c: MediaController) {
@@ -188,7 +203,7 @@ internal class AudioMediaControllerFacade @Inject constructor(
                         )
                     }
                 }
-                delay(POSITION_POLLING_INTERVAL_MS)
+                delay(POSITION_POLLING_INTERVAL)
             }
         }
     }
@@ -204,6 +219,18 @@ internal class AudioMediaControllerFacade @Inject constructor(
         serviceIntent.setDataAndType(intent.data, intent.type)
         runCatching { ContextCompat.startForegroundService(context, serviceIntent) }
             .onFailure { Timber.e(it, "Failed to start AudioPlayerService") }
+        reconnectController()
+    }
+
+    private fun reconnectController() {
+        stopPositionPolling()
+        controller?.removeListener(playerListener)
+        val futureToRelease = controllerFuture
+        controllerFuture = null
+        controller = null
+        runCatching { futureToRelease?.let { MediaController.releaseFuture(it) } }
+            .onFailure { Timber.e(it, "Failed to release MediaController before reconnect") }
+        connect()
     }
 
     override fun play() {
@@ -257,6 +284,6 @@ internal class AudioMediaControllerFacade @Inject constructor(
     }
 
     companion object {
-        private const val POSITION_POLLING_INTERVAL_MS = 500L
+        private val POSITION_POLLING_INTERVAL = 500.milliseconds
     }
 }

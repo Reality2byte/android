@@ -300,4 +300,136 @@ class AudioPlayerScreenTest {
     }
 
     // endregion
+
+    // region Podcast mode – content visibility
+
+    @Test
+    fun `test that seek backward 15 button is shown in podcast mode`() {
+        setContent(uiState = defaultData(), isPodcastMode = true)
+
+        composeTestRule.onNodeWithContentDescription("Seek backward 15 seconds").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that seek forward 15 button is shown in podcast mode`() {
+        setContent(uiState = defaultData(), isPodcastMode = true)
+
+        composeTestRule.onNodeWithContentDescription("Seek forward 15 seconds").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that sleep timer button is shown in podcast mode`() {
+        setContent(uiState = defaultData(), isPodcastMode = true)
+
+        composeTestRule.onNodeWithContentDescription("Sleep timer").assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that speed indicator is shown in podcast mode`() {
+        setContent(uiState = defaultData(), isPodcastMode = true)
+
+        composeTestRule.onNodeWithText("1x", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `test that seek backward 15 button is disabled when isLoading is true in podcast mode`() {
+        setContent(uiState = defaultData(isLoading = true), isPodcastMode = true)
+
+        composeTestRule.onNodeWithContentDescription("Seek backward 15 seconds")
+            .assertIsNotEnabled()
+    }
+
+    // endregion
+
+    // region Podcast mode – callbacks
+
+    @Test
+    fun `test that onSeekBackward15 is invoked when seek backward 15 button is clicked`() {
+        val onSeekBackward15 = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(isLoading = false),
+            isPodcastMode = true,
+            onSeekBackward15 = onSeekBackward15,
+        )
+
+        composeTestRule.onNodeWithContentDescription("Seek backward 15 seconds").performClick()
+
+        verify(onSeekBackward15).invoke()
+    }
+
+    @Test
+    fun `test that onSeekForward15 is invoked when seek forward 15 button is clicked`() {
+        val onSeekForward15 = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(isLoading = false),
+            isPodcastMode = true,
+            onSeekForward15 = onSeekForward15,
+        )
+
+        composeTestRule.onNodeWithContentDescription("Seek forward 15 seconds").performClick()
+
+        verify(onSeekForward15).invoke()
+    }
+
+    @Test
+    fun `test that onSleepTimerClicked is invoked when sleep timer button is clicked`() {
+        val onSleepTimerClicked = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(),
+            isPodcastMode = true,
+            onSleepTimerClicked = onSleepTimerClicked,
+        )
+
+        composeTestRule.onNodeWithContentDescription("Sleep timer").performClick()
+
+        verify(onSleepTimerClicked).invoke()
+    }
+
+    @Test
+    fun `test that onSpeedClicked is invoked when speed indicator is clicked`() {
+        val onSpeedClicked = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(),
+            isPodcastMode = true,
+            onSpeedClicked = onSpeedClicked,
+        )
+
+        composeTestRule.onNodeWithText("1x", useUnmergedTree = true).performClick()
+
+        verify(onSpeedClicked).invoke()
+    }
+
+    // endregion
+
+    // region Mode toggle – callbacks
+
+    @Test
+    fun `test that onToggleMode is invoked when podcast mode button is clicked`() {
+        val onToggleMode = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(),
+            isPodcastMode = true,
+            onToggleMode = onToggleMode,
+        )
+
+        composeTestRule.onNodeWithText("Podcast mode", useUnmergedTree = true).performClick()
+
+        verify(onToggleMode).invoke()
+    }
+
+    @Test
+    fun `test that onToggleMode is invoked when music mode button is clicked`() {
+        val onToggleMode = mock<() -> Unit>()
+        setContent(
+            uiState = defaultData(),
+            isPodcastMode = false,
+            onToggleMode = onToggleMode,
+        )
+
+        composeTestRule.onNodeWithText("Music mode", useUnmergedTree = true).performClick()
+
+        verify(onToggleMode).invoke()
+    }
+
+    // endregion
 }

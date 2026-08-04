@@ -1,4 +1,4 @@
-package mega.privacy.android.feature.mediaplayer.presentation
+package mega.privacy.android.feature.mediaplayer.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -6,7 +6,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -22,7 +21,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mega.privacy.android.shared.original.core.ui.theme.OriginalTheme
+import mega.android.core.ui.theme.AndroidTheme
 import kotlin.math.pow
 
 private const val BAR_LENGTH_RATIO = 0.24f
@@ -62,13 +61,8 @@ internal fun MediaPlayerLoadingIndicator(
         val barStart = outerRadius * BAR_START_RATIO
 
         for (i in 0 until barCount) {
-            // Bar 0 sits at 12 o'clock; bars advance clockwise.
             val angleDeg = i * (360f / barCount) - 90f
-
-            // How far behind the current lit position this bar is (0 = head, ≈barCount = just ahead).
             val distance = (progress - i + barCount) % barCount
-
-            // Exponential decay: head → alpha 1.0, tail → alpha ~0.07.
             val alpha = (1f - distance / barCount)
                 .pow(ALPHA_DECAY_EXPONENT)
                 .coerceIn(0.07f, 1f)
@@ -89,14 +83,12 @@ internal fun MediaPlayerLoadingIndicator(
     }
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFF1C1E1E)
 @Composable
 private fun PreviewMediaPlayerLoadingIndicator() {
-    OriginalTheme(isDark = true) {
+    AndroidTheme(isDark = true) {
         Box(
-            modifier = Modifier
-                .size(96.dp)
-                .background(Color(21, 22, 22)),
+            modifier = Modifier.size(96.dp),
             contentAlignment = Alignment.Center,
         ) {
             MediaPlayerLoadingIndicator(modifier = Modifier.size(48.dp))
