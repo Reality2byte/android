@@ -3,7 +3,6 @@ package mega.privacy.android.app.nav
 import android.content.Context
 import android.content.Intent
 import mega.privacy.android.app.mediaplayer.AudioPlayerActivity
-import mega.privacy.android.app.mediaplayer.LegacyVideoPlayerActivity
 import mega.privacy.android.app.presentation.videoplayer.VideoPlayerActivity
 import mega.privacy.android.app.utils.Constants.EXTRA_SERIALIZE_STRING
 import mega.privacy.android.app.utils.Constants.INTENT_EXTRA_KEY_ADAPTER_TYPE
@@ -33,8 +32,6 @@ import mega.privacy.android.domain.entity.FileTypeInfo
 import mega.privacy.android.domain.entity.SortOrder
 import mega.privacy.android.domain.entity.VideoFileTypeInfo
 import mega.privacy.android.domain.entity.node.NodeContentUri
-import mega.privacy.android.domain.featuretoggle.ApiFeatures
-import mega.privacy.android.domain.usecase.featureflag.GetFeatureFlagValueUseCase
 import javax.inject.Inject
 
 /**
@@ -42,7 +39,6 @@ import javax.inject.Inject
  */
 class MediaPlayerIntentMapper @Inject constructor(
     private val nodeContentUriIntentMapper: NodeContentUriIntentMapper,
-    private val getFeatureFlagValueUseCase: GetFeatureFlagValueUseCase,
 ) {
     /**
      * Create media player intent
@@ -75,12 +71,7 @@ class MediaPlayerIntentMapper @Inject constructor(
         publicLinkUrl: String? = null,
         localFilePath: String? = null,
     ): Intent {
-        // VideoPlayerRevampPublicLink is enabled for all users (anonymous and authenticated) in
-        // this version, so it is used as the single condition for opening the revamped player.
-        val useVideoRevamp = runCatching {
-            getFeatureFlagValueUseCase(ApiFeatures.VideoPlayerRevampPublicLink)
-        }.getOrDefault(false)
-        val intent = getIntent(context, fileTypeInfo, useVideoRevamp).apply {
+        val intent = getIntent(context, fileTypeInfo).apply {
             putExtra(INTENT_EXTRA_KEY_ORDER_GET_CHILDREN, sortOrder)
             putExtra(INTENT_EXTRA_KEY_PLACEHOLDER, 0)
             putExtra(INTENT_EXTRA_KEY_FILE_NAME, name)
@@ -141,11 +132,10 @@ class MediaPlayerIntentMapper @Inject constructor(
         return intent
     }
 
-    private fun getIntent(context: Context, fileTypeInfo: FileTypeInfo, useVideoRevamp: Boolean) =
+    private fun getIntent(context: Context, fileTypeInfo: FileTypeInfo) =
         when {
             fileTypeInfo.isSupported && fileTypeInfo is VideoFileTypeInfo ->
-                if (useVideoRevamp) Intent(context, VideoPlayerActivity::class.java)
-                else Intent(context, LegacyVideoPlayerActivity::class.java)
+                Intent(context, VideoPlayerActivity::class.java)
 
             fileTypeInfo.isSupported && fileTypeInfo is AudioFileTypeInfo ->
                 Intent(context, AudioPlayerActivity::class.java)

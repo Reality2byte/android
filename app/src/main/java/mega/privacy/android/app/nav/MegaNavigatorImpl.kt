@@ -22,7 +22,6 @@ import mega.privacy.android.app.extensions.launchUrl
 import mega.privacy.android.app.globalmanagement.ActivityLifecycleHandler
 import mega.privacy.android.app.main.legacycontact.AddContactActivity
 import mega.privacy.android.app.mediaplayer.AudioPlayerActivity
-import mega.privacy.android.app.mediaplayer.LegacyVideoPlayerActivity
 import mega.privacy.android.app.mediaplayer.Nav3AudioPlayerRouteLauncher
 import mega.privacy.android.app.presentation.contact.AddContactToShareComposeActivity
 import mega.privacy.android.app.presentation.contact.AddContactsComposeActivity
@@ -86,7 +85,6 @@ import mega.privacy.android.domain.entity.node.NodeContentUri
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.TypedFileNode
 import mega.privacy.android.domain.entity.sync.SyncType
-import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.domain.qualifier.ApplicationScope
 import mega.privacy.android.domain.qualifier.MainDispatcher
 import mega.privacy.android.domain.usecase.GetFileTypeInfoByNameUseCase
@@ -419,10 +417,6 @@ internal class MegaNavigatorImpl @Inject constructor(
         }
     }
 
-    private suspend fun isVideoRevampEnabled(): Boolean =
-        runCatching { getFeatureFlagValueUseCase(ApiFeatures.VideoPlayerRevamp) }
-            .getOrDefault(false)
-
     /**
      * Launch the media player for [intent]. Route launchers decide whether to use the
      * single-activity Compose destination for video or audio; otherwise the activity is started
@@ -445,11 +439,9 @@ internal class MegaNavigatorImpl @Inject constructor(
     private fun getIntent(
         context: Context,
         fileTypeInfo: FileTypeInfo,
-        useRevamp: Boolean = false,
     ) = when {
         fileTypeInfo.isSupported && fileTypeInfo is VideoFileTypeInfo ->
-            if (useRevamp) Intent(context, VideoPlayerActivity::class.java)
-            else Intent(context, LegacyVideoPlayerActivity::class.java)
+            Intent(context, VideoPlayerActivity::class.java)
 
         fileTypeInfo.isSupported && fileTypeInfo is AudioFileTypeInfo ->
             Intent(context, AudioPlayerActivity::class.java)
@@ -505,8 +497,7 @@ internal class MegaNavigatorImpl @Inject constructor(
         message: NodeAttachmentMessage,
         fileNode: FileNode,
     ) {
-        val useRevamp = isVideoRevampEnabled()
-        val intent = getIntent(context, fileNode.type, useRevamp).apply {
+        val intent = getIntent(context, fileNode.type).apply {
             putExtra(INTENT_EXTRA_KEY_ADAPTER_TYPE, FROM_CHAT)
             putExtra(INTENT_EXTRA_KEY_IS_PLAYLIST, false)
             putExtra(INTENT_EXTRA_KEY_MSG_ID, message.msgId)
@@ -529,9 +520,8 @@ internal class MegaNavigatorImpl @Inject constructor(
         chatId: Long,
         name: String,
     ) {
-        val useRevamp = isVideoRevampEnabled()
         val fileType = getFileTypeInfoByNameUseCase(name)
-        val intent = getIntent(context, fileType, useRevamp).apply {
+        val intent = getIntent(context, fileType).apply {
             putExtra(INTENT_EXTRA_KEY_ADAPTER_TYPE, FROM_CHAT)
             putExtra(INTENT_EXTRA_KEY_IS_PLAYLIST, false)
             putExtra(INTENT_EXTRA_KEY_MSG_ID, messageId)

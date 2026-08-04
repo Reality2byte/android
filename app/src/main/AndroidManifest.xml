@@ -414,11 +414,6 @@
             android:label="@string/pdf_app_name"
             android:launchMode="singleTop" />
         <activity
-            android:name=".mediaplayer.LegacyVideoPlayerActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|uiMode"
-            android:theme="@style/Theme.Mega.FullScreen.VideoPlayer"
-            android:windowSoftInputMode="adjustNothing" />
-        <activity
             android:name=".presentation.videoplayer.VideoPlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:supportsPictureInPicture="true"

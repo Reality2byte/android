@@ -42,16 +42,6 @@ enum class ApiFeatures(
     ),
 
     /**
-     * Enable video player revamp public link
-     */
-    VideoPlayerRevampPublicLink(
-        experimentName = "vprpl",
-        description = "Enable revamped video player for public link access when not logged in",
-        defaultValue = false,
-        singleCheckPerRun = true,
-    ),
-
-    /**
      * Enables video editor
      */
     VideoEditor(
@@ -209,19 +199,6 @@ enum class ApiFeatures(
         experimentName = "acwlo",
         description = "Enable continue where you left off feature",
         defaultValue = false
-    ),
-
-    /**
-     * Video Player Revamp feature flag.
-     * When enabled, opens the revamped Video Player (VideoPlayerRevampActivity) instead of the legacy one.
-     * singleCheckPerRun = true to cache the flag value for the lifetime of the app session and
-     * prevent intermittent false returns caused by repeated remote fetches.
-     */
-    VideoPlayerRevamp(
-        experimentName = "vprv",
-        description = "Open the revamped Video Player instead of the legacy one",
-        defaultValue = false,
-        singleCheckPerRun = true,
     ),
 
     /**
