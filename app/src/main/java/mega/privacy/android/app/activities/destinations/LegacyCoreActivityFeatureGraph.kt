@@ -85,7 +85,7 @@ class LegacyCoreActivityFeatureGraph(
             addChatParticipantsDestination(navigationHandler)
             addMeetingParticipantsDestination(navigationHandler)
             contactsRequestLegacyDestination(navigationHandler::back)
-            inviteContactLegacyDestination(navigationHandler::back)
+            inviteContactLegacyDestination(navigationHandler)
             authenticityCredentialsLegacyDestination(navigationHandler::back)
             chatLegacyDestination(navigationHandler::back)
             showChatMessagesDestination(navigationHandler)

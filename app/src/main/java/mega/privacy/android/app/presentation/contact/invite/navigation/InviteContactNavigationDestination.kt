@@ -7,28 +7,36 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import mega.privacy.android.app.presentation.contact.invite.InviteContactActivity
 import mega.privacy.android.app.presentation.contact.invite.InviteContactViewModel
-import mega.privacy.android.navigation.contract.transparent.transparentMetadata
+import mega.privacy.android.feature_flags.AppFeatures
+import mega.privacy.android.navigation.contract.NavigationHandler
+import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.destination.InviteContactNavKey
 
 /**
- * Navigation destination for InviteContactActivity that handles legacy navigation.
- * 
- * @param isFromAchievement Whether the entry point is from the achievements screen.
+ * Registers the [InviteContactNavKey] destination. Behind [AppFeatures.ContactsComposeUI] either
+ * renders the Compose [InviteContactAppHost] invite screen (flag on) or launches the legacy
+ * [InviteContactActivity] and pops itself (flag off).
  */
-fun EntryProviderScope<NavKey>.inviteContactLegacyDestination(removeDestination: () -> Unit) {
-    entry<InviteContactNavKey>(
-        metadata = transparentMetadata()
-    ) { key ->
-        val context = LocalContext.current
-        LaunchedEffect(Unit) {
-            val intent = Intent(context, InviteContactActivity::class.java).apply {
-                putExtra(InviteContactViewModel.KEY_FROM, key.isFromAchievement)
-            }
-            context.startActivity(intent)
-
-            // Immediately pop this destination from the back stack
-            removeDestination()
-        }
+fun EntryProviderScope<NavKey>.inviteContactLegacyDestination(navigationHandler: NavigationHandler) {
+    entry<InviteContactNavKey> { navKey ->
+        FeatureFlagGate(
+            feature = AppFeatures.ContactsComposeUI,
+            disabled = {
+                val context = LocalContext.current
+                LaunchedEffect(Unit) {
+                    val intent = Intent(context, InviteContactActivity::class.java).apply {
+                        putExtra(InviteContactViewModel.KEY_FROM, navKey.isFromAchievement)
+                    }
+                    context.startActivity(intent)
+                    navigationHandler.back()
+                }
+            },
+            enabled = {
+                InviteContactAppHost(
+                    navigationHandler = navigationHandler,
+                    isFromAchievement = navKey.isFromAchievement,
+                )
+            },
+        )
     }
 }
-
