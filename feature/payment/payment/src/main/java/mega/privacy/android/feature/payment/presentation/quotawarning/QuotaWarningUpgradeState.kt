@@ -43,4 +43,15 @@ data class QuotaWarningUpgradeState(
     val isLoading: Boolean = true,
     val isConnected: Boolean = true,
     val hasLoadError: Boolean = false,
-)
+) {
+    /**
+     * Whether the current account is on a paid (Pro) plan. An unknown plan counts as free, matching
+     * the plan name the screen falls back to.
+     */
+    val isProUser: Boolean = currentPlan != null && currentPlan != AccountType.FREE
+
+    /**
+     * Whether the loaded quota data is being shown, as opposed to the skeleton or the error state.
+     */
+    val isContentShown: Boolean = !isLoading && isConnected && !hasLoadError
+}

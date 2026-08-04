@@ -71,13 +71,23 @@ class QuotaWarningMessageMapper @Inject constructor() {
         isProUser: Boolean,
         isHighestPlan: Boolean = false,
     ): QuotaWarningMessage {
-        val message = when (type) {
-            QuotaWarningType.Storage -> storageMessage(storageState, trigger)
-            QuotaWarningType.Transfer -> transferMessage(trigger, isTransferOverQuota, isProUser)
+        val scenario = quotaWarningScenario(
+            type = type,
+            storageState = storageState,
+            isTransferOverQuota = isTransferOverQuota,
+        )
+        val message = when (scenario) {
+            QuotaWarningScenario.StorageAlmostFull,
+            QuotaWarningScenario.StorageFull,
+                -> storageMessage(scenario, trigger)
+
+            QuotaWarningScenario.TransferAlmostUsed,
+            QuotaWarningScenario.TransferAllUsed,
+                -> transferMessage(scenario, trigger, isProUser)
         }
         return if (isHighestPlan) {
             message.copy(
-                subtitleId = highestPlanSubtitle(type, trigger, isTransferOverQuota),
+                subtitleId = highestPlanSubtitle(scenario, trigger),
                 showLearnMore = false,
                 subtitleHasLink = true,
             )
@@ -87,36 +97,33 @@ class QuotaWarningMessageMapper @Inject constructor() {
     }
 
     private fun highestPlanSubtitle(
-        type: QuotaWarningType,
+        scenario: QuotaWarningScenario,
         trigger: QuotaWarningTrigger,
-        isTransferOverQuota: Boolean,
-    ): Int = when (type) {
-        QuotaWarningType.Storage ->
-            sharedR.string.subscription_quota_storage_highest_plan_subtitle
+    ): Int {
+        val isStreaming = trigger == QuotaWarningTrigger.Streaming
+        return when (scenario) {
+            QuotaWarningScenario.StorageAlmostFull, QuotaWarningScenario.StorageFull ->
+                sharedR.string.subscription_quota_storage_highest_plan_subtitle
 
-        QuotaWarningType.Transfer -> {
-            val isStreaming = trigger == QuotaWarningTrigger.Streaming
-            when {
-                isTransferOverQuota && isStreaming ->
-                    sharedR.string.subscription_quota_transfer_over_streaming_highest_plan_subtitle
+            QuotaWarningScenario.TransferAllUsed -> if (isStreaming) {
+                sharedR.string.subscription_quota_transfer_over_streaming_highest_plan_subtitle
+            } else {
+                sharedR.string.subscription_quota_transfer_over_download_highest_plan_subtitle
+            }
 
-                isTransferOverQuota ->
-                    sharedR.string.subscription_quota_transfer_over_download_highest_plan_subtitle
-
-                isStreaming ->
-                    sharedR.string.subscription_quota_transfer_low_streaming_highest_plan_subtitle
-
-                else ->
-                    sharedR.string.subscription_quota_transfer_low_download_highest_plan_subtitle
+            QuotaWarningScenario.TransferAlmostUsed -> if (isStreaming) {
+                sharedR.string.subscription_quota_transfer_low_streaming_highest_plan_subtitle
+            } else {
+                sharedR.string.subscription_quota_transfer_low_download_highest_plan_subtitle
             }
         }
     }
 
     private fun storageMessage(
-        storageState: StorageState,
+        scenario: QuotaWarningScenario,
         trigger: QuotaWarningTrigger,
     ): QuotaWarningMessage {
-        val isFull = storageState == StorageState.Red || storageState == StorageState.PayWall
+        val isFull = scenario == QuotaWarningScenario.StorageFull
         val subtitleId = when {
             !isFull -> sharedR.string.subscription_quota_storage_almost_full_subtitle
             trigger == QuotaWarningTrigger.Upload ->
@@ -135,12 +142,12 @@ class QuotaWarningMessageMapper @Inject constructor() {
     }
 
     private fun transferMessage(
+        scenario: QuotaWarningScenario,
         trigger: QuotaWarningTrigger,
-        isTransferOverQuota: Boolean,
         isProUser: Boolean,
     ): QuotaWarningMessage {
         val isStreaming = trigger == QuotaWarningTrigger.Streaming
-        return if (isTransferOverQuota) {
+        return if (scenario == QuotaWarningScenario.TransferAllUsed) {
             QuotaWarningMessage(
                 titleId = sharedR.string.subscription_quota_transfer_over_title,
                 titleTakesPercentage = false,

@@ -5,8 +5,11 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mega.android.core.ui.extensions.LaunchedOnceEffect
+import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.billing.BillingEvent
 import mega.privacy.android.domain.entity.payment.UpgradeSource
@@ -37,6 +40,26 @@ fun QuotaWarningUpgradeRoute(
 
     BackHandler(onBack = onBack)
 
+    val events = remember(
+        type,
+        uiState.storageState,
+        uiState.isTransferOverQuota,
+        uiState.isProUser,
+    ) {
+        QuotaWarningEventMapper()(
+            type = type,
+            storageState = uiState.storageState,
+            isTransferOverQuota = uiState.isTransferOverQuota,
+            isProUser = uiState.isProUser,
+        )
+    }
+
+    LaunchedOnceEffect(uiState.isContentShown) {
+        if (uiState.isContentShown) {
+            Analytics.tracker.trackEvent(events.screenView)
+        }
+    }
+
     LaunchedEffect(Unit) {
         billingViewModel.billingUpdateEvent.collect {
             if (it is BillingEvent.OnPurchaseUpdate) {
@@ -51,6 +74,7 @@ fun QuotaWarningUpgradeRoute(
         trigger = trigger,
         uiState = uiState,
         onUpgradeClick = { subscription ->
+            Analytics.tracker.trackEvent(events.upgradeButtonPressed)
             activity?.let {
                 billingViewModel.startPurchase(
                     activity = it,
@@ -59,7 +83,10 @@ fun QuotaWarningUpgradeRoute(
                 )
             }
         },
-        onViewAllPlansClick = onViewAllPlans,
+        onViewAllPlansClick = {
+            Analytics.tracker.trackEvent(events.viewAllPlansButtonPressed)
+            onViewAllPlans()
+        },
         onLearnMoreClick = {
             activity?.let { megaNavigator.launchUrl(it, TRANSFER_QUOTA_LEARN_MORE_URL) }
         },

@@ -98,7 +98,7 @@ fun QuotaWarningUpgradeScreen(
 ) {
     val context = LocalContext.current
     val locale = LocalLocale.current.platformLocale
-    val isProUser = uiState.currentPlan != null && uiState.currentPlan != AccountType.FREE
+    val isProUser = uiState.isProUser
     val message = remember(
         type,
         trigger,
