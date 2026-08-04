@@ -470,7 +470,7 @@ class ImagePreviewViewModel @Inject constructor(
             getFeatureFlagValueUseCase(ApiFeatures.VideoEditor)
         }.getOrDefault(false)
         val isNotInBackups = !isNodeInBackups(imageNode)
-        return isValidSource && hasWritePermission && isNotInBackups &&
+        return _state.value.isOnline && isValidSource && hasWritePermission && isNotInBackups &&
                 (isSupportedImage || isSupportedVideo)
     }
 

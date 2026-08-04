@@ -291,6 +291,7 @@ internal fun ImagePreviewScreen(
                         ) {
                             ImagePreviewTopBar(
                                 imageNode = imageNode,
+                                isOnline = viewState.isOnline,
                                 showEditTooltip = viewState.showVideoEditorTooltip
                                         && imageNode.type is VideoFileTypeInfo,
                                 onEditTooltipDismissed = viewModel::onVideoEditorTooltipDismissed,
@@ -730,6 +731,7 @@ private fun ImageContent(
 @Composable
 private fun ImagePreviewTopBar(
     imageNode: ImageNode,
+    isOnline: Boolean,
     showEditTooltip: Boolean,
     onEditTooltipDismissed: () -> Unit,
     showEditMenu: suspend (ImageNode) -> Boolean,
@@ -787,7 +789,7 @@ private fun ImagePreviewTopBar(
                     value = showMoreMenu(imageNode)
                 }
 
-                val isEditMenuVisible by produceState(false, imageNode) {
+                val isEditMenuVisible by produceState(false, imageNode, isOnline) {
                     value = showEditMenu(imageNode)
                 }
 

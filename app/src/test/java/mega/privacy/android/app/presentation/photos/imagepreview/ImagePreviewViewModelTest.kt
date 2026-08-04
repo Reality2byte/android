@@ -719,12 +719,31 @@ class ImagePreviewViewModelTest {
             whenever(getNodeAccessPermission(NodeId(123L))).thenReturn(AccessPermission.OWNER)
             whenever(savedStateHandle.get<ImagePreviewFetcherSource>(IMAGE_NODE_FETCHER_SOURCE))
                 .thenReturn(ImagePreviewFetcherSource.TIMELINE)
+            whenever(monitorConnectivityUseCase()) doReturn flowOf(true)
+            initViewModel()
 
             val result = underTest.isPhotoEditorMenuVisible(imageNode)
 
             assertThat(result).isTrue()
         }
 
+    @Test
+    internal fun `test that isPhotoEditorMenuVisible returns false when device is offline`() =
+        runTest {
+            val imageNode = mock<ImageNode> {
+                on { type } doReturn StaticImageFileTypeInfo("image/jpeg", "jpg")
+                on { id } doReturn NodeId(123L)
+            }
+            whenever(getNodeAccessPermission(NodeId(123L))).thenReturn(AccessPermission.OWNER)
+            whenever(savedStateHandle.get<ImagePreviewFetcherSource>(IMAGE_NODE_FETCHER_SOURCE))
+                .thenReturn(ImagePreviewFetcherSource.TIMELINE)
+            whenever(monitorConnectivityUseCase()) doReturn flowOf(false)
+            initViewModel()
+
+            val result = underTest.isPhotoEditorMenuVisible(imageNode)
+
+            assertThat(result).isFalse()
+        }
 
     @Test
     internal fun `test that isPhotoEditorMenuVisible returns false when user has no write permission`() =
@@ -850,6 +869,8 @@ class ImagePreviewViewModelTest {
             whenever(savedStateHandle.get<ImagePreviewFetcherSource>(IMAGE_NODE_FETCHER_SOURCE))
                 .thenReturn(ImagePreviewFetcherSource.TIMELINE)
             whenever(getFeatureFlagValueUseCase(ApiFeatures.VideoEditor)).thenReturn(true)
+            whenever(monitorConnectivityUseCase()) doReturn flowOf(true)
+            initViewModel()
 
             val result = underTest.isPhotoEditorMenuVisible(imageNode)
 
