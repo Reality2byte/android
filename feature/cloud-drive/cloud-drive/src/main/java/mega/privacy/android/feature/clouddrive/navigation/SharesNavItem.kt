@@ -20,6 +20,7 @@ import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.destination.SharesNavKey
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
+import mega.privacy.mobile.analytics.event.SharedItemsBottomNavigationItemEvent
 
 /**
  * Main navigation item for the Shared items section.
@@ -45,19 +46,6 @@ class SharesNavItem : MainNavItem, Flagged {
     override val preferredSlot: PreferredSlot = PreferredSlot.None
     override val availableOffline: Boolean = false
     override val analyticsEventIdentifier: NavigationEventIdentifier =
-        SharesNavigationIdentifier
+        SharedItemsBottomNavigationItemEvent
 }
 
-/**
- * Analytics identifier for the Shared items bottom navigation item.
- */
-object SharesNavigationIdentifier : NavigationEventIdentifier {
-    override val navigationElementType: String?
-        get() = "Bottom"
-    override val destination: String?
-        get() = "Shared Items"
-    override val eventName: String
-        get() = "SharedItemsBottomNavigationItem"
-    override val uniqueIdentifier: Int
-        get() = -1
-}

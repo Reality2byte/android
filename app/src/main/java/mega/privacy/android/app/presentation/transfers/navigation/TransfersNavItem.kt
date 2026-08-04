@@ -20,6 +20,7 @@ import mega.privacy.android.navigation.destination.TransfersNavKey
 import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
+import mega.privacy.mobile.analytics.event.TransfersBottomNavigationItemEvent
 
 /**
  * Main navigation item for the Transfers section.
@@ -47,17 +48,6 @@ class TransfersNavItem : MainNavItem, Flagged {
     override val preferredSlot: PreferredSlot = PreferredSlot.None
     override val availableOffline: Boolean = true
     override val analyticsEventIdentifier: NavigationEventIdentifier =
-        TransfersNavigationIdentifier
+        TransfersBottomNavigationItemEvent
     override val feature: Feature = ApiFeatures.CustomisableBottomNavigation
-}
-
-object TransfersNavigationIdentifier : NavigationEventIdentifier {
-    override val navigationElementType: String?
-        get() = "Bottom"
-    override val destination: String?
-        get() = "Transfers"
-    override val eventName: String
-        get() = "TransfersBottomNavigationItem"
-    override val uniqueIdentifier: Int
-        get() = -1
 }

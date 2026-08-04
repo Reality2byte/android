@@ -20,6 +20,7 @@ import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.destination.FavouritesNavKey
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
+import mega.privacy.mobile.analytics.event.FavouritesBottomNavigationItemEvent
 
 /**
  * Main navigation item for the Favourites section.
@@ -48,19 +49,6 @@ class FavouritesNavItem : MainNavItem, Flagged {
     override val preferredSlot: PreferredSlot = PreferredSlot.None
     override val availableOffline: Boolean = false
     override val analyticsEventIdentifier: NavigationEventIdentifier =
-        FavouritesNavigationIdentifier
+        FavouritesBottomNavigationItemEvent
 }
 
-/**
- * Analytics identifier for the Favourites bottom navigation item.
- */
-object FavouritesNavigationIdentifier : NavigationEventIdentifier {
-    override val navigationElementType: String?
-        get() = "Bottom"
-    override val destination: String?
-        get() = "Favourites"
-    override val eventName: String
-        get() = "FavouritesBottomNavigationItem"
-    override val uniqueIdentifier: Int
-        get() = -1
-}

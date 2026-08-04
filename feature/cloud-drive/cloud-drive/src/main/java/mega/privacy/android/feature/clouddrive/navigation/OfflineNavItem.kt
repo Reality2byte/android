@@ -22,6 +22,7 @@ import mega.privacy.android.navigation.destination.OfflineNavKey
 import mega.privacy.android.navigation.destination.TransfersNavKey
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.core.event.identifier.NavigationEventIdentifier
+import mega.privacy.mobile.analytics.event.OfflineFilesBottomNavigationItemEvent
 
 /**
  * Main navigation item for the Offline files section.
@@ -65,19 +66,5 @@ class OfflineNavItem : MainNavItem, Flagged {
     override val preferredSlot: PreferredSlot = PreferredSlot.None
     override val availableOffline: Boolean = true
     override val analyticsEventIdentifier: NavigationEventIdentifier =
-        OfflineNavigationIdentifier
-}
-
-/**
- * Analytics identifier for the Offline files bottom navigation item.
- */
-object OfflineNavigationIdentifier : NavigationEventIdentifier {
-    override val navigationElementType: String?
-        get() = "Bottom"
-    override val destination: String?
-        get() = "Offline Files"
-    override val eventName: String
-        get() = "OfflineFilesBottomNavigationItem"
-    override val uniqueIdentifier: Int
-        get() = -1
+        OfflineFilesBottomNavigationItemEvent
 }

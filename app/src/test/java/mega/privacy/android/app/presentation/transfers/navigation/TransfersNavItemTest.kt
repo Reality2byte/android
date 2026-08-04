@@ -6,6 +6,7 @@ import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.navigation.contract.PreferredSlot
 import mega.privacy.android.navigation.destination.TransfersNavKey
 import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.analytics.event.TransfersBottomNavigationItemEvent
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -62,6 +63,6 @@ class TransfersNavItemTest {
     @Test
     fun `test that analytics event identifier is the transfers navigation identifier`() {
         assertThat(underTest.analyticsEventIdentifier)
-            .isEqualTo(TransfersNavigationIdentifier)
+            .isEqualTo(TransfersBottomNavigationItemEvent)
     }
 }
