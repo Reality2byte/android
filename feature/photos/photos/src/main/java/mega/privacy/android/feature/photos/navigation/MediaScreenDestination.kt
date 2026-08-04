@@ -5,6 +5,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,7 +59,9 @@ import mega.privacy.android.feature.photos.presentation.search.MediaSearchScreen
 import mega.privacy.android.feature.photos.presentation.search.PhotosSearchViewModel
 import mega.privacy.android.feature.photos.presentation.timeline.TimelineTabViewModel
 import mega.privacy.android.feature.photos.presentation.videos.VideoRecentlyWatchedRoute
+import mega.privacy.android.domain.featuretoggle.ApiFeatures
 import mega.privacy.android.navigation.contract.NavigationHandler
+import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.contract.queue.snackbar.rememberSnackBarQueue
 import mega.privacy.android.navigation.contract.shared.sharedViewModel
 import mega.privacy.android.navigation.destination.AddVideoToPlaylistNavKey
@@ -69,6 +72,7 @@ import mega.privacy.android.navigation.destination.AlbumGetLinkNavKey
 import mega.privacy.android.navigation.destination.AlbumGetMultipleLinksNavKey
 import mega.privacy.android.navigation.destination.AlbumImportNavKey
 import mega.privacy.android.navigation.destination.AlbumImportPreviewNavKey
+import mega.privacy.android.navigation.destination.ShareLinkNavKey
 import mega.privacy.android.navigation.destination.CameraUploadsProgressNavKey
 import mega.privacy.android.navigation.destination.CloudDriveMediaDiscoveryNavKey
 import mega.privacy.android.navigation.destination.CreateAlbumDialogNavKey
@@ -358,37 +362,65 @@ fun EntryProviderScope<NavKey>.cameraUploadsProgressRoute(
     }
 }
 
+/**
+ * Registers the album "Get link" entry.
+ *
+ * Gated behind [ApiFeatures.ShareLinkRevamp]: when the flag is enabled the entry removes itself and
+ * redirects to the revamped [ShareLinkNavKey], carrying the album id as the subject. When it is
+ * disabled the existing screen below is shown. Unlike the node flow the fallback stays in-process,
+ * because this screen is already Compose — there is no legacy activity to launch.
+ *
+ * The gate is here rather than at the call sites because a click handler cannot read a suspend
+ * flag; see `feature/share-link/CLAUDE.md`. Only a [NavKey] declared in `:navigation` is
+ * referenced, so no dependency on `:feature:share-link` is introduced.
+ */
 fun EntryProviderScope<NavKey>.albumGetLink(
     navigationHandler: NavigationHandler,
 ) {
     entry<AlbumGetLinkNavKey> { args ->
-        val context = LocalContext.current
-        val albumGetLinkViewModel =
-            hiltViewModel<AlbumGetLinkViewModel, AlbumGetLinkViewModel.Factory> {
-                it.create(args.albumId)
+        FeatureFlagGate(
+            feature = ApiFeatures.ShareLinkRevamp,
+            disabled = { LegacyAlbumGetLink(args = args, navigationHandler = navigationHandler) },
+        ) {
+            LaunchedEffect(Unit) {
+                navigationHandler.remove(args)
+                navigationHandler.navigate(ShareLinkNavKey(albumId = args.albumId))
             }
-        AlbumGetLinkScreen(
-            albumGetLinkViewModel = albumGetLinkViewModel,
-            onBack = navigationHandler::back,
-            onLearnMore = {
-                navigationHandler.navigate(AlbumDecryptionKeyNavKey)
-            },
-            onShareLink = { album, link ->
-                with(context) {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, album?.title.orEmpty())
-                        putExtra(Intent.EXTRA_TEXT, link)
-                    }
-                    val shareIntent = Intent.createChooser(
-                        intent,
-                        getString(sharedR.string.general_share)
-                    )
-                    startActivity(shareIntent)
-                }
-            },
-        )
+        }
     }
+}
+
+@Composable
+private fun LegacyAlbumGetLink(
+    args: AlbumGetLinkNavKey,
+    navigationHandler: NavigationHandler,
+) {
+    val context = LocalContext.current
+    val albumGetLinkViewModel =
+        hiltViewModel<AlbumGetLinkViewModel, AlbumGetLinkViewModel.Factory> {
+            it.create(args.albumId)
+        }
+    AlbumGetLinkScreen(
+        albumGetLinkViewModel = albumGetLinkViewModel,
+        onBack = navigationHandler::back,
+        onLearnMore = {
+            navigationHandler.navigate(AlbumDecryptionKeyNavKey)
+        },
+        onShareLink = { album, link ->
+            with(context) {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, album?.title.orEmpty())
+                    putExtra(Intent.EXTRA_TEXT, link)
+                }
+                val shareIntent = Intent.createChooser(
+                    intent,
+                    getString(sharedR.string.general_share)
+                )
+                startActivity(shareIntent)
+            }
+        },
+    )
 }
 
 fun EntryProviderScope<NavKey>.albumGetMultipleLinks(

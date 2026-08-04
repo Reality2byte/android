@@ -20,6 +20,7 @@ import mega.privacy.android.navigation.payment.UpgradeAccountSource
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.contract.queue.snackbar.rememberSnackBarQueue
+import mega.privacy.android.navigation.destination.AlbumGetLinkNavKey
 import mega.privacy.android.navigation.destination.GetLinkNavKey
 import mega.privacy.android.navigation.destination.LinkSettingsNavKey
 import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
@@ -30,8 +31,12 @@ import mega.privacy.android.shared.resources.R as sharedR
  * Registers the revamped Share link screen entry.
  *
  * Gated behind [ApiFeatures.ShareLinkRevamp]: when the flag is disabled the destination
- * removes itself and redirects to the legacy [GetLinkNavKey], which launches
- * `GetLinkActivity`. This mirrors the `FileLinkRevamp` seam.
+ * removes itself and redirects to the legacy screen for the subject — [GetLinkNavKey], which
+ * launches `GetLinkActivity`, for nodes, or [AlbumGetLinkNavKey], which is already Compose, for an
+ * album. This mirrors the `FileLinkRevamp` seam.
+ *
+ * An album only reaches here with the flag on, since the album entry point gates before
+ * navigating; the disabled branch covers the flag being turned off mid-session.
  */
 fun EntryProviderScope<NavKey>.shareLinkScreen(
     navigationHandler: NavigationHandler,
@@ -42,15 +47,16 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
             disabled = {
                 LaunchedEffect(Unit) {
                     navigationHandler.remove(key)
-                    navigationHandler.navigate(GetLinkNavKey(handles = key.handles))
+                    navigationHandler.navigate(
+                        key.albumId?.let { AlbumGetLinkNavKey(albumId = it) }
+                            ?: GetLinkNavKey(handles = key.handles)
+                    )
                 }
             }
         ) {
             val viewModel =
                 hiltViewModel<ShareLinkViewModel, ShareLinkViewModel.Factory> { factory ->
-                    factory.create(
-                        ShareLinkViewModel.Args(ShareLinkSubject.Nodes(handles = key.handles))
-                    )
+                    factory.create(ShareLinkViewModel.Args(key.subject()))
                 }
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val resources = LocalResources.current
@@ -67,7 +73,9 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
                 },
                 onBack = navigationHandler::back,
                 onOpenSettings = {
-                    navigationHandler.navigate(LinkSettingsNavKey(handles = key.handles))
+                    navigationHandler.navigate(
+                        LinkSettingsNavKey(handles = key.handles, albumId = key.albumId)
+                    )
                 },
                 onShareLink = { linksText ->
                     val data = uiState as? ShareLinkUiState.Data
@@ -132,9 +140,7 @@ fun EntryProviderScope<NavKey>.linkSettingsScreen(
     entry<LinkSettingsNavKey> { key ->
         val viewModel =
             hiltViewModel<LinkSettingsViewModel, LinkSettingsViewModel.Factory> { factory ->
-                factory.create(
-                    LinkSettingsViewModel.Args(ShareLinkSubject.Nodes(handles = key.handles))
-                )
+                factory.create(LinkSettingsViewModel.Args(key.subject()))
             }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val resources = LocalResources.current
@@ -193,6 +199,17 @@ private fun Context.shareLinksAsPlainText(text: String, subject: String?) {
     startActivity(chooser)
 }
 
+
+/**
+ * The subject the key describes. The nav key carries node handles and an album id as flat,
+ * serializable fields; both screens work in terms of the sealed [ShareLinkSubject].
+ */
+internal fun ShareLinkNavKey.subject(): ShareLinkSubject =
+    albumId?.let(ShareLinkSubject::Album) ?: ShareLinkSubject.Nodes(handles)
+
+/** @see ShareLinkNavKey.subject */
+internal fun LinkSettingsNavKey.subject(): ShareLinkSubject =
+    albumId?.let(ShareLinkSubject::Album) ?: ShareLinkSubject.Nodes(handles)
 
 /** MEGA security help page opened from the "Separate link and key" learn-more link. */
 private const val SEPARATE_KEY_LEARN_MORE_URL =
