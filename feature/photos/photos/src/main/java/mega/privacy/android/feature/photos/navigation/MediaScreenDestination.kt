@@ -5,7 +5,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -380,7 +379,34 @@ fun EntryProviderScope<NavKey>.albumGetLink(
     entry<AlbumGetLinkNavKey> { args ->
         FeatureFlagGate(
             feature = ApiFeatures.ShareLinkRevamp,
-            disabled = { LegacyAlbumGetLink(args = args, navigationHandler = navigationHandler) },
+            disabled = {
+                val context = LocalContext.current
+                val albumGetLinkViewModel =
+                    hiltViewModel<AlbumGetLinkViewModel, AlbumGetLinkViewModel.Factory> {
+                        it.create(args.albumId)
+                    }
+                AlbumGetLinkScreen(
+                    albumGetLinkViewModel = albumGetLinkViewModel,
+                    onBack = navigationHandler::back,
+                    onLearnMore = {
+                        navigationHandler.navigate(AlbumDecryptionKeyNavKey)
+                    },
+                    onShareLink = { album, link ->
+                        with(context) {
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, album?.title.orEmpty())
+                                putExtra(Intent.EXTRA_TEXT, link)
+                            }
+                            val shareIntent = Intent.createChooser(
+                                intent,
+                                getString(sharedR.string.general_share)
+                            )
+                            startActivity(shareIntent)
+                        }
+                    },
+                )
+            },
         ) {
             LaunchedEffect(Unit) {
                 navigationHandler.remove(args)
@@ -388,39 +414,6 @@ fun EntryProviderScope<NavKey>.albumGetLink(
             }
         }
     }
-}
-
-@Composable
-private fun LegacyAlbumGetLink(
-    args: AlbumGetLinkNavKey,
-    navigationHandler: NavigationHandler,
-) {
-    val context = LocalContext.current
-    val albumGetLinkViewModel =
-        hiltViewModel<AlbumGetLinkViewModel, AlbumGetLinkViewModel.Factory> {
-            it.create(args.albumId)
-        }
-    AlbumGetLinkScreen(
-        albumGetLinkViewModel = albumGetLinkViewModel,
-        onBack = navigationHandler::back,
-        onLearnMore = {
-            navigationHandler.navigate(AlbumDecryptionKeyNavKey)
-        },
-        onShareLink = { album, link ->
-            with(context) {
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, album?.title.orEmpty())
-                    putExtra(Intent.EXTRA_TEXT, link)
-                }
-                val shareIntent = Intent.createChooser(
-                    intent,
-                    getString(sharedR.string.general_share)
-                )
-                startActivity(shareIntent)
-            }
-        },
-    )
 }
 
 fun EntryProviderScope<NavKey>.albumGetMultipleLinks(

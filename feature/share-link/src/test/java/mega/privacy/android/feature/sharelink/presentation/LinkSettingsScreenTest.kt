@@ -19,6 +19,7 @@ import mega.privacy.android.domain.entity.AccountType
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
+import mega.privacy.mobile.analytics.event.AlbumLinkSettingsScreenEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDialogEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesDiscardButtonPressedEvent
@@ -26,6 +27,8 @@ import mega.privacy.mobile.analytics.event.LinkProFeatureSeeNotNowPlanFileButton
 import mega.privacy.mobile.analytics.event.LinkProFeatureSeePlanFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkRemovePasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyAlbumButtonDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyAlbumButtonEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonEnabledEvent
@@ -861,6 +864,48 @@ class LinkSettingsScreenTest {
 
         assertThat(enabled).isTrue()
         composeRule.onNodeWithTag(LINK_SETTINGS_UPGRADE_DIALOG_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that an album fires the album link settings screen view event and not the node one`() {
+        setContent(uiState = LinkSettingsUiState(isLoading = false, isAlbum = true))
+
+        assertThat(analyticsRule.events.count { it == AlbumLinkSettingsScreenEvent }).isEqualTo(1)
+        assertThat(analyticsRule.events).doesNotContain(LinkSettingsScreenEvent)
+    }
+
+    @Test
+    fun `test that a node fires the link settings screen view event and not the album one`() {
+        setContent(uiState = loaded)
+
+        assertThat(analyticsRule.events.count { it == LinkSettingsScreenEvent }).isEqualTo(1)
+        assertThat(analyticsRule.events).doesNotContain(AlbumLinkSettingsScreenEvent)
+    }
+
+    @Test
+    fun `test that tapping the separate-key toggle on an album tracks the album enabled event`() {
+        setContent(uiState = LinkSettingsUiState(isLoading = false, isAlbum = true))
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSendDecryptionKeyAlbumButtonEnabledEvent)
+        assertThat(analyticsRule.events).doesNotContain(LinkSendDecryptionKeyFileButtonEnabledEvent)
+    }
+
+    @Test
+    fun `test that tapping the separate-key toggle off on an album tracks the album disabled event`() {
+        setContent(
+            uiState = LinkSettingsUiState(
+                isLoading = false,
+                isAlbum = true,
+                isSeparateKeyEnabled = true,
+            )
+        )
+
+        composeRule.onNodeWithTag(LINK_SETTINGS_SEPARATE_KEY_TOGGLE_TAG).performClick()
+
+        assertThat(analyticsRule.events).contains(LinkSendDecryptionKeyAlbumButtonDisabledEvent)
+        assertThat(analyticsRule.events).doesNotContain(LinkSendDecryptionKeyFileButtonDisabledEvent)
     }
 
     private fun setContent(

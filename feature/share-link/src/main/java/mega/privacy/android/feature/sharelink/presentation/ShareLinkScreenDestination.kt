@@ -66,6 +66,7 @@ fun EntryProviderScope<NavKey>.shareLinkScreen(
 
             ShareLinkScreen(
                 uiState = uiState,
+                isAlbum = key.albumId != null,
                 onSensitiveWarningConfirmed = viewModel::onSensitiveWarningConfirmed,
                 onSensitiveWarningDismissed = {
                     viewModel.onSensitiveWarningDismissed()

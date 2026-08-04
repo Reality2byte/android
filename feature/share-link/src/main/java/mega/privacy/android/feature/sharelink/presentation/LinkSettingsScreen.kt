@@ -78,6 +78,7 @@ import mega.android.core.ui.theme.values.LinkColor
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.domain.entity.changepassword.PasswordStrength
+import mega.privacy.mobile.analytics.event.AlbumLinkSettingsScreenEvent
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkConfirmPasswordFolderButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkDiscardChangesCancelButtonPressedEvent
@@ -92,6 +93,8 @@ import mega.privacy.mobile.analytics.event.LinkRemovePasswordFolderButtonPressed
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFileButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkResetPasswordFolderButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkSeparateKeyLearnMoreButtonPressedEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyAlbumButtonDisabledEvent
+import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyAlbumButtonEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonDisabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFileButtonEnabledEvent
 import mega.privacy.mobile.analytics.event.LinkSendDecryptionKeyFolderButtonDisabledEvent
@@ -148,7 +151,9 @@ fun LinkSettingsScreen(
     }
 
     LaunchedOnceEffect(Unit) {
-        Analytics.tracker.trackEvent(LinkSettingsScreenEvent)
+        Analytics.tracker.trackEvent(
+            if (uiState.isAlbum) AlbumLinkSettingsScreenEvent else LinkSettingsScreenEvent
+        )
     }
     LaunchedEffect(showDiscardDialog) {
         if (showDiscardDialog) Analytics.tracker.trackEvent(LinkDiscardChangesDialogEvent)
@@ -160,7 +165,7 @@ fun LinkSettingsScreen(
     }
 
     val onSeparateKeyToggled = { enabled: Boolean ->
-        trackSeparateKeyToggle(uiState.isFolder, enabled)
+        trackSeparateKeyToggle(uiState, enabled)
         onSeparateKeyEnabled(enabled)
     }
     // Pro-only rows stay interactive for free accounts: turning one on opens the upgrade prompt
@@ -483,12 +488,15 @@ private fun LinkSettingsContent(
     }
 }
 
-private fun trackSeparateKeyToggle(isFolder: Boolean, enabled: Boolean) {
+/** The separate-key toggle is the one link option reported per subject: album, folder or file. */
+private fun trackSeparateKeyToggle(uiState: LinkSettingsUiState, enabled: Boolean) {
     Analytics.tracker.trackEvent(
         when {
-            enabled && isFolder -> LinkSendDecryptionKeyFolderButtonEnabledEvent
+            enabled && uiState.isAlbum -> LinkSendDecryptionKeyAlbumButtonEnabledEvent
+            enabled && uiState.isFolder -> LinkSendDecryptionKeyFolderButtonEnabledEvent
             enabled -> LinkSendDecryptionKeyFileButtonEnabledEvent
-            isFolder -> LinkSendDecryptionKeyFolderButtonDisabledEvent
+            uiState.isAlbum -> LinkSendDecryptionKeyAlbumButtonDisabledEvent
+            uiState.isFolder -> LinkSendDecryptionKeyFolderButtonDisabledEvent
             else -> LinkSendDecryptionKeyFileButtonDisabledEvent
         }
     )

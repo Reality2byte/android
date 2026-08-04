@@ -28,6 +28,7 @@ import mega.android.core.ui.model.menu.MenuActionWithClick
 import mega.android.core.ui.model.menu.MenuActionWithIcon
 import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.icon.pack.IconPack
+import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.analytics.event.LinkCopyAllLinksButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkCopyDecryptionKeyButtonPressedEvent
 import mega.privacy.mobile.analytics.event.LinkCopyLinkButtonPressedEvent
@@ -40,7 +41,7 @@ import mega.privacy.mobile.analytics.event.LinkHiddenItemsContinueButtonPressedE
 import mega.privacy.mobile.analytics.event.LinkHiddenItemsWarningDialogEvent
 import mega.privacy.mobile.analytics.event.LinkShareButtonPressedEvent
 import mega.privacy.mobile.analytics.event.ShareLinkScreenEvent
-import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.analytics.event.SingleAlbumLinkScreenEvent
 
 /**
  * Revamped Share link result screen.
@@ -63,6 +64,9 @@ import mega.privacy.android.shared.resources.R as sharedR
  * @param onSensitiveWarningDismissed Invoked when the user cancels the hidden-items warning.
  * @param onCopyrightAgreed Invoked when the user agrees to the first-time copyright consent.
  * @param onCopyrightDisagreed Invoked when the user declines the first-time copyright consent.
+ * @param isAlbum Whether an album's link is being shared, selecting the album screen-view event.
+ * Taken from the navigation key rather than [uiState], because the screen view is reported at first
+ * composition, while the state is still loading and cannot say what the subject is.
  * @param modifier Modifier for the scaffold.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +79,7 @@ fun ShareLinkScreen(
     onCopyLink: () -> Unit,
     onCopyKey: () -> Unit,
     modifier: Modifier = Modifier,
+    isAlbum: Boolean = false,
     onCopyPassword: () -> Unit = {},
     onLinksCopied: () -> Unit = {},
     onSensitiveWarningConfirmed: () -> Unit = {},
@@ -87,7 +92,11 @@ fun ShareLinkScreen(
     var showShareKeyDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedOnceEffect(Unit) {
-        Analytics.tracker.trackEvent(ShareLinkScreenEvent)
+        // Albums keep the screen-view event the legacy album screen already fires, so the metric
+        // stays continuous across the revamp.
+        Analytics.tracker.trackEvent(
+            if (isAlbum) SingleAlbumLinkScreenEvent else ShareLinkScreenEvent
+        )
     }
     LaunchedEffect(uiState is ShareLinkUiState.CopyrightConsent) {
         if (uiState is ShareLinkUiState.CopyrightConsent) {

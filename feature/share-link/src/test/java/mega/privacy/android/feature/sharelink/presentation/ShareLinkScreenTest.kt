@@ -31,6 +31,7 @@ import mega.privacy.mobile.analytics.event.LinkHiddenItemsContinueButtonPressedE
 import mega.privacy.mobile.analytics.event.LinkHiddenItemsWarningDialogEvent
 import mega.privacy.mobile.analytics.event.LinkShareButtonPressedEvent
 import mega.privacy.mobile.analytics.event.ShareLinkScreenEvent
+import mega.privacy.mobile.analytics.event.SingleAlbumLinkScreenEvent
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_DETAILS_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_EXPIRED_TAG
 import mega.privacy.android.feature.sharelink.presentation.component.SHARE_LINK_KEY_COPY_TAG
@@ -865,8 +866,25 @@ class ShareLinkScreenTest {
         composeRule.onNodeWithTag(SHARE_LINK_KEY_DIALOG_TAG).assertIsDisplayed()
     }
 
+    @Test
+    fun `test that an album fires the album screen view event and not the node one`() {
+        setContent(uiState = albumData, isAlbum = true)
+
+        assertThat(analyticsRule.events.count { it == SingleAlbumLinkScreenEvent }).isEqualTo(1)
+        assertThat(analyticsRule.events).doesNotContain(ShareLinkScreenEvent)
+    }
+
+    @Test
+    fun `test that a node fires the share link screen view event and not the album one`() {
+        setContent(uiState = data)
+
+        assertThat(analyticsRule.events.count { it == ShareLinkScreenEvent }).isEqualTo(1)
+        assertThat(analyticsRule.events).doesNotContain(SingleAlbumLinkScreenEvent)
+    }
+
     private fun setContent(
         uiState: ShareLinkUiState,
+        isAlbum: Boolean = false,
         onBack: () -> Unit = {},
         onOpenSettings: () -> Unit = {},
         onShareLink: (String) -> Unit = {},
@@ -884,6 +902,7 @@ class ShareLinkScreenTest {
             CompositionLocalProvider(LocalClipboard provides clipboard) {
                 ShareLinkScreen(
                     uiState = uiState,
+                    isAlbum = isAlbum,
                     onBack = onBack,
                     onOpenSettings = onOpenSettings,
                     onShareLink = onShareLink,
