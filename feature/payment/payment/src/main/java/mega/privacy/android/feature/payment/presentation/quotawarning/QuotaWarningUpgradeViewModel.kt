@@ -153,29 +153,36 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
     private fun updateAccountDetail(detail: AccountDetail, subscriptions: Subscriptions?) {
         val levelDetail = detail.levelDetail
         val storageDetail = detail.storageDetail
+        val transferDetail = detail.transferDetail
         val storageUsed = storageDetail?.usedStorage
-        val isHighestPlan = isHighestPlan(
+        val transferUsed = transferDetail?.usedTransfer
+        val cycle = levelDetail?.let(::resolveCurrentPlanCycle) ?: AccountSubscriptionCycle.UNKNOWN
+        val candidates = upgradeCandidates(
             currentPlan = levelDetail?.accountType,
             totalStorage = storageDetail?.totalStorage,
+            totalTransfer = transferDetail?.totalTransfer,
+            cycle = cycle,
             subscriptions = subscriptions,
         )
+        val isHighestPlan = levelDetail?.accountType?.isPaid == true &&
+                subscriptions.hasPlans() &&
+                candidates.isEmpty()
         _state.update {
             it.copy(
                 currentPlan = levelDetail?.accountType,
-                subscriptionCycle = levelDetail
-                    ?.let(::resolveCurrentPlanCycle)
-                    ?: AccountSubscriptionCycle.UNKNOWN,
+                subscriptionCycle = cycle,
                 storageUsed = storageUsed,
                 storageTotal = storageDetail?.totalStorage,
                 storageUsedPercentage = storageDetail?.usedPercentage ?: 0,
-                transferUsed = detail.transferDetail?.usedTransfer,
-                transferTotal = detail.transferDetail?.totalTransfer,
-                transferUsedPercentage = detail.transferDetail?.usedTransferPercentage ?: 0,
-                recommendedSubscription = if (isHighestPlan) {
-                    null
-                } else {
-                    subscriptions?.let { subs -> recommendedSubscription(storageUsed, subs) }
-                },
+                transferUsed = transferUsed,
+                transferTotal = transferDetail?.totalTransfer,
+                transferUsedPercentage = transferDetail?.usedTransferPercentage ?: 0,
+                recommendedSubscription = recommendedSubscription(
+                    storageUsed = storageUsed,
+                    transferUsed = transferUsed,
+                    cycle = cycle,
+                    candidates = candidates,
+                ),
                 isHighestPlan = isHighestPlan,
                 isLoading = it.isLoading && storageDetail == null,
             )
@@ -197,30 +204,52 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
             ?: levelDetail.accountSubscriptionCycle
     }
 
-    /**
-     * True when the user is on a paid plan and no available subscription offers more storage than
-     * their current plan, i.e. there is nothing left to upgrade to. In that case the screen shows a
-     * "Contact support" action instead of a purchase card.
-     */
-    private fun isHighestPlan(
-        currentPlan: AccountType?,
-        totalStorage: Long?,
-        subscriptions: Subscriptions?,
-    ): Boolean {
-        if (currentPlan?.isPaid != true) return false
-        val plans = subscriptions
-            ?.let { it.monthlySubscriptions + it.yearlySubscriptions }
-            ?.takeIf { it.isNotEmpty() }
-            ?: return false
-        // subscription.storage is expressed in GB, so compare against the plan quota in GB
-        val currentStorageGb = (totalStorage ?: 0L) / BYTES_IN_GB
-        return plans.none { it.storage.toLong() > currentStorageGb }
-    }
+    private fun Subscriptions?.hasPlans(): Boolean =
+        this != null && (monthlySubscriptions.isNotEmpty() || yearlySubscriptions.isNotEmpty())
 
     /**
-     * Smallest plan whose storage covers current usage (largest if none does), so upgrading clears
-     * the over-quota state regardless of the current tier. Plans are merged across the monthly and
-     * yearly lists so a plan offered in only one cycle is still considered.
+     * The plans worth upgrading to, sorted by storage: those that raise at least one quota of the
+     * current plan and lower neither. Every plan qualifies while the account is not on a paid plan.
+     */
+    private fun upgradeCandidates(
+        currentPlan: AccountType?,
+        totalStorage: Long?,
+        totalTransfer: Long?,
+        cycle: AccountSubscriptionCycle,
+        subscriptions: Subscriptions?,
+    ): List<LocalisedSubscription> {
+        if (subscriptions == null) return emptyList()
+        val plans = subscriptions.toLocalisedPlans()
+        if (currentPlan?.isPaid != true) return plans
+        // subscription quotas are expressed in GB, so compare against the account quotas in GB
+        val currentStorageGb = (totalStorage ?: 0L) / BYTES_IN_GB
+        val currentTransferGb = (totalTransfer ?: 0L) / BYTES_IN_GB
+        return plans.filter { plan ->
+            val storageGb = plan.storage.toLong()
+            val transferGb = plan.transferGbFor(cycle) ?: currentTransferGb
+            plan.accountType != currentPlan &&
+                    storageGb >= currentStorageGb && transferGb >= currentTransferGb &&
+                    (storageGb > currentStorageGb || transferGb > currentTransferGb)
+        }
+    }
+
+    private fun Subscriptions.toLocalisedPlans(): List<LocalisedSubscription> =
+        (monthlySubscriptions + yearlySubscriptions)
+            .map { it.accountType }
+            .distinct()
+            .map { accountType ->
+                localisedSubscriptionMapper(
+                    monthlySubscription = monthlySubscriptions
+                        .firstOrNull { it.accountType == accountType },
+                    yearlySubscription = yearlySubscriptions
+                        .firstOrNull { it.accountType == accountType },
+                )
+            }
+            .sortedBy { it.storage }
+
+    /**
+     * Smallest candidate whose storage and transfer both cover current usage (largest if none does),
+     * so upgrading clears the over-quota state whichever quota triggered the warning.
      *
      * Special case: when a discounted plan also covers current usage and its post-offer price
      * undercuts that default recommendation, the discounted plan is recommended instead (the
@@ -228,25 +257,16 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
      */
     private fun recommendedSubscription(
         storageUsed: Long?,
-        subscriptions: Subscriptions,
+        transferUsed: Long?,
+        cycle: AccountSubscriptionCycle,
+        candidates: List<LocalisedSubscription>,
     ): LocalisedSubscription? {
-        val plansBySize = (subscriptions.monthlySubscriptions + subscriptions.yearlySubscriptions)
-            .map { it.accountType }
-            .distinct()
-            .map { accountType ->
-                localisedSubscriptionMapper(
-                    monthlySubscription = subscriptions.monthlySubscriptions
-                        .firstOrNull { it.accountType == accountType },
-                    yearlySubscription = subscriptions.yearlySubscriptions
-                        .firstOrNull { it.accountType == accountType },
-                )
-            }
-            .sortedBy { it.storage }
-        val usedBytes = storageUsed ?: 0L
-        val default = plansBySize.firstOrNull { it.coversUsage(usedBytes) }
-            ?: plansBySize.lastOrNull()
+        val storageBytes = storageUsed ?: 0L
+        val default = candidates.firstOrNull { it.coversUsage(storageBytes, transferUsed, cycle) }
+            ?: candidates.lastOrNull()
             ?: return null
-        return cheaperDiscountedAlternative(plansBySize, usedBytes, default) ?: default
+        return cheaperDiscountedAlternative(candidates, storageBytes, transferUsed, cycle, default)
+            ?: default
     }
 
     /**
@@ -254,13 +274,15 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
      * undercuts [default], or null when no such better-value offer exists.
      */
     private fun cheaperDiscountedAlternative(
-        plansBySize: List<LocalisedSubscription>,
-        usedBytes: Long,
+        candidates: List<LocalisedSubscription>,
+        storageUsed: Long,
+        transferUsed: Long?,
+        cycle: AccountSubscriptionCycle,
         default: LocalisedSubscription,
     ): LocalisedSubscription? {
         val defaultPrice = default.effectiveMonthlyPrice() ?: return null
-        return plansBySize
-            .filter { it.hasDiscount && it.coversUsage(usedBytes) }
+        return candidates
+            .filter { it.hasDiscount && it.coversUsage(storageUsed, transferUsed, cycle) }
             .mapNotNull { plan -> plan.effectiveMonthlyPrice()?.let { plan to it } }
             .filter { (_, price) -> price < defaultPrice }
             .minByOrNull { (_, price) -> price }
@@ -268,11 +290,37 @@ class QuotaWarningUpgradeViewModel @Inject constructor(
     }
 
     /**
-     * Whether this plan's storage quota exceeds current usage, so upgrading to it clears the
-     * over-quota state. [usedBytes] is in bytes; plan storage is expressed in GB.
+     * Whether this plan's quotas exceed current usage in both dimensions, so upgrading to it clears
+     * the over-quota state. Usage is in bytes; plan quotas are in GB. A dimension without data —
+     * transfer usage not loaded, or a plan with no transfer quota — does not rule the plan out.
      */
-    private fun LocalisedSubscription.coversUsage(usedBytes: Long): Boolean =
-        storage.toLong() * BYTES_IN_GB > usedBytes
+    private fun LocalisedSubscription.coversUsage(
+        storageUsed: Long,
+        transferUsed: Long?,
+        cycle: AccountSubscriptionCycle,
+    ): Boolean = storage.toLong() * BYTES_IN_GB > storageUsed &&
+            coversTransferUsage(transferUsed, cycle)
+
+    private fun LocalisedSubscription.coversTransferUsage(
+        transferUsed: Long?,
+        cycle: AccountSubscriptionCycle,
+    ): Boolean {
+        val used = transferUsed ?: return true
+        val quotaGb = transferGbFor(cycle) ?: return true
+        return quotaGb * BYTES_IN_GB > used
+    }
+
+    /**
+     * Transfer quota in GB of the billing cycle this plan will be offered in, or null when the SDK
+     * reports none. A yearly option carries the whole year of transfer, as does the account quota of
+     * a yearly plan, so the cycle is picked the way the recommended plan card picks it.
+     */
+    private fun LocalisedSubscription.transferGbFor(cycle: AccountSubscriptionCycle): Long? {
+        val preferMonthly = cycle == AccountSubscriptionCycle.MONTHLY
+        val subscription = getSubscription(isMonthly = preferMonthly)
+            ?: getSubscription(isMonthly = !preferMonthly)
+        return subscription?.transfer?.toLong()?.takeIf { it > 0 }
+    }
 
     /**
      * The lowest monthly-equivalent price of the plan across its available billing cycles, using the

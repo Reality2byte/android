@@ -329,6 +329,263 @@ class QuotaWarningUpgradeViewModelTest {
     }
 
     @Test
+    fun `test that a plan with a smaller quota than the current plan is not recommended`() =
+        runTest {
+            val essential = subscription(AccountType.ESSENTIAL, storage = 200, transfer = 2048)
+            val proII = subscription(AccountType.PRO_II, storage = 8192, transfer = 8192)
+            val detail = accountDetail(
+                storageUsed = 20 * BYTES_IN_GB,
+                accountType = AccountType.PRO_I,
+                totalStorage = 3072 * BYTES_IN_GB,
+                totalTransfer = 3072 * BYTES_IN_GB,
+                transferUsed = 3072 * BYTES_IN_GB,
+            )
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+                Subscriptions(
+                    monthlySubscriptions = listOf(essential, proII),
+                    yearlySubscriptions = emptyList(),
+                )
+            )
+            initViewModel()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                assertThat(awaitItem().recommendedSubscription?.accountType)
+                    .isEqualTo(AccountType.PRO_II)
+            }
+        }
+
+    @Test
+    fun `test that a yearly account is compared against the yearly transfer quota`() = runTest {
+        val detail = accountDetail(
+            storageUsed = 1 * BYTES_IN_GB,
+            accountType = AccountType.PRO_I,
+            totalStorage = 3072 * BYTES_IN_GB,
+            totalTransfer = 36864 * BYTES_IN_GB,
+            transferUsed = 36864 * BYTES_IN_GB,
+            accountSubscriptionCycle = AccountSubscriptionCycle.YEARLY,
+        )
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+        wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(proPlanSubscriptions())
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            assertThat(state.recommendedSubscription?.accountType).isEqualTo(AccountType.PRO_II)
+            assertThat(state.isHighestPlan).isFalse()
+        }
+    }
+
+    @Test
+    fun `test that an account with no billing cycle is compared against the yearly transfer quota`() =
+        runTest {
+            // a one-off yearly plan carries no subscription cycle
+            val detail = accountDetail(
+                storageUsed = 1 * BYTES_IN_GB,
+                accountType = AccountType.PRO_I,
+                totalStorage = 3072 * BYTES_IN_GB,
+                totalTransfer = 36864 * BYTES_IN_GB,
+                transferUsed = 36864 * BYTES_IN_GB,
+            )
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(proPlanSubscriptions())
+            initViewModel()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                val state = awaitItem()
+                assertThat(state.recommendedSubscription?.accountType).isEqualTo(AccountType.PRO_II)
+                assertThat(state.isHighestPlan).isFalse()
+            }
+        }
+
+    @Test
+    fun `test that a monthly account is compared against the monthly transfer quota`() = runTest {
+        val detail = accountDetail(
+            storageUsed = 1 * BYTES_IN_GB,
+            accountType = AccountType.PRO_I,
+            totalStorage = 3072 * BYTES_IN_GB,
+            totalTransfer = 3072 * BYTES_IN_GB,
+            transferUsed = 3072 * BYTES_IN_GB,
+            accountSubscriptionCycle = AccountSubscriptionCycle.MONTHLY,
+        )
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+        wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(proPlanSubscriptions())
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            // Essential is excluded on its monthly 2 TB transfer, which its yearly 24 TB would pass
+            assertThat(state.recommendedSubscription?.accountType).isEqualTo(AccountType.PRO_II)
+            assertThat(state.isHighestPlan).isFalse()
+        }
+    }
+
+    /** Plans offered in both cycles, where the yearly option carries twelve times the transfer. */
+    private fun proPlanSubscriptions() = Subscriptions(
+        monthlySubscriptions = listOf(
+            subscription(AccountType.ESSENTIAL, storage = 4096, transfer = 2048),
+            subscription(AccountType.PRO_II, storage = 10240, transfer = 10240),
+        ),
+        yearlySubscriptions = listOf(
+            subscription(AccountType.ESSENTIAL, storage = 4096, transfer = 2048 * 12),
+            subscription(AccountType.PRO_II, storage = 10240, transfer = 10240 * 12),
+        ),
+    )
+
+    @Test
+    fun `test that the plan the account is already on is not recommended`() = runTest {
+        val essential = subscription(AccountType.ESSENTIAL, storage = 200, transfer = 2048)
+        val proI = subscription(AccountType.PRO_I, storage = 3072, transfer = 3072)
+        val proII = subscription(AccountType.PRO_II, storage = 10240, transfer = 10240)
+        val detail = accountDetail(
+            storageUsed = 20 * BYTES_IN_GB,
+            accountType = AccountType.PRO_I,
+            totalStorage = 3072 * BYTES_IN_GB,
+            totalTransfer = 3072 * BYTES_IN_GB,
+            transferUsed = 3072 * BYTES_IN_GB,
+        )
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+        wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+            Subscriptions(
+                monthlySubscriptions = listOf(essential, proI, proII),
+                yearlySubscriptions = emptyList(),
+            )
+        )
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            assertThat(awaitItem().recommendedSubscription?.accountType)
+                .isEqualTo(AccountType.PRO_II)
+        }
+    }
+
+    @Test
+    fun `test that recommended subscription is the smallest plan whose transfer quota exceeds usage`() =
+        runTest {
+            val essential = subscription(AccountType.ESSENTIAL, storage = 200, transfer = 2048)
+            val proII = subscription(AccountType.PRO_II, storage = 8192, transfer = 8192)
+            val detail = accountDetail(
+                storageUsed = 10 * BYTES_IN_GB,
+                totalStorage = 20 * BYTES_IN_GB,
+                transferUsed = 3072 * BYTES_IN_GB,
+            )
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+                Subscriptions(
+                    monthlySubscriptions = listOf(essential, proII),
+                    yearlySubscriptions = emptyList(),
+                )
+            )
+            initViewModel()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                assertThat(awaitItem().recommendedSubscription?.accountType)
+                    .isEqualTo(AccountType.PRO_II)
+            }
+        }
+
+    @Test
+    fun `test that a cheaper discounted plan is ignored when it does not cover transfer usage`() =
+        runTest {
+            val essential = subscription(
+                AccountType.ESSENTIAL,
+                storage = 8192,
+                transfer = 2048,
+                amount = 4.99f,
+                discountedAmountMonthly = 1.99f,
+                discountedPercentage = 60,
+            )
+            val proII = subscription(
+                AccountType.PRO_II,
+                storage = 8192,
+                transfer = 8192,
+                amount = 9.99f,
+            )
+            val detail = accountDetail(
+                storageUsed = 10 * BYTES_IN_GB,
+                totalStorage = 20 * BYTES_IN_GB,
+                transferUsed = 3072 * BYTES_IN_GB,
+            )
+            whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+            wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+                Subscriptions(
+                    monthlySubscriptions = listOf(essential, proII),
+                    yearlySubscriptions = emptyList(),
+                )
+            )
+            initViewModel()
+            advanceUntilIdle()
+
+            underTest.state.test {
+                assertThat(awaitItem().recommendedSubscription?.accountType)
+                    .isEqualTo(AccountType.PRO_II)
+            }
+        }
+
+    @Test
+    fun `test that a plan adding storage but lowering transfer is not an upgrade`() = runTest {
+        val proII = subscription(AccountType.PRO_II, storage = 8192, transfer = 8192)
+        val moreStorageLessTransfer =
+            subscription(AccountType.PRO_III, storage = 16384, transfer = 4096)
+        val detail = accountDetail(
+            storageUsed = 1000 * BYTES_IN_GB,
+            accountType = AccountType.PRO_II,
+            totalStorage = 8192 * BYTES_IN_GB,
+            totalTransfer = 8192 * BYTES_IN_GB,
+            transferUsed = 8192 * BYTES_IN_GB,
+        )
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+        wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+            Subscriptions(
+                monthlySubscriptions = listOf(proII, moreStorageLessTransfer),
+                yearlySubscriptions = emptyList(),
+            )
+        )
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            assertThat(state.recommendedSubscription).isNull()
+            assertThat(state.isHighestPlan).isTrue()
+        }
+    }
+
+    @Test
+    fun `test that a plan raising only the transfer quota is an upgrade`() = runTest {
+        val proII = subscription(AccountType.PRO_II, storage = 8192, transfer = 8192)
+        val moreTransfer = subscription(AccountType.PRO_III, storage = 8192, transfer = 16384)
+        val detail = accountDetail(
+            storageUsed = 1000 * BYTES_IN_GB,
+            accountType = AccountType.PRO_II,
+            totalStorage = 8192 * BYTES_IN_GB,
+            totalTransfer = 8192 * BYTES_IN_GB,
+            transferUsed = 8192 * BYTES_IN_GB,
+        )
+        whenever(monitorAccountDetailUseCase()).thenReturn(flowOf(detail))
+        wheneverBlocking { getSubscriptionsUseCase() }.thenReturn(
+            Subscriptions(
+                monthlySubscriptions = listOf(proII, moreTransfer),
+                yearlySubscriptions = emptyList(),
+            )
+        )
+        initViewModel()
+        advanceUntilIdle()
+
+        underTest.state.test {
+            val state = awaitItem()
+            assertThat(state.recommendedSubscription?.accountType).isEqualTo(AccountType.PRO_III)
+            assertThat(state.isHighestPlan).isFalse()
+        }
+    }
+
+    @Test
     fun `test that highest plan is detected when a paid user has no larger plan to upgrade to`() =
         runTest {
             val essential = subscription(AccountType.ESSENTIAL, storage = 100)
@@ -558,6 +815,9 @@ class QuotaWarningUpgradeViewModelTest {
         storageUsed: Long,
         accountType: AccountType = AccountType.FREE,
         totalStorage: Long = 0,
+        transferUsed: Long? = null,
+        totalTransfer: Long = 0,
+        accountSubscriptionCycle: AccountSubscriptionCycle = AccountSubscriptionCycle.UNKNOWN,
     ): AccountDetail {
         val storageDetail = AccountStorageDetail(
             usedCloudDrive = 0,
@@ -566,11 +826,20 @@ class QuotaWarningUpgradeViewModelTest {
             totalStorage = totalStorage,
             usedStorage = storageUsed,
         )
+        val transferDetail = transferUsed?.let {
+            AccountTransferDetail(
+                totalTransfer = totalTransfer,
+                usedTransfer = it,
+                usedTransferPercentage = 0,
+            )
+        }
         val levelDetail = mock<AccountLevelDetail> {
             on { this.accountType }.thenReturn(accountType)
+            on { this.accountSubscriptionCycle }.thenReturn(accountSubscriptionCycle)
         }
         return mock {
             on { this.storageDetail }.thenReturn(storageDetail)
+            on { this.transferDetail }.thenReturn(transferDetail)
             on { this.levelDetail }.thenReturn(levelDetail)
         }
     }
@@ -702,6 +971,7 @@ class QuotaWarningUpgradeViewModelTest {
     private fun subscription(
         accountType: AccountType,
         storage: Int,
+        transfer: Int = 0,
         amount: Float = 4.99f,
         discountedAmountMonthly: Float? = null,
         discountedPercentage: Int? = null,
@@ -710,7 +980,7 @@ class QuotaWarningUpgradeViewModelTest {
         accountType = accountType,
         handle = 1L,
         storage = storage,
-        transfer = 0,
+        transfer = transfer,
         amount = CurrencyAmount(amount, Currency("EUR")),
         discountedAmountMonthly = discountedAmountMonthly?.let {
             CurrencyAmount(it, Currency("EUR"))
