@@ -7,6 +7,8 @@ import de.palm.composestateevents.triggered
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import mega.privacy.android.core.test.extension.CoroutineMainDispatcherExtension
 import mega.privacy.android.domain.entity.AccountType
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
@@ -73,6 +76,13 @@ class LinkSettingsViewModelTest {
     private suspend fun stubNode() {
         val node = mock<TypedFileNode> {
             on { exportedData } doReturn ExportedData(PUBLIC_LINK, 0L)
+        }
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
+    }
+
+    private suspend fun stubNodeWithExpiry() {
+        val node = mock<TypedFileNode> {
+            on { exportedData } doReturn ExportedData(PUBLIC_LINK, 0L, EXPIRY_TIME_SECONDS)
         }
         whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))).thenReturn(node)
     }
@@ -127,6 +137,69 @@ class LinkSettingsViewModelTest {
             if (predicate(item)) return item
         }
     }
+
+    @Test
+    fun `test that the first loaded state already has the existing expiry applied`() =
+        runTest(extension.testDispatcher) {
+            stubNodeWithExpiry()
+            val underTest = createUnderTest()
+
+            underTest.uiState.test {
+                // The toggle must not flip on after the content is visible: the very first state
+                // the screen renders has to carry the expiry already.
+                val firstLoaded = awaitUntil { !it.isLoading }
+                assertThat(firstLoaded.isExpiryEnabled).isTrue()
+                assertThat(firstLoaded.isExpiryAlreadySet).isTrue()
+                assertThat(firstLoaded.expiryDate).isEqualTo(EXPIRY_TIME)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `test that uiState stays loading while the node is still being read`() =
+        runTest(extension.testDispatcher) {
+            // The bug: the account detail arrives first, and loading used to clear on it alone,
+            // showing the content before the node's expiry was known.
+            val gate = CompletableDeferred<TypedFileNode>()
+            whenever { getNodeByIdUseCase(NodeId(NODE_HANDLE)) } doSuspendableAnswer { gate.await() }
+            val underTest = createUnderTest()
+
+            advanceUntilIdle()
+            assertThat(underTest.uiState.value.isLoading).isTrue()
+
+            gate.complete(
+                mock { on { exportedData } doReturn ExportedData(PUBLIC_LINK, 0L, EXPIRY_TIME_SECONDS) }
+            )
+            advanceUntilIdle()
+
+            val loaded = underTest.uiState.value
+            assertThat(loaded.isLoading).isFalse()
+            assertThat(loaded.isExpiryEnabled).isTrue()
+        }
+
+    @Test
+    fun `test that a later account change does not overwrite an edit already made`() =
+        runTest(extension.testDispatcher) {
+            val accounts = MutableStateFlow(AccountDetail())
+            whenever(monitorAccountDetailUseCase()).thenReturn(accounts)
+            stubNodeWithExpiry()
+            val underTest = createUnderTest()
+            advanceUntilIdle()
+
+            underTest.onExpiryEnabled(false)
+            advanceUntilIdle()
+
+            // The node is read once but the account type keeps arriving; a second emission must
+            // not re-seed the expiry the user just turned off.
+            val levelDetail = mock<AccountLevelDetail> { on { accountType } doReturn AccountType.PRO_I }
+            accounts.value = AccountDetail(levelDetail = levelDetail)
+            advanceUntilIdle()
+
+            val state = underTest.uiState.value
+            assertThat(state.isExpiryEnabled).isFalse()
+            assertThat(state.expiryDate).isNull()
+            assertThat(state.accountType).isEqualTo(AccountType.PRO_I)
+        }
 
     @Test
     fun `test that uiState is loading until the account detail arrives`() =

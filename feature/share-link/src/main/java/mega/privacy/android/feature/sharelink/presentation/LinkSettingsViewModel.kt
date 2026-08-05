@@ -12,10 +12,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mega.privacy.android.domain.entity.node.FolderNode
 import mega.privacy.android.domain.entity.node.NodeId
+import mega.privacy.android.domain.entity.node.TypedNode
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.GetPasswordStrengthUseCase
 import mega.privacy.android.domain.usecase.account.MonitorAccountDetailUseCase
@@ -70,8 +74,7 @@ class LinkSettingsViewModel @AssistedInject constructor(
     private var publicLink: String? = null
 
     init {
-        loadNode()
-        monitorAccountDetail()
+        loadLinkSettings()
         cachedPassword?.password?.let(::computeStrength)
     }
 
@@ -186,39 +189,64 @@ class LinkSettingsViewModel @AssistedInject constructor(
         }
     }
 
-    /** No-op for an album: it is not a node, and only the separate-key option applies to it. */
-    private fun loadNode() {
-        val handle = handle?.takeUnless { isAlbum } ?: return
+    /**
+     * Loads everything the first frame depends on and publishes it together.
+     *
+     * The node and the account type used to be collected by two independent coroutines, and
+     * whichever finished first cleared [LinkSettingsUiState.isLoading]. In practice that was always
+     * the account detail — it serves a cached value while the node read goes to the SDK — so the
+     * content composed with the expiry toggle still off and the node load flipped it a moment
+     * later, animating the toggle after the screen was already visible. Combining them means the
+     * screen only ever renders once both are known.
+     */
+    private fun loadLinkSettings() {
         viewModelScope.launch {
-            val node = runCatching { getNodeByIdUseCase(NodeId(handle)) }
-                .onFailure { Timber.e(it, "Failed to load node for link settings") }
-                .getOrNull()
-            val exportedData = node?.exportedData
-            publicLink = exportedData?.publicLink
-            val expiryMillis = exportedData?.expirationTime?.seconds?.inWholeMilliseconds
-            update {
-                if (expiryMillis == null) {
-                    it.copy(isFolder = node is FolderNode)
-                } else {
-                    it.copy(
-                        isFolder = node is FolderNode,
-                        isExpiryEnabled = true,
-                        isExpiryAlreadySet = true,
-                        initialExpiryDate = expiryMillis,
-                        expiryDate = expiryMillis,
-                    )
+            combine(
+                flow { emit(loadNode()) },
+                monitorAccountDetailUseCase()
+                    .map { it.levelDetail?.accountType }
+                    .catch { throwable ->
+                        // Without an account type the skeleton would never clear, so fall back to
+                        // null: the Pro rows simply stay locked.
+                        Timber.e(throwable, "Failed to monitor the account detail")
+                        emit(null)
+                    },
+                ::Pair,
+            ).collect { (node, accountType) ->
+                update { state ->
+                    // The node is read once, but the account type keeps arriving. Only the first
+                    // emission seeds from the node, so a later account change cannot overwrite an
+                    // edit the user has already made.
+                    val seeded = if (state.isLoading) state.seededFrom(node) else state
+                    seeded.copy(isLoading = false, accountType = accountType)
                 }
             }
         }
     }
 
-    private fun monitorAccountDetail() {
-        viewModelScope.launch {
-            monitorAccountDetailUseCase()
-                .catch { Timber.e(it) }
-                .collect { accountDetail ->
-                    update { it.copy(isLoading = false, accountType = accountDetail.levelDetail?.accountType) }
-                }
+    /** Reads the node behind the link, or null for an album, which is not a node. */
+    private suspend fun loadNode(): TypedNode? {
+        val handle = handle?.takeUnless { isAlbum } ?: return null
+        val node = runCatching { getNodeByIdUseCase(NodeId(handle)) }
+            .onFailure { Timber.e(it, "Failed to load node for link settings") }
+            .getOrNull()
+        publicLink = node?.exportedData?.publicLink
+        return node
+    }
+
+    /** Applies the link's existing options, so the screen's first frame already reflects them. */
+    private fun LinkSettingsUiState.seededFrom(node: TypedNode?): LinkSettingsUiState {
+        val expiryMillis = node?.exportedData?.expirationTime?.seconds?.inWholeMilliseconds
+        return if (expiryMillis == null) {
+            copy(isFolder = node is FolderNode)
+        } else {
+            copy(
+                isFolder = node is FolderNode,
+                isExpiryEnabled = true,
+                isExpiryAlreadySet = true,
+                initialExpiryDate = expiryMillis,
+                expiryDate = expiryMillis,
+            )
         }
     }
 
