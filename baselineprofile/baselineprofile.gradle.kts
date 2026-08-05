@@ -80,4 +80,14 @@ dependencies {
     implementation(testlib.espresso)
     implementation(testlib.uiautomator)
     implementation(testlib.benchmark.macro.junit4)
+
+    constraints {
+        implementation(testlib.uiautomator) {
+            because(
+                "benchmark-macro-junit4 pulls uiautomator 2.3.0 transitively; pin to the catalog " +
+                    "version so a single uiautomator version resolves and the IDE does not report a " +
+                    "spurious source-vs-bytecode mismatch on androidx.test.uiautomator classes."
+            )
+        }
+    }
 }
