@@ -2945,6 +2945,22 @@
     <string name="contacts_remove_dialog_title">Remove %1$s?</string>
     <!-- Contact list: body of the dialog asking the user to confirm removing a contact -->
     <string name="contacts_remove_dialog_message">This contact will be removed from your contact list.</string>
+    <!-- Contact requests: label for the tab listing received (incoming) contact requests -->
+    <string name="tab_received_requests">Received requests</string>
+    <!-- Contact requests: label for the tab listing sent (outgoing) contact requests -->
+    <string name="tab_sent_requests">Sent requests</string>
+    <!-- Contact requests: empty state shown when there are no received (incoming) requests -->
+    <string name="received_requests_empty">[B]No [/B][A]received requests[/A]</string>
+    <!-- Contact requests: empty state shown when there are no sent (outgoing) requests -->
+    <string name="sent_requests_empty">[B]No [/B][A]sent requests[/A]</string>
+    <!-- Contact requests bottom sheet: action that accepts a received contact request -->
+    <string name="contact_accept">Accept</string>
+    <!-- Contact requests bottom sheet: action that ignores a received contact request -->
+    <string name="contact_ignore">Ignore</string>
+    <!-- Contact requests bottom sheet: destructive action that declines a received contact request -->
+    <string name="contact_decline">Decline</string>
+    <!-- Contact requests bottom sheet: action that resends a sent contact request -->
+    <string name="contact_reinvite">Reinvite</string>
     <!-- Add contacts picker: toolbar title shown when selecting contacts to send to a chat -->
     <string name="send_contacts">Send contacts</string>
     <!-- Multi-select picker: toolbar title showing how many items are currently selected. %1$d is the count. -->
