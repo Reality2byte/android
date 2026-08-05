@@ -24,7 +24,12 @@ import mega.privacy.android.domain.entity.Subscription
 import mega.privacy.android.domain.entity.SubscriptionStatus
 import mega.privacy.android.domain.entity.account.CurrencyAmount
 import mega.privacy.android.domain.entity.account.OfferPeriod
+import com.google.common.truth.Truth.assertThat
+import mega.privacy.android.analytics.test.AnalyticsTestRule
 import mega.privacy.android.feature.payment.components.TEST_TAG_BILLING_PERIOD_MONTHLY
+import mega.privacy.android.feature.payment.components.TEST_TAG_BILLING_PERIOD_YEARLY
+import mega.privacy.mobile.analytics.event.UpgradeAccountPlanMonthlyPeriodTogglePressedEvent
+import mega.privacy.mobile.analytics.event.UpgradeAccountPlanYearlyPeriodTogglePressedEvent
 import mega.privacy.android.feature.payment.components.TEST_TAG_BUY_BUTTON
 import mega.privacy.android.feature.payment.components.TEST_TAG_CURRENT_PLAN_CARD
 import mega.privacy.android.feature.payment.components.TEST_TAG_FREE_PLAN_CARD
@@ -218,6 +223,9 @@ class UpgradeAccountScreenTest {
 
     @get:Rule
     var composeRule = createComposeRule()
+
+    @get:Rule
+    val analyticsRule = AnalyticsTestRule()
 
     @Test
     fun `test that pro plans are shown correctly`() {
@@ -679,6 +687,44 @@ class UpgradeAccountScreenTest {
             .performScrollToNode(hasTestTag(TEST_TAG_ADDITIONAL_BENEFITS))
         composeRule.onNodeWithTag("${TEST_TAG_REVAMP_PLAN_CARD}1").assertExists()
         composeRule.onNodeWithTag("${TEST_TAG_REVAMP_PLAN_CARD}2").assertDoesNotExist()
+    }
+
+    @Test
+    fun `test that selecting monthly period tracks the monthly toggle event`() {
+        setContent(isSubscriptionRevampEnabled = true)
+
+        composeRule.onNodeWithTag(TEST_TAG_LAZY_COLUMN)
+            .performScrollToNode(hasTestTag(TEST_TAG_BILLING_PERIOD_MONTHLY))
+        composeRule.onNodeWithTag(TEST_TAG_BILLING_PERIOD_MONTHLY).performClick()
+
+        assertThat(analyticsRule.events)
+            .containsExactly(UpgradeAccountPlanMonthlyPeriodTogglePressedEvent)
+    }
+
+    @Test
+    fun `test that switching back to yearly tracks the yearly toggle event`() {
+        setContent(isSubscriptionRevampEnabled = true)
+
+        composeRule.onNodeWithTag(TEST_TAG_LAZY_COLUMN)
+            .performScrollToNode(hasTestTag(TEST_TAG_BILLING_PERIOD_MONTHLY))
+        composeRule.onNodeWithTag(TEST_TAG_BILLING_PERIOD_MONTHLY).performClick()
+        composeRule.onNodeWithTag(TEST_TAG_BILLING_PERIOD_YEARLY).performClick()
+
+        assertThat(analyticsRule.events).containsExactly(
+            UpgradeAccountPlanMonthlyPeriodTogglePressedEvent,
+            UpgradeAccountPlanYearlyPeriodTogglePressedEvent,
+        ).inOrder()
+    }
+
+    @Test
+    fun `test that re-tapping the selected period does not track a toggle event`() {
+        setContent(isSubscriptionRevampEnabled = true)
+
+        composeRule.onNodeWithTag(TEST_TAG_LAZY_COLUMN)
+            .performScrollToNode(hasTestTag(TEST_TAG_BILLING_PERIOD_YEARLY))
+        composeRule.onNodeWithTag(TEST_TAG_BILLING_PERIOD_YEARLY).performClick()
+
+        assertThat(analyticsRule.events).isEmpty()
     }
 
     @Test

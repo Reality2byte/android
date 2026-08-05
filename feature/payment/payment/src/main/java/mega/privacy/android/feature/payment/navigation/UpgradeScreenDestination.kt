@@ -48,8 +48,9 @@ fun EntryProviderScope<NavKey>.upgradeScreens(
         metadata = NavDisplay.transitionSpec { slideUpForwardTransition } +
                 NavDisplay.popTransitionSpec { slideDownBackwardTransition } +
                 NavDisplay.predictivePopTransitionSpec { slideDownBackwardTransition }
-    ) {
+    ) { key ->
         SubscriptionOfferRoute(
+            source = key.source,
             onBack = navigationHandler::back,
             onViewAllPlans = {
                 navigationHandler.navigate(

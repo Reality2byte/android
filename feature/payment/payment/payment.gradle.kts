@@ -55,6 +55,7 @@ dependencies {
     // test
     testImplementation(project(":core-test"))
     testImplementation(project(":core-ui-test"))
+    testImplementation(project(":core:analytics:analytics-test"))
     testImplementation(androidx.navigation.testing)
     testImplementation(platform(testlib.junit5.bom))
     testImplementation(testlib.bundles.ui.test)

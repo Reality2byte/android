@@ -18,8 +18,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mega.android.core.ui.components.banner.HomeBanner
+import mega.android.core.ui.extensions.LaunchedOncePerAppEffect
 import mega.android.core.ui.theme.devicetype.DeviceType
 import mega.android.core.ui.theme.devicetype.LocalDeviceType
+import mega.privacy.android.analytics.Analytics
+import mega.privacy.mobile.analytics.event.HomeSubscriptionOfferBannerDismissButtonPressedEvent
+import mega.privacy.mobile.analytics.event.HomeSubscriptionOfferBannerDisplayedEvent
 import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper
 import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import mega.privacy.android.domain.entity.banner.PromotionalBanner as DomainPromoBanner
@@ -58,6 +62,11 @@ fun ScrollableBanner(
     ) {
         offerBanner?.let { offer ->
             item(key = SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_ID) {
+                // Once per process: the carousel item recomposes every time it is scrolled back
+                // into view, which would otherwise inflate the impression count.
+                LaunchedOncePerAppEffect(SUBSCRIPTION_OFFER_BANNER_IMPRESSION_KEY) {
+                    Analytics.tracker.trackEvent(HomeSubscriptionOfferBannerDisplayedEvent)
+                }
                 val title = stringResource(
                     sharedR.string.home_offer_banner_title,
                     offer.campaignName.text,
@@ -80,6 +89,9 @@ fun ScrollableBanner(
                         onClick(SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL)
                     },
                     onDismissClick = {
+                        Analytics.tracker.trackEvent(
+                            HomeSubscriptionOfferBannerDismissButtonPressedEvent
+                        )
                         onDismiss(
                             SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_ID,
                             SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL,
@@ -163,3 +175,6 @@ private fun calculateCardWidth(
 
 private val BANNER_SPACING = 12.dp
 private val BANNER_HORIZONTAL_PADDING = 16.dp
+
+private const val SUBSCRIPTION_OFFER_BANNER_IMPRESSION_KEY =
+    "home_subscription_offer_banner_impression"

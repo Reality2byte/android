@@ -54,6 +54,7 @@ import mega.android.core.ui.components.list.FlexibleLineListItem
 import mega.android.core.ui.components.list.SecondaryHeaderListItem
 import mega.android.core.ui.components.toolbar.AppBarNavigationType
 import mega.android.core.ui.components.toolbar.MegaTopAppBar
+import mega.android.core.ui.extensions.LaunchedOncePerAppEffect
 import mega.android.core.ui.preview.BooleanProvider
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidThemeForPreviews
@@ -82,10 +83,14 @@ import mega.privacy.android.navigation.destination.MyAccountNavKey
 import mega.privacy.android.navigation.destination.NotificationsNavKey
 import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
 import mega.privacy.android.navigation.destination.TestPasswordNavKey
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
 import mega.privacy.android.shared.original.core.ui.utils.composeLet
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.android.thirdpartylib.twemoji.EmojiUtilsShortcodes
 import mega.privacy.mobile.analytics.event.LogoutButtonPressedEvent
+import mega.privacy.mobile.analytics.event.MenuSubscriptionOfferBannerDismissButtonPressedEvent
+import mega.privacy.mobile.analytics.event.MenuSubscriptionOfferBannerDisplayedEvent
+import mega.privacy.mobile.analytics.event.MenuSubscriptionOfferBannerPressedEvent
 import mega.privacy.mobile.analytics.event.MyAccountProfileNavigationItemEvent
 import mega.privacy.mobile.analytics.event.NotificationsEntryButtonPressedEvent
 import mega.privacy.mobile.analytics.event.PrivacySuiteCollapsedEvent
@@ -225,6 +230,11 @@ fun MenuHomeScreenUi(
 
             uiState.offerBanner?.let { offerBanner ->
                 item(key = OFFER_BANNER) {
+                    // Once per process: the list item recomposes each time it is scrolled back
+                    // into view, which would otherwise inflate the impression count.
+                    LaunchedOncePerAppEffect(MENU_OFFER_BANNER_IMPRESSION_KEY) {
+                        Analytics.tracker.trackEvent(MenuSubscriptionOfferBannerDisplayedEvent)
+                    }
                     OfferBanner(
                         title = stringResource(
                             sharedR.string.home_offer_banner_title,
@@ -238,8 +248,18 @@ fun MenuHomeScreenUi(
                         ),
                         validUntil = offerBanner.validUntil,
                         actionButtonText = stringResource(sharedR.string.home_offer_banner_button),
-                        onActionClick = { navigateToFeature(SubscriptionOfferNavKey) },
-                        onDismissClick = onOfferBannerDismissed,
+                        onActionClick = {
+                            Analytics.tracker.trackEvent(MenuSubscriptionOfferBannerPressedEvent)
+                            navigateToFeature(
+                                SubscriptionOfferNavKey(SubscriptionOfferSource.MenuBanner)
+                            )
+                        },
+                        onDismissClick = {
+                            Analytics.tracker.trackEvent(
+                                MenuSubscriptionOfferBannerDismissButtonPressedEvent
+                            )
+                            onOfferBannerDismissed()
+                        },
                         modifier = Modifier
                             .padding(horizontal = 16.dp, vertical = 12.dp)
                             .testTag(OFFER_BANNER),
@@ -503,3 +523,5 @@ internal object MenuHomeScreenUiTestTags {
     const val AVATAR = "$MENU_HOME_SCREEN:avatar"
     const val OFFER_BANNER = "$MENU_HOME_SCREEN:offer_banner"
 }
+
+private const val MENU_OFFER_BANNER_IMPRESSION_KEY = "menu_subscription_offer_banner_impression"

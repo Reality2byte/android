@@ -6,6 +6,7 @@ import android.net.Uri
 import mega.privacy.android.analytics.test.AnalyticsTestExtension
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
 import mega.privacy.android.navigation.destination.WebSiteNavKey
 import mega.privacy.mobile.analytics.event.PwmSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.TransferItSmartBannerItemSelectedEvent
@@ -233,7 +234,9 @@ class BannerClickHandlerTest {
             SubscriptionOfferBannerMapper.SUBSCRIPTION_OFFER_BANNER_URL,
         )
 
-        verify(navigationHandler).navigate(SubscriptionOfferNavKey)
+        verify(navigationHandler).navigate(
+            SubscriptionOfferNavKey(SubscriptionOfferSource.HomeBanner)
+        )
     }
 
     @Test

@@ -9,6 +9,8 @@ import mega.privacy.android.domain.usecase.domainmigration.GetDomainNameUseCase.
 import mega.privacy.android.navigation.contract.NavigationHandler
 import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
 import mega.privacy.android.navigation.destination.WebSiteNavKey
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
+import mega.privacy.mobile.analytics.event.HomeSubscriptionOfferBannerPressedEvent
 import mega.privacy.mobile.analytics.event.PwmSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.TransferItSmartBannerItemSelectedEvent
 import mega.privacy.mobile.analytics.event.VpnSmartBannerItemSelectedEvent
@@ -33,7 +35,10 @@ object BannerClickHandler {
     ) {
         when {
             url == SUBSCRIPTION_OFFER_BANNER_URL -> {
-                navigationHandler.navigate(SubscriptionOfferNavKey)
+                Analytics.tracker.trackEvent(HomeSubscriptionOfferBannerPressedEvent)
+                navigationHandler.navigate(
+                    SubscriptionOfferNavKey(SubscriptionOfferSource.HomeBanner)
+                )
             }
 
             matchesVpnUrl(url) -> {

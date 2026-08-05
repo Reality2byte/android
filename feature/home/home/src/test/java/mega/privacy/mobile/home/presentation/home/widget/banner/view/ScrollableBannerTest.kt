@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import mega.android.core.ui.model.LocalizedText
 import mega.android.core.ui.theme.AndroidThemeForPreviews
+import mega.privacy.android.analytics.test.AnalyticsTestRule
 import mega.privacy.android.domain.entity.banner.PromotionalBanner
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.home.presentation.home.widget.banner.mapper.SubscriptionOfferBannerMapper.Companion.SUBSCRIPTION_OFFER_BANNER_ID
@@ -23,6 +24,9 @@ class ScrollableBannerTest {
 
     @get:Rule
     var composeRule = createComposeRule()
+
+    @get:Rule
+    val analyticsRule = AnalyticsTestRule()
 
     private val banner1 = PromotionalBanner(
         id = 1,

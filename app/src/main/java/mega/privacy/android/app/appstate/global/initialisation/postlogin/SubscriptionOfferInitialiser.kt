@@ -5,6 +5,7 @@ import mega.privacy.android.domain.usecase.billing.ShouldShowSubscriptionOfferUs
 import mega.privacy.android.navigation.contract.initialisation.initialisers.PostLoginInitialiserAction
 import mega.privacy.android.navigation.contract.queue.NavigationEventQueue
 import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,7 +24,9 @@ class SubscriptionOfferInitialiser @Inject constructor(
             runCatching {
                 if (shouldShowSubscriptionOfferUseCase()) {
                     setSubscriptionOfferLastShownTimeUseCase()
-                    navigationEventQueue.emit(SubscriptionOfferNavKey)
+                    navigationEventQueue.emit(
+                        SubscriptionOfferNavKey(SubscriptionOfferSource.AutoOpen)
+                    )
                 }
             }.onFailure { e ->
                 Timber.e(e, "Error checking the subscription offer")

@@ -14,6 +14,7 @@ import mega.privacy.android.navigation.contract.navkey.MainNavItemNavKey
 import mega.privacy.android.navigation.contract.navkey.NoSessionNavKey
 import mega.privacy.android.navigation.payment.QuotaWarningTrigger
 import mega.privacy.android.navigation.payment.QuotaWarningType
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
 import mega.privacy.android.navigation.payment.UpgradeAccountSource
 
 @Serializable
@@ -244,9 +245,13 @@ data class UpgradeAccountNavKey(
 /**
  * Full-screen promo for the recommended discounted plan (DSN-3130 offer landing screen), opened
  * with a slide-up-from-bottom transition.
+ *
+ * @property source how the screen was opened; reported to analytics
  */
 @Serializable
-data object SubscriptionOfferNavKey : NavKey
+data class SubscriptionOfferNavKey(
+    val source: SubscriptionOfferSource,
+) : NavKey
 
 @Serializable
 @Parcelize

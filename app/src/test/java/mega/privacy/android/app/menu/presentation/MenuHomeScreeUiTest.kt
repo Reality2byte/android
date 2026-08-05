@@ -43,6 +43,7 @@ import mega.privacy.android.navigation.contract.DefaultNumberBadge
 import mega.privacy.android.navigation.contract.MainNavItemBadge
 import mega.privacy.android.navigation.contract.NavDrawerItem
 import mega.privacy.android.navigation.destination.SubscriptionOfferNavKey
+import mega.privacy.android.navigation.payment.SubscriptionOfferSource
 import mega.privacy.android.shared.resources.R as sharedR
 import mega.privacy.mobile.home.presentation.home.widget.banner.model.SubscriptionOfferBannerUiModel
 import mega.privacy.mobile.analytics.event.LogoutButtonPressedEvent
@@ -172,7 +173,9 @@ class MenuHomeScreeUiTest {
 
         composeRule.onNodeWithTag(TEST_TAG_OFFER_BANNER_BUTTON).performClick()
 
-        verify(navigateToFeature).invoke(SubscriptionOfferNavKey)
+        verify(navigateToFeature).invoke(
+            SubscriptionOfferNavKey(SubscriptionOfferSource.MenuBanner)
+        )
     }
 
     @Test

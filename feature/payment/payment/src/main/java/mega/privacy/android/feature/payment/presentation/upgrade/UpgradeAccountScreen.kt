@@ -64,6 +64,7 @@ import mega.android.core.ui.extensions.showAutoDurationSnackbar
 import mega.android.core.ui.preview.CombinedThemePreviews
 import mega.android.core.ui.theme.AndroidTheme
 import mega.android.core.ui.theme.values.TextColor
+import mega.privacy.android.analytics.Analytics
 import mega.privacy.android.core.formatter.formatFileSize
 import mega.privacy.android.domain.entity.AccountSubscriptionCycle
 import mega.privacy.android.domain.entity.AccountType
@@ -86,6 +87,8 @@ import mega.privacy.android.feature.payment.model.extensions.toUIAccountType
 import mega.privacy.android.icon.pack.IconPack
 import mega.privacy.android.icon.pack.R as IconPackR
 import mega.privacy.android.shared.resources.R as sharedR
+import mega.privacy.mobile.analytics.event.UpgradeAccountPlanMonthlyPeriodTogglePressedEvent
+import mega.privacy.mobile.analytics.event.UpgradeAccountPlanYearlyPeriodTogglePressedEvent
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +110,18 @@ fun UpgradeAccountScreen(
     var chosenPlan by rememberSaveable { mutableStateOf<AccountType?>(null) }
     var isMonthly by rememberSaveable { mutableStateOf(false) }
     var showOfferExpiredDialog by rememberSaveable { mutableStateOf(false) }
+    val onMonthlyChange: (Boolean) -> Unit = { monthly ->
+        if (monthly != isMonthly) {
+            Analytics.tracker.trackEvent(
+                if (monthly) {
+                    UpgradeAccountPlanMonthlyPeriodTogglePressedEvent
+                } else {
+                    UpgradeAccountPlanYearlyPeriodTogglePressedEvent
+                }
+            )
+        }
+        isMonthly = monthly
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     val onOfferCountdownExpired = {
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
@@ -297,7 +312,7 @@ fun UpgradeAccountScreen(
                             uiState = uiState,
                             offerSubscription = offerHighlight.subscription,
                             isMonthly = isMonthly,
-                            onMonthlyChange = { isMonthly = it },
+                            onMonthlyChange = onMonthlyChange,
                             locale = locale,
                             context = context,
                             isUpgradeAccount = isUpgradeAccount,
@@ -310,7 +325,7 @@ fun UpgradeAccountScreen(
                         is OfferHighlight.Multiple -> subscriptionMultipleOfferContent(
                             uiState = uiState,
                             isMonthly = isMonthly,
-                            onMonthlyChange = { isMonthly = it },
+                            onMonthlyChange = onMonthlyChange,
                             locale = locale,
                             context = context,
                             isUpgradeAccount = isUpgradeAccount,
@@ -323,7 +338,7 @@ fun UpgradeAccountScreen(
                         OfferHighlight.None -> subscriptionRevampContent(
                             uiState = uiState,
                             isMonthly = isMonthly,
-                            onMonthlyChange = { isMonthly = it },
+                            onMonthlyChange = onMonthlyChange,
                             locale = locale,
                             isUpgradeAccount = isUpgradeAccount,
                             onInAppCheckoutClick = onInAppCheckoutClick,
@@ -367,7 +382,7 @@ fun UpgradeAccountScreen(
                         subscriptionAvailableContent(
                             uiState = uiState,
                             isMonthly = isMonthly,
-                            onMonthlyChange = { isMonthly = it },
+                            onMonthlyChange = onMonthlyChange,
                             chosenPlan = chosenPlan,
                             onPlanSelected = { chosenPlan = it },
                             hasDiscount = hasDiscount,
