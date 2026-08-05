@@ -56,6 +56,21 @@ class CropToolTest {
     }
 
     @Test
+    fun `test that SetPreset 5x4 locks the aspect and centres the crop`() {
+        val result = CropTool.reduce(state(), CropAction.SetPreset(CropPreset.LANDSCAPE_5_4))
+
+        assertThat(result.crop.selectedPreset).isEqualTo(CropPreset.LANDSCAPE_5_4)
+        assertThat(result.crop.aspectLock).isEqualTo(5f / 4f)
+        with(result.crop.rect) {
+            assertThat(top).isEqualTo(0f)
+            assertThat(bottom).isEqualTo(1f)
+            val expectedWidth = (srcH * (5f / 4f)) / srcW
+            assertThat(right - left).isWithin(0.0001f).of(expectedWidth)
+            assertThat(left).isWithin(0.0001f).of((1f - expectedWidth) / 2f)
+        }
+    }
+
+    @Test
     fun `test that SetPreset free clears the aspect lock`() {
         val result = CropTool.reduce(state(), CropAction.SetPreset(CropPreset.FREE))
 

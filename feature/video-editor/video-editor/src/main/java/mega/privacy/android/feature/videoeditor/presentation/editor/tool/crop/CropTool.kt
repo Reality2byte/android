@@ -143,4 +143,5 @@ private fun CropPreset.icon(): ImageVector = when (this) {
     CropPreset.PORTRAIT_4_5 -> IconPack.Medium.Thin.Outline.Format4x5
     CropPreset.PORTRAIT_3_4 -> IconPack.Medium.Thin.Outline.Format3x4
     CropPreset.STANDARD_4_3 -> IconPack.Medium.Thin.Outline.Format4x3
+    CropPreset.LANDSCAPE_5_4 -> IconPack.Medium.Thin.Outline.Format5x4
 }

@@ -187,6 +187,7 @@ interface IconPackInterface {
                 val Format3x4: ImageVector
                 val Format4x3: ImageVector
                 val Format4x5: ImageVector
+                val Format5x4: ImageVector
                 val Format9x16: ImageVector
                 val FormatFreeform: ImageVector
                 val FormatOriginal: ImageVector

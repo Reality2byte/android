@@ -29,6 +29,7 @@ enum class CropPreset(val displayName: String, val ratio: Float?, val free: Bool
     PORTRAIT_9_16("9:16", 9f / 16f),
     LANDSCAPE_16_9("16:9", 16f / 9f),
     PORTRAIT_4_5("4:5", 4f / 5f),
+    LANDSCAPE_5_4("5:4", 5f / 4f),
     PORTRAIT_3_4("3:4", 3f / 4f),
     STANDARD_4_3("4:3", 4f / 3f),
 }

@@ -83,6 +83,7 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat16x9I
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat3x4ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat4x3ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat4x5ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat5x4ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormat9x16ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormatFreeformImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineFormatOriginalImageVector
@@ -446,6 +447,9 @@ public object IconPack : IconPackInterface {
 
                 override val Format4x5: ImageVector by
                         lazy { createMediumThinOutlineFormat4x5ImageVector() }
+
+                override val Format5x4: ImageVector by
+                        lazy { createMediumThinOutlineFormat5x4ImageVector() }
 
                 override val Format9x16: ImageVector by
                         lazy { createMediumThinOutlineFormat9x16ImageVector() }
