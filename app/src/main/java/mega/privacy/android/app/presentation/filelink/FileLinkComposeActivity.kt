@@ -12,24 +12,29 @@ import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
 import de.palm.composestateevents.EventEffect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mega.android.core.ui.theme.AndroidTheme
+import kotlinx.serialization.Serializable
+import mega.privacy.android.app.BaseActivity
 import mega.privacy.android.app.MimeTypeList.Companion.typeForName
 import mega.privacy.android.app.R
-import mega.privacy.android.app.activities.PasscodeActivity
 import mega.privacy.android.app.activities.contract.NameCollisionActivityContract
+import mega.privacy.android.app.appstate.content.navigation.LegacyActivityScaffold
+import mega.privacy.android.app.appstate.content.navigation.NavigationResultManager
 import mega.privacy.android.app.arch.extensions.collectFlow
 import mega.privacy.android.app.main.DecryptAlertDialog
 import mega.privacy.android.app.main.FileExplorerActivity
+import mega.privacy.android.app.presentation.container.SharedAppContainer
 import mega.privacy.android.app.presentation.filelink.view.FileLinkView
 import mega.privacy.android.app.presentation.imagepreview.ImagePreviewActivity
 import mega.privacy.android.app.presentation.imagepreview.fetcher.PublicFileImageNodeFetcher
@@ -39,7 +44,6 @@ import mega.privacy.android.app.presentation.pdfviewer.PdfViewerActivity
 import mega.privacy.android.app.presentation.transfers.starttransfer.view.StartTransferComponent
 import mega.privacy.android.app.utils.Constants
 import mega.privacy.android.app.utils.Constants.FILE_LINK_ADAPTER
-import mega.privacy.android.app.utils.Constants.SNACKBAR_TYPE
 import mega.privacy.android.app.utils.MegaNodeUtil
 import mega.privacy.android.core.sharedcomponents.extension.isDarkMode
 import mega.privacy.android.domain.entity.ThemeMode
@@ -47,12 +51,14 @@ import mega.privacy.android.domain.entity.node.TypedFileNode
 import mega.privacy.android.domain.usecase.MonitorThemeModeUseCase
 import mega.privacy.android.navigation.MegaNavigator
 import mega.privacy.android.navigation.OpenTextEditorParams
+import mega.privacy.android.navigation.contract.FeatureDestination
+import mega.privacy.android.navigation.contract.dialog.AppDialogDestinations
+import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
 import mega.privacy.android.navigation.destination.UpgradeAccountNavKey
 import mega.privacy.android.shared.ads.advertisements.GoogleAdsManager
 import mega.privacy.android.shared.ads.rewarded.rememberRewardedAdGate
 import mega.privacy.android.shared.original.core.ui.theme.OriginalTheme
 import mega.privacy.android.shared.resources.R as sharedR
-import nz.mega.sdk.MegaApiJava.INVALID_HANDLE
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -61,7 +67,7 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 @Deprecated("Use revamp")
-class FileLinkComposeActivity : PasscodeActivity(),
+class FileLinkComposeActivity : BaseActivity(),
     DecryptAlertDialog.DecryptDialogListener {
 
     /**
@@ -82,6 +88,30 @@ class FileLinkComposeActivity : PasscodeActivity(),
     @Inject
     lateinit var googleAdsManager: GoogleAdsManager
 
+    /**
+     * Navigation result manager
+     */
+    @Inject
+    lateinit var navigationResultManager: NavigationResultManager
+
+    /**
+     * Feature destinations
+     */
+    @Inject
+    lateinit var featureDestinations: Set<@JvmSuppressWildcards FeatureDestination>
+
+    /**
+     * App dialog destinations
+     */
+    @Inject
+    lateinit var appDialogDestinations: Set<@JvmSuppressWildcards AppDialogDestinations>
+
+    /**
+     * Snackbar event queue
+     */
+    @Inject
+    lateinit var snackbarEventQueue: SnackbarEventQueue
+
     private val viewModel: LegacyFileLinkViewModel by viewModels()
 
     private var mKey: String? = null
@@ -99,8 +129,8 @@ class FileLinkComposeActivity : PasscodeActivity(),
     private val nameCollisionActivityLauncher = registerForActivityResult(
         NameCollisionActivityContract()
     ) { result ->
-        result?.let {
-            showSnackbar(SNACKBAR_TYPE, it, INVALID_HANDLE)
+        result?.let { message ->
+            lifecycleScope.launch { snackbarEventQueue.queueMessage(message) }
         }
     }
 
@@ -132,74 +162,100 @@ class FileLinkComposeActivity : PasscodeActivity(),
         setContent {
             val themeMode by monitorThemeModeUseCase()
                 .collectAsStateWithLifecycle(initialValue = ThemeMode.System)
-            val uiState by viewModel.state.collectAsStateWithLifecycle()
-            val request by googleAdsManager.request.collectAsStateWithLifecycle()
-
-            EventEffect(
-                event = uiState.openFile,
-                onConsumed = viewModel::resetOpenFile,
-                action = ::onOpenFile
-            )
-
-            val snackBarHostState = remember { SnackbarHostState() }
-            OriginalTheme(isDark = themeMode.isDarkMode()) {
-                AndroidTheme(isDark = themeMode.isDarkMode()) {
-                    val rewardedAdGate = rememberRewardedAdGate(
-                        onNavigate = { navKey ->
-                            // Rewarded Ad Gate only navigates to UpgradeAccountNavKey
-                            if (navKey is UpgradeAccountNavKey) {
-                                megaNavigator.openUpgradeAccount(
-                                    this@FileLinkComposeActivity,
-                                    navKey.source,
-                                )
-                            }
-                        },
-                        isAdsAllowedForScreen = uiState.shouldShowAdsForLink,
+            // A file link opens without a session, so the shell must not require one.
+            LegacyActivityScaffold(
+                container = { content ->
+                    SharedAppContainer(
+                        themeMode = themeMode,
+                        isSessionRequired = false,
+                        finishOnSessionRefresh = false,
+                        content = content,
                     )
-                    FileLinkView(
-                        viewState = uiState,
-                        snackBarHostState = snackBarHostState,
-                        onBackPressed = { onBackPressedDispatcher.onBackPressed() },
-                        onShareClicked = ::onShareClicked,
-                        onPreviewClick = { rewardedAdGate.requestAction(::onPreviewClick) },
-                        onSaveToDeviceClicked = { rewardedAdGate.requestAction { viewModel.handleSaveFile() } },
-                        onImportClicked = { rewardedAdGate.requestAction(::onImportClicked) },
-                        onErrorMessageConsumed = viewModel::resetErrorMessage,
-                        onOverQuotaErrorConsumed = viewModel::resetOverQuotaError,
-                        onForeignNodeErrorConsumed = viewModel::resetForeignNodeError,
-                        request = request,
+                },
+                initialKey = InternalFileLinkNavKey,
+                navigationResultManager = navigationResultManager,
+                featureDestinations = featureDestinations,
+                appDialogDestinations = appDialogDestinations,
+                onEmptyBackStack = { if (!isFinishing) finish() },
+            ) { _, _ ->
+                entry<InternalFileLinkNavKey> {
+                    FileLinkContent(
+                        isDark = themeMode.isDarkMode(),
+                        onBackPressed = ::finish,
                     )
-                }
-                StartTransferComponent(
-                    event = uiState.downloadEvent,
-                    onConsumeEvent = viewModel::resetDownloadFile,
-                    snackBarHostState = snackBarHostState,
-                )
-                EventEffect(
-                    event = uiState.askForDecryptionKeyDialogEvent,
-                    onConsumed = viewModel::resetAskForDecryptionKeyDialog
-                ) {
-                    showAskForDecryptionKeyDialog()
-                }
-
-                EventEffect(
-                    event = uiState.collisionsEvent,
-                    onConsumed = viewModel::resetCollision,
-                ) {
-                    nameCollisionActivityLauncher.launch(arrayListOf(it))
-                }
-
-                EventEffect(
-                    event = uiState.copySuccessEvent,
-                    onConsumed = viewModel::resetCopySuccessEvent,
-                ) {
-                    sendMessageAfterCopy()
                 }
             }
         }
         checkForInAppAdvertisement()
         collectFlow(viewModel.monitorMiscLoadedUseCase()) {
             checkForInAppAdvertisement()
+        }
+    }
+
+    @Composable
+    private fun FileLinkContent(isDark: Boolean, onBackPressed: () -> Unit) {
+        val uiState by viewModel.state.collectAsStateWithLifecycle()
+        val request by googleAdsManager.request.collectAsStateWithLifecycle()
+        val snackBarHostState = remember { SnackbarHostState() }
+
+        EventEffect(
+            event = uiState.openFile,
+            onConsumed = viewModel::resetOpenFile,
+            action = ::onOpenFile
+        )
+
+        // FileLinkView is still Material 2, so it needs the legacy theme on top of the container.
+        OriginalTheme(isDark = isDark) {
+            val rewardedAdGate = rememberRewardedAdGate(
+                onNavigate = { navKey ->
+                    // Rewarded Ad Gate only navigates to UpgradeAccountNavKey
+                    if (navKey is UpgradeAccountNavKey) {
+                        megaNavigator.openUpgradeAccount(
+                            this@FileLinkComposeActivity,
+                            navKey.source,
+                        )
+                    }
+                },
+                isAdsAllowedForScreen = uiState.shouldShowAdsForLink,
+            )
+            FileLinkView(
+                viewState = uiState,
+                snackBarHostState = snackBarHostState,
+                onBackPressed = onBackPressed,
+                onShareClicked = ::onShareClicked,
+                onPreviewClick = { rewardedAdGate.requestAction(::onPreviewClick) },
+                onSaveToDeviceClicked = { rewardedAdGate.requestAction { viewModel.handleSaveFile() } },
+                onImportClicked = { rewardedAdGate.requestAction(::onImportClicked) },
+                onErrorMessageConsumed = viewModel::resetErrorMessage,
+                onOverQuotaErrorConsumed = viewModel::resetOverQuotaError,
+                onForeignNodeErrorConsumed = viewModel::resetForeignNodeError,
+                request = request,
+            )
+        }
+        StartTransferComponent(
+            event = uiState.downloadEvent,
+            onConsumeEvent = viewModel::resetDownloadFile,
+            snackBarHostState = snackBarHostState,
+        )
+        EventEffect(
+            event = uiState.askForDecryptionKeyDialogEvent,
+            onConsumed = viewModel::resetAskForDecryptionKeyDialog
+        ) {
+            showAskForDecryptionKeyDialog()
+        }
+
+        EventEffect(
+            event = uiState.collisionsEvent,
+            onConsumed = viewModel::resetCollision,
+        ) {
+            nameCollisionActivityLauncher.launch(arrayListOf(it))
+        }
+
+        EventEffect(
+            event = uiState.copySuccessEvent,
+            onConsumed = viewModel::resetCopySuccessEvent,
+        ) {
+            sendMessageAfterCopy()
         }
     }
 
@@ -327,7 +383,7 @@ class FileLinkComposeActivity : PasscodeActivity(),
                             this@FileLinkComposeActivity,
                             fileNode
                         ) { stringRes ->
-                            showSnackbar(SNACKBAR_TYPE, getString(stringRes), INVALID_HANDLE)
+                            lifecycleScope.launch { snackbarEventQueue.queueMessage(stringRes) }
                         }
                     }
                 }
@@ -356,3 +412,6 @@ class FileLinkComposeActivity : PasscodeActivity(),
         }
     }
 }
+
+@Serializable
+private data object InternalFileLinkNavKey : NavKey

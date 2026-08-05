@@ -1,7 +1,8 @@
 package mega.privacy.android.app.appstate.global.initialisation.appstart
 
 import kotlinx.coroutines.flow.catch
-import mega.privacy.android.app.appstate.global.quota.StreamOverQuotaEventQueue
+import mega.privacy.android.app.appstate.global.quota.TransferOverQuotaEventQueue
+import mega.privacy.android.app.appstate.global.quota.TransferOverQuotaSource
 import mega.privacy.android.domain.usecase.transfers.overquota.BroadcastTransferOverQuotaUseCase
 import mega.privacy.android.domain.usecase.transfers.overquota.MonitorStreamOverQuotaEventUseCase
 import mega.privacy.android.navigation.contract.initialisation.initialisers.AppStartInitialiserAction
@@ -15,13 +16,13 @@ import javax.inject.Inject
 class StreamOverQuotaInitialiser @Inject constructor(
     monitorStreamOverQuotaEventUseCase: MonitorStreamOverQuotaEventUseCase,
     broadcastTransferOverQuotaUseCase: BroadcastTransferOverQuotaUseCase,
-    streamOverQuotaEventQueue: StreamOverQuotaEventQueue,
+    transferOverQuotaEventQueue: TransferOverQuotaEventQueue,
 ) : AppStartInitialiserAction(action = {
     monitorStreamOverQuotaEventUseCase()
         .catch { Timber.e(it, "Error monitoring streaming over quota events") }
         .collect { timeLeft ->
             Timber.d("Emit stream over quota $timeLeft")
             broadcastTransferOverQuotaUseCase(true)
-            streamOverQuotaEventQueue.emit(timeLeft)
+            transferOverQuotaEventQueue.emit(TransferOverQuotaSource.Streaming)
         }
 })

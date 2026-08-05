@@ -30,9 +30,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
@@ -57,7 +55,7 @@ import mega.privacy.android.app.appstate.content.transfer.TransferHandlerImpl
 import mega.privacy.android.app.appstate.global.GlobalStateViewModel
 import mega.privacy.android.app.appstate.global.model.GlobalState
 import mega.privacy.android.app.appstate.global.model.RootNodeState
-import mega.privacy.android.app.appstate.global.quota.StreamOverQuotaEffect
+import mega.privacy.android.app.appstate.global.quota.TransferOverQuotaWarningEffect
 import mega.privacy.android.app.appstate.global.snackbar.SnackbarEventsViewModel
 import mega.privacy.android.app.appstate.global.util.show
 import mega.privacy.android.app.middlelayer.inappupdate.InAppUpdateHandler
@@ -76,9 +74,6 @@ import mega.privacy.android.core.sharedcomponents.extension.isDarkMode
 import mega.privacy.android.core.sharedcomponents.parcelable
 import mega.privacy.android.core.sharedcomponents.requeststatus.RequestStatusProgressContainer
 import mega.privacy.android.core.sharedcomponents.requeststatus.RequestStatusProgressViewModel
-import mega.privacy.android.domain.featuretoggle.ApiFeatures
-import mega.privacy.android.domain.usecase.transfers.overquota.MonitorTransferOverQuotaEventUseCase
-import mega.privacy.android.navigation.contract.featureflag.FeatureFlagGate
 import mega.privacy.android.navigation.contract.navOptions
 import mega.privacy.android.navigation.contract.queue.NavigationEventQueue
 import mega.privacy.android.navigation.contract.queue.NavigationQueueEvent
@@ -87,9 +82,6 @@ import mega.privacy.android.navigation.contract.queue.dialog.AppDialogsEventQueu
 import mega.privacy.android.navigation.destination.CreateAccountNavKey
 import mega.privacy.android.navigation.destination.HomeScreensNavKey
 import mega.privacy.android.navigation.destination.LoginNavKey
-import mega.privacy.android.navigation.destination.QuotaWarningUpgradeNavKey
-import mega.privacy.android.navigation.payment.QuotaWarningTrigger
-import mega.privacy.android.navigation.payment.QuotaWarningType
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -135,12 +127,6 @@ class MegaActivity : FragmentActivity() {
      */
     @Inject
     lateinit var intentActionHandler: MegaActivityIntentActionHandler
-
-    /**
-     * Monitor transfer over quota event
-     */
-    @Inject
-    lateinit var monitorTransferOverQuotaEventUseCase: MonitorTransferOverQuotaEventUseCase
 
     private val passcodeViewModel: PasscodeCheckViewModel by viewModels()
 
@@ -366,23 +352,7 @@ class MegaActivity : FragmentActivity() {
                                     action = { snackbarHostState.show(it.attributes) }
                                 )
 
-                                FeatureFlagGate(feature = ApiFeatures.QuotaWarningUpsellScreen) {
-                                    LaunchedEffect(Unit) {
-                                        monitorTransferOverQuotaEventUseCase()
-                                            .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
-                                            .collect {
-                                                navigationHandler.navigate(
-                                                    QuotaWarningUpgradeNavKey(
-                                                        type = QuotaWarningType.Transfer,
-                                                        trigger = QuotaWarningTrigger.Download,
-                                                    ),
-                                                    navOptions { dropIfAlreadyShown = true },
-                                                )
-                                            }
-                                    }
-                                }
-
-                                StreamOverQuotaEffect(navigationHandler)
+                                TransferOverQuotaWarningEffect(navigationHandler)
 
                                 // The storage state is only readable once the nodes are fetched,
                                 // and re-entering per session restarts the monitoring.

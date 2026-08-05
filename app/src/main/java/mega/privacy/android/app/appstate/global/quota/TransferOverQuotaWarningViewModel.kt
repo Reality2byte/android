@@ -5,41 +5,40 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import mega.privacy.android.domain.usecase.environment.GetCurrentTimeInMillisUseCase
 import javax.inject.Inject
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * ViewModel exposing the pending streaming bandwidth over quota event to the activity hosting the
- * navigation back stack.
+ * ViewModel exposing the pending bandwidth over quota event to the activity hosting the navigation
+ * back stack.
  *
  * Scoped to that activity, so the warning is shown again when the user opens another one.
  */
 @HiltViewModel
-class StreamOverQuotaViewModel @Inject constructor(
-    private val streamOverQuotaEventQueue: StreamOverQuotaEventQueue,
+class TransferOverQuotaWarningViewModel @Inject constructor(
+    private val transferOverQuotaEventQueue: TransferOverQuotaEventQueue,
     private val getCurrentTimeInMillisUseCase: GetCurrentTimeInMillisUseCase,
 ) : ViewModel() {
 
     private var lastWarnedAt = 0L
 
     /**
-     * Emits while a streaming over quota warning is waiting to be shown.
+     * Emits while an over quota warning is waiting to be shown.
      */
-    val streamOverQuotaEvents: Flow<Duration> = streamOverQuotaEventQueue.events
+    val transferOverQuotaEvents: Flow<TransferOverQuotaSource> = transferOverQuotaEventQueue.events
 
     /**
      * Claim the pending warning, or null when another activity already took it or it was already
      * shown here within [WARNING_INTERVAL].
      *
-     * Dismissing the warning resumes playback, which hits the over quota again straight away, so
-     * without the interval it would be shown again on every dismissal.
+     * Dismissing the warning resumes the transfer, which hits the over quota again straight away,
+     * so without the interval it would be shown again on every dismissal.
      */
-    fun consumeStreamOverQuotaEvent(): Duration? {
-        val timeLeft = streamOverQuotaEventQueue.consume() ?: return null
+    fun consumeTransferOverQuotaEvent(): TransferOverQuotaSource? {
+        val source = transferOverQuotaEventQueue.consume() ?: return null
         val now = getCurrentTimeInMillisUseCase()
         if (now - lastWarnedAt < WARNING_INTERVAL.inWholeMilliseconds) return null
         lastWarnedAt = now
-        return timeLeft
+        return source
     }
 
     private companion object {
