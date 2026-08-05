@@ -116,6 +116,15 @@ class FakeMegaApiGateway(
     private val globalTransferFlow = MutableSharedFlow<GlobalTransfer>(extraBufferCapacity = 64)
     private val globalRequestEventsFlow = MutableSharedFlow<RequestEvent>(extraBufferCapacity = 64)
 
+    init {
+        // Route the node tree's mutating helpers (rename/move/copy/moveToRubbish/remove) to the
+        // global-updates flow, so a single call both changes the tree and broadcasts the matching
+        // OnNodesUpdate, as the real SDK does.
+        nodeTree.nodeUpdateSink = { changedNodes ->
+            emitGlobalUpdate(GlobalUpdate.OnNodesUpdate(ArrayList(changedNodes)))
+        }
+    }
+
     /** Emits [update] to collectors of [globalUpdates]. */
     suspend fun emitGlobalUpdate(update: GlobalUpdate) {
         globalUpdatesFlow.emit(update)

@@ -50,8 +50,22 @@ node tree seeded with Cloud Drive / Rubbish Bin / Vault roots (handles 1/2/3):
   `TYPE_*` constant. Transfer methods complete `onTransferStart` + `onTransferFinish`.
 - `Flow` properties are backed by shared flows with public `emit*` helpers.
 
-No deep SDK behaviour is simulated: commands such as copy/move/delete never mutate the node
-tree. Tests needing tree changes mutate `nodeTree` directly or stub the relevant reads. The
+No deep SDK behaviour is simulated: listener-based commands such as `copyNode`/`moveNode`/
+`deleteNode` never themselves mutate the node tree. To apply the SDK-side effect, use the
+`nodeTree` mutating helpers, which change the state **and** emit the matching
+`GlobalUpdate.OnNodesUpdate` (with the real `MegaNode.CHANGE_TYPE_*` flag) in one call:
+
+```kotlin
+gateway.nodeTree.rename(handle = 10L, newName = "renamed.jpg")   // CHANGE_TYPE_NAME
+gateway.nodeTree.move(handle = 10L, newParentHandle = 20L)       // CHANGE_TYPE_PARENT
+gateway.nodeTree.copy(handle = 10L, newParentHandle = 20L)       // CHANGE_TYPE_NEW, returns the copy
+gateway.nodeTree.moveToRubbish(handle = 10L)                     // CHANGE_TYPE_PARENT to Rubbish
+gateway.nodeTree.remove(handle = 10L)                            // CHANGE_TYPE_REMOVED
+```
+
+Unknown handles (and moves under a node's own descendant) are no-ops returning null, matching how
+the read helpers treat invalid input. Tests can still mutate `nodeTree` directly (`addNode` /
+`removeNode`) and emit updates by hand when they need finer control. The
 `MegaApiJava`/`MegaChatApiJava` parameter passed to listener callbacks is an inert instance that
 must never be invoked.
 
