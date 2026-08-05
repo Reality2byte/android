@@ -1,8 +1,6 @@
 package mega.privacy.android.feature.videoeditor.presentation.editor.tool.trim
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,6 +17,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.Bui
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.EditorTool
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolId
+import mega.privacy.android.icon.pack.IconPack
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -34,7 +33,7 @@ import kotlin.time.Duration.Companion.milliseconds
 object TrimTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Trim
-    override val icon: ImageVector = Icons.Filled.ContentCut
+    override val icon: ImageVector = IconPack.Medium.Thin.Outline.Scissors
     override val labelRes: Int = sharedR.string.video_editor_tool_trim
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {

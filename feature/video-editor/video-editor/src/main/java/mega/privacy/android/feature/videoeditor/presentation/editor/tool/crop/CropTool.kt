@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Crop
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -42,7 +40,7 @@ import mega.privacy.android.icon.pack.IconPack
 object CropTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Crop
-    override val icon: ImageVector = Icons.Filled.Crop
+    override val icon: ImageVector = IconPack.Medium.Thin.Outline.Crop
     override val labelRes: Int = sharedR.string.video_editor_tool_crop
 
     override val pauseOnEnter: Boolean = false

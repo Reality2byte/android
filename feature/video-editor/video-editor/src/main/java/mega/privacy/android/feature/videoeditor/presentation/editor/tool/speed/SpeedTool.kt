@@ -2,8 +2,6 @@ package mega.privacy.android.feature.videoeditor.presentation.editor.tool.speed
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -21,6 +19,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.Bui
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.EditorTool
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolId
+import mega.privacy.android.icon.pack.IconPack
 
 /**
  * Built-in Speed tool.
@@ -34,7 +33,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.Too
 object SpeedTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Speed
-    override val icon: ImageVector = Icons.Filled.Speed
+    override val icon: ImageVector = IconPack.Medium.Thin.Outline.Speedometer
     override val labelRes: Int = sharedR.string.video_editor_tool_speed
 
     private const val MIN_SPEED = 0.1f

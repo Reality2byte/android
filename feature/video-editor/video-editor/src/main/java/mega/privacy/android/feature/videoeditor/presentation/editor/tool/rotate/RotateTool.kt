@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Rotate90DegreesCw
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,7 +34,7 @@ import mega.privacy.android.icon.pack.IconPack
 object RotateTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Rotate
-    override val icon: ImageVector = Icons.Filled.Rotate90DegreesCw
+    override val icon: ImageVector = IconPack.Medium.Thin.Outline.Refresh02
     override val labelRes: Int = sharedR.string.video_editor_tool_rotate
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {

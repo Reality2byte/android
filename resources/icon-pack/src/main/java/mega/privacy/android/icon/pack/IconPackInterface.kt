@@ -156,6 +156,7 @@ interface IconPackInterface {
                 val Copyright: ImageVector
                 val CornerUpRight: ImageVector
                 val Contract: ImageVector
+                val Crop: ImageVector
                 val Database: ImageVector
                 val Devices: ImageVector
                 val Download: ImageVector
@@ -233,9 +234,11 @@ interface IconPackInterface {
                 val PlusCircle: ImageVector
                 val RectangleImageStack: ImageVector
                 val RectangleStackPlus: ImageVector
+                val Refresh02: ImageVector
                 val Rocket: ImageVector
                 val RotateCcw: ImageVector
                 val RotateCw: ImageVector
+                val Scissors: ImageVector
                 val Screenshot: ImageVector
                 val SearchLarge: ImageVector
                 val SearchSmall: ImageVector
@@ -250,6 +253,7 @@ interface IconPackInterface {
                 val SlashCircle: ImageVector
                 val SlidersHorizontal01: ImageVector
                 val SlidersVertical02: ImageVector
+                val Speedometer: ImageVector
                 val Square: ImageVector
                 val Star: ImageVector
                 val Subtitles02: ImageVector

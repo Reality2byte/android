@@ -85,7 +85,7 @@ private fun ToolTabItem(
 ) {
     val highlighted = item.selected || item.applied
     val iconTint = if (highlighted) IconColor.Brand else IconColor.Secondary
-    val labelColor = if (highlighted) TextColor.Primary else TextColor.Secondary
+    val labelColor = if (highlighted) TextColor.Brand else TextColor.Secondary
     Column(
         modifier = modifier.clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -124,14 +124,14 @@ private fun ToolTabBarPreview() {
             items = listOf(
                 ToolTabUiItem(
                     id = "trim",
-                    icon = IconPack.Medium.Thin.Outline.Video,
+                    icon = IconPack.Medium.Thin.Outline.Scissors,
                     label = "Trim",
                     selected = true,
                     applied = false
                 ),
                 ToolTabUiItem(
                     id = "crop",
-                    icon = IconPack.Medium.Thin.Outline.Maximize02,
+                    icon = IconPack.Medium.Thin.Outline.Crop,
                     label = "Crop",
                     selected = false,
                     applied = true

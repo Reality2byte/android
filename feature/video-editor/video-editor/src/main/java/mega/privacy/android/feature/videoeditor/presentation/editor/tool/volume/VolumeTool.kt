@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +30,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.Bui
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.EditorTool
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolAction
 import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.ToolId
+import mega.privacy.android.icon.pack.IconPack
 
 /**
  * Built-in Volume tool. Audio gain is realised at export via a
@@ -44,7 +43,7 @@ import mega.privacy.android.feature.videoeditor.presentation.editor.tool.api.Too
 object VolumeTool : EditorTool {
 
     override val id: ToolId = BuiltInToolIds.Volume
-    override val icon: ImageVector = Icons.AutoMirrored.Filled.VolumeUp
+    override val icon: ImageVector = IconPack.Medium.Thin.Outline.VolumeMax
     override val labelRes: Int = sharedR.string.video_editor_tool_volume
 
     override fun reduce(state: EditorState, action: ToolAction): EditorState {

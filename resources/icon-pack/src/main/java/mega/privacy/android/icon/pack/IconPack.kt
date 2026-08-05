@@ -54,6 +54,7 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineContractIma
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCopy01ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCopyrightImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCornerUpRightImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineCropImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineDatabaseImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineDevicesImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineDownloadImageVector
@@ -129,9 +130,11 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlinePlusCircleI
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlinePlusImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRectangleImageStackImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRectangleStackPlusImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRefresh02ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRocketImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRotateCcwImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineRotateCwImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineScissorsImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineScreenshotImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSearchLargeImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSearchSmallImageVector
@@ -146,6 +149,7 @@ import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineShieldLiteI
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSlashCircleImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSlidersHorizontal01ImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSlidersVertical02ImageVector
+import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSpeedometerImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSquareImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineStarImageVector
 import mega.privacy.android.icon.pack.vectors.createMediumThinOutlineSubtitles02ImageVector
@@ -363,6 +367,8 @@ public object IconPack : IconPackInterface {
                 override val CornerUpRight: ImageVector by
                         lazy { createMediumThinOutlineCornerUpRightImageVector() }
 
+                override val Crop: ImageVector by lazy { createMediumThinOutlineCropImageVector() }
+
                 override val Database: ImageVector by
                         lazy { createMediumThinOutlineDatabaseImageVector() }
 
@@ -577,6 +583,9 @@ public object IconPack : IconPackInterface {
                 override val RectangleStackPlus: ImageVector by
                         lazy { createMediumThinOutlineRectangleStackPlusImageVector() }
 
+                override val Refresh02: ImageVector by
+                        lazy { createMediumThinOutlineRefresh02ImageVector() }
+
                 override val Rocket: ImageVector by
                         lazy { createMediumThinOutlineRocketImageVector() }
 
@@ -585,6 +594,9 @@ public object IconPack : IconPackInterface {
 
                 override val RotateCw: ImageVector by
                         lazy { createMediumThinOutlineRotateCwImageVector() }
+
+                override val Scissors: ImageVector by
+                        lazy { createMediumThinOutlineScissorsImageVector() }
 
                 override val Screenshot: ImageVector by
                         lazy { createMediumThinOutlineScreenshotImageVector() }
@@ -627,6 +639,9 @@ public object IconPack : IconPackInterface {
 
                 override val SlidersVertical02: ImageVector by
                         lazy { createMediumThinOutlineSlidersVertical02ImageVector() }
+
+                override val Speedometer: ImageVector by
+                        lazy { createMediumThinOutlineSpeedometerImageVector() }
 
                 override val Square: ImageVector by
                         lazy { createMediumThinOutlineSquareImageVector() }
