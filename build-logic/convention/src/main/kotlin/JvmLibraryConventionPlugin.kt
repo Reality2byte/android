@@ -1,13 +1,11 @@
 import mega.privacy.android.gradle.configureKotlin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaToolchainService
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.extra
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
  * Conventions for JVM(non-Android) library modules
@@ -33,21 +31,14 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
     }
 }
 
+/**
+ * Pins the Java toolchain so that both `compileJava` and `compileKotlin` target the same
+ * JVM version regardless of the JDK the Gradle daemon happens to run on.
+ */
 private fun Project.setJvmToolChainVersion() {
-    /**
-     * Custom Launcher to set jvmToolchain
-     */
-    val service = extensions.getByType<JavaToolchainService>()
+    val jdk: String by rootProject.extra
 
-    /**
-     * Custom Launcher to set jvmToolchain
-     */
-    val customLauncher = service.launcherFor {
-        val jdk: String by rootProject.extra
-        languageVersion.set(JavaLanguageVersion.of(jdk.toInt()))
-    }
-
-    tasks.withType<KotlinCompile>().configureEach {
-        kotlinJavaToolchain.toolchain.use(customLauncher)
+    extensions.configure<JavaPluginExtension> {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(jdk.toInt()))
     }
 }
