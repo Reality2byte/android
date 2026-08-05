@@ -699,7 +699,7 @@
     <!-- The additional security label in the ads free introduction screen -->
     <string name="payment_ads_free_intro_additional_security_label">MEGA&#160;Pass和MEGA&#160;VPN</string>
     <!-- The additional security description in the ads free introduction screen -->
-    <string name="payment_ads_free_intro_additional_security_description">為檔案和資料夾連結設定密碼和到期日期。</string>
+    <string name="payment_ads_free_intro_additional_security_description">透過我們的密碼管理器與高速VPN，讓您的線上日常更安全、更快速、更輕鬆</string>
     <!-- The button text view pro plan in the ads free introduction screen -->
     <string name="payment_ads_free_intro_button_view_pro_plan">查看Pro方案</string>
     <!-- Label for call option on settings -->
@@ -1257,7 +1257,7 @@
     <!-- Bottom menu option to delete permanently an item from Rubbish Bin -->
     <string name="rubbish_bin_bottom_menu_option_delete">永久刪除</string>
     <!-- option to dispute taken down file or folder -->
-    <string name="dispute_takendown_file">侵權移除申訴</string>
+    <string name="dispute_takendown_file">撤除下架申訴</string>
     <!-- Title of the Dialog to edit the profile attributes of the user’s account -->
     <string name="title_edit_profile_info">編輯</string>
     <!-- Context menu item. Allows user to add file/folder to favourites -->
@@ -2326,7 +2326,7 @@
     <string name="folder_link_guest_banner_title">儲存到您的MEGA雲端空間</string>
     <string name="folder_link_guest_banner_description">請妥善保存此連結。建立免費帳號即可儲存此資料夾並隨時隨地進行存取。</string>
     <string name="folder_link_guest_banner_create_account">建立免費帳戶</string>
-    <string name="folder_link_guest_banner_dismiss_content_description">關閉橫幅</string>
+    <string name="folder_link_guest_banner_dismiss_content_description">忽略橫幅</string>
     <string name="home_configuration_screen_toolbar_title">自訂主畫面</string>
     <string name="home_configuration_screen_toolbar_subtitle">拖曳區塊以重新排序</string>
     <string name="home_configuration_screen_menu_reset_to_default">回復預設</string>
@@ -2418,7 +2418,7 @@
     <string name="home_cwlo_clear_history_dialog_message">確定要清除紀錄嗎？此操作無法復原。</string>
     <string name="search_placeholder_chat">在對話中搜尋</string>
     <string name="search_landing_chat_explorer_subtitle">搜尋通訊錄、對話、會議</string>
-    <string name="home_do_more_with_mega_title">MEGA助您提升生產力</string>
+    <string name="home_do_more_with_mega_title">MEGA常用功能</string>
     <string name="home_do_more_with_mega_add_sync">新增同步</string>
     <string name="home_do_more_with_mega_scan_document">掃描文件</string>
     <string name="home_do_more_with_mega_create_album">建立相簿</string>
@@ -2492,14 +2492,14 @@
     <string name="settings_preference_option_per_folder">每個資料夾</string>
     <string name="settings_preference_option_all_folders">所有都相同</string>
     <string name="add_contacts_mega_contacts_section_title">MEGA聯絡人</string>
-    <string name="create_group_chat_ekr_explanation">加密金鑰輪替略微更安全，但無法建立聊天連結，新參與者不會看到過去的訊息。</string>
+    <string name="create_group_chat_ekr_explanation">加密金鑰輪替可提升安全性，但無法建立對話連結，新加入的與會者無法瀏覽歷史訊息。</string>
     <string name="home_pinned_choose_files_and_folders">選取檔案與資料夾</string>
     <string name="subscription_revamp_title">升級至 MEGA Pro</string>
     <string name="subscription_revamp_why_go_pro_title">為什麼要升級成為 MEGA Pro？</string>
     <string name="subscription_revamp_why_go_pro_transfer">享有高達 %1$s 的傳輸配額</string>
-    <string name="subscription_revamp_why_go_pro_vpn">使用 MEGA VPN，線上更安全</string>
+    <string name="subscription_revamp_why_go_pro_vpn">使用MEGA VPN，保持線上隱私</string>
     <string name="subscription_revamp_why_go_pro_pass">使用 MEGA Pass，讓密碼更安全</string>
-    <string name="subscription_revamp_current_plan_cycle_yearly">每年訂閱</string>
+    <string name="subscription_revamp_current_plan_cycle_yearly">年繳訂閱</string>
     <string name="subscription_revamp_price_per_month">%1$s/月</string>
     <string name="subscription_revamp_charged_yearly">%1$s 按年收費</string>
     <string name="subscription_revamp_get_plan_button">取得 %1$s</string>
@@ -2597,4 +2597,182 @@
     </plurals>
     <string name="add_contacts_unverified_contact_warning">與您共享資訊的某些聯絡人尚未經過您的驗證。為了確保額外的安全性，我們建議您在聯絡人中驗證他們的憑證。點選您要驗證的聯絡人旁邊的三個小圓點，然後點選「資訊」。</string>
     <string name="contacts_qr_scan_action">掃描二維條碼</string>
+    <string name="share_link_access_password_description">只有擁有密碼的人才能開啟連結</string>
+    <string name="share_link_password_copied_snackbar">密碼已複製到剪貼簿</string>
+    <string name="document_scanner_review_title">查看掃描</string>
+    <string name="create_group_chat_link_requires_name_error">輸入群組名稱即可取得對話連結</string>
+    <string name="home_do_more_with_mega_album_created_message">相簿「%1$s」已建立</string>
+    <string name="home_do_more_with_mega_see_album_action">查看相簿</string>
+    <string name="campaign_name_with_discount_up_to">%1$s：最高可享 %2$d%% 折扣</string>
+    <string name="subscription_revamp_price_per_year">%1$s/年</string>
+    <plurals name="subscription_offer_billed_yearly_months">
+        <item quantity="other">前%1$d個月以%2$s計費，之後按年計費%3$s</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_yearly_years">
+        <item quantity="other">前%1$d年以%2$s計費，之後按年計費%3$s</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_months">
+        <item quantity="other">前%1$d個月以%2$s計費，之後收費%3$s</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_years">
+        <item quantity="other">前%1$d年以%2$s計費，之後收費%3$s</item>
+    </plurals>
+    <plurals name="general_share_link_count_title">
+        <item quantity="other">%1$d個連結</item>
+    </plurals>
+    <string name="contacts_qr_already_contact_dialog_body">邀請尚未發送。%1$s已在您的聯絡人列表中。</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_title">QR碼掃描器尚未就緒</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_body">QR碼掃描器仍在下載中。請在幾秒鐘後再試。</string>
+    <string name="share_link_separate_key_title">分開連結與金鑰</string>
+    <string name="share_link_separate_key_subtitle">連結將不包含解密金鑰。請透過不同管道分享金鑰，以提升安全性。</string>
+    <plurals name="share_link_access_banner_description_with_key">
+        <item quantity="other">任何擁有這些連結與金鑰的人，皆可查看並下載您的資料</item>
+    </plurals>
+    <string name="subscription_revamp_current_plan_expiring_badge">即將到期</string>
+    <plurals name="subscription_revamp_current_plan_period_minutes">
+        <item quantity="other">%1$d分鐘</item>
+    </plurals>
+    <string name="general_pro_label">Pro</string>
+    <string name="file_info_information_map_label">地理位置</string>
+    <string name="create_group_chat_image_content_description">群組圖示</string>
+    <string name="create_group_chat_image_take_photo">挑選圖片</string>
+    <string name="create_group_chat_image_choose_from_gallery">從相簿選擇</string>
+    <string name="subscription_quota_storage_almost_full_title">您的空間已使用%1$d%%</string>
+    <string name="subscription_quota_storage_almost_full_subtitle">請在空間用盡前升級您的方案</string>
+    <string name="subscription_quota_storage_over_subtitle">升級您的方案即可獲得更多儲存空間並上傳更多檔案</string>
+    <string name="subscription_quota_transfer_low_title">您的傳輸配額即將用盡</string>
+    <string name="subscription_quota_transfer_percentage_used_title">您已使用%1$d%%的傳輸配額</string>
+    <string name="subscription_quota_transfer_low_download_subtitle">因此，您的下載可能會中斷。請升級您的方案以取得更多傳輸配額。</string>
+    <string name="subscription_quota_transfer_low_streaming_subtitle">因此，媒體播放可能會中斷。請升級您的方案以取得更多傳輸配額。</string>
+    <string name="subscription_quota_transfer_over_download_subtitle">若要繼續下載，請升級您的方案以取得更多傳輸配額。</string>
+    <string name="subscription_quota_transfer_over_streaming_subtitle">若要繼續媒體播放，請升級您的方案以取得更多傳輸配額。</string>
+    <string name="subscription_quota_current_plan_storage_usage">已使用 %1$s / %2$s</string>
+    <string name="subscription_quota_current_plan_transfer_usage">已使用%1$s</string>
+    <string name="subscription_quota_recommended_storage_usage">已使用 %1$s / %2$s</string>
+    <string name="subscription_quota_recommended_transfer_usage">已使用 %1$s / %2$s</string>
+    <string name="subscription_quota_best_for_you">為您推薦</string>
+    <string name="subscription_quota_charged_yearly">按年計費%1$s</string>
+    <string name="subscription_quota_upgrade_button">升級至%1$s</string>
+    <string name="subscription_quota_view_all_plans">查看所有方案</string>
+    <string name="subscription_quota_current_plan_transfer_usage_with_total">已使用 %1$s / %2$s</string>
+    <string name="subscription_quota_storage_over_upload_subtitle">您的儲存空間已用盡。請升級您的方案以繼續上傳</string>
+    <string name="audio_player_podcast_mode_label">Podcast模式</string>
+    <string name="audio_player_music_mode_label">音樂模式</string>
+    <string name="add_contacts_manual_email_placeholder">輸入電子郵件地址</string>
+    <string name="add_contacts_manual_email_add_action">新增電子郵件地址</string>
+    <string name="add_contacts_manual_email_already_added_error">此電子郵件地址已存在</string>
+    <string name="file_type_name_image">圖片</string>
+    <string name="file_type_name_compressed">壓縮</string>
+    <string name="file_type_name_text">文字</string>
+    <string name="file_type_name_vector">向量</string>
+    <string name="file_type_name_mpeg4_video">MPEG-4影片</string>
+    <string name="file_type_name_mp3_audio">MP3音訊</string>
+    <string name="file_type_name_png_image">PNG圖片</string>
+    <string name="file_type_name_jpeg_image">JPEG圖片</string>
+    <string name="file_type_name_gif_image">GIF圖片</string>
+    <string name="file_type_name_heic_image">HEIC圖片</string>
+    <string name="file_type_name_zip_compressed">Zip壓縮檔</string>
+    <string name="file_type_name_pdf_document">PDF文件</string>
+    <string name="file_type_name_raw">Raw圖片</string>
+    <string name="file_type_name_word">Word文件</string>
+    <string name="file_type_name_excel">Excel試算表</string>
+    <string name="file_type_name_spreadsheet">試算表</string>
+    <string name="file_type_name_powerpoint">PowerPoint簡報</string>
+    <string name="file_type_name_keynote">Keynote簡報</string>
+    <string name="file_type_name_numbers">Numbers試算表</string>
+    <string name="file_type_name_pages">Pages文件</string>
+    <string name="file_type_name_openoffice">OpenOffice文件</string>
+    <string name="file_type_name_photoshop">Adobe Photoshop</string>
+    <string name="file_type_name_illustrator">Adobe Illustrator</string>
+    <string name="file_type_name_indesign">Adobe InDesign</string>
+    <string name="file_type_name_premiere">Adobe Premiere</string>
+    <string name="file_type_name_aftereffects">Adobe After Effects</string>
+    <string name="file_type_name_xd">Adobe XD</string>
+    <string name="file_type_name_cad">CAD檔案</string>
+    <string name="file_type_name_font">字型</string>
+    <string name="file_type_name_executable">執行檔</string>
+    <string name="file_type_name_disk_image">磁碟映像檔</string>
+    <string name="file_type_name_torrent">Torrent</string>
+    <string name="file_type_name_three_d">3D檔案</string>
+    <string name="file_type_name_web">網頁檔案</string>
+    <string name="file_type_name_url">網址連結</string>
+    <string name="file_type_name_generic">%1$s檔案</string>
+    <string name="file_type_name_quicktime_video">QuickTime影片</string>
+    <string name="file_type_name_avi_video">AVI影片</string>
+    <string name="file_type_name_mkv_video">MKV影片</string>
+    <string name="file_type_name_wav_audio">WAV音訊</string>
+    <string name="file_type_name_m4a_audio">M4A音訊</string>
+    <string name="file_type_name_webp_image">WebP圖片</string>
+    <string name="file_type_name_rar_compressed">RAR壓縮檔</string>
+    <string name="file_type_name_7zip_compressed">7-Zip壓縮檔</string>
+    <string name="subscription_quota_storage_highest_plan_subtitle">請清理雲端硬碟空間，或至[A]mega.io[/A]管理您的方案以取得更多儲存空間</string>
+    <string name="subscription_quota_transfer_low_download_highest_plan_subtitle">因此，您的下載可能會中斷。請至[A]mega.io[/A]管理您的方案以取得更多傳輸配額</string>
+    <string name="subscription_quota_transfer_low_streaming_highest_plan_subtitle">因此，媒體播放可能會中斷。請至[A]mega.io[/A]管理您的方案以取得更多傳輸配額</string>
+    <string name="subscription_quota_transfer_over_download_highest_plan_subtitle">若要繼續下載，請至[A]mega.io[/A]管理您的方案以取得更多傳輸配額</string>
+    <string name="subscription_quota_transfer_over_streaming_highest_plan_subtitle">若要繼續媒體播放，請至[A]mega.io[/A]管理您的方案以取得更多傳輸配額</string>
+    <string name="subscription_quota_contact_support">聯繫客服</string>
+    <string name="audio_player_playback_speed_title">播放速度</string>
+    <string name="file_info_taken_down_file_warning">此檔案已根據我們的撤除政策下架。</string>
+    <string name="file_info_taken_down_folder_warning">此檔案已根據我們的撤除政策下架。</string>
+    <string name="file_info_taken_down_action">撤除指引政策</string>
+    <string name="share_link_password_protected_label">受密碼保護</string>
+    <string name="contact_info_nickname_dialog_set_button">設定</string>
+    <string name="contact_info_nickname_dialog_hint">暱稱</string>
+    <string name="contact_info_nickname_added">已加入暱稱</string>
+    <string name="contact_info_nickname_removed">已移除暱稱</string>
+    <string name="contact_info_mute_option_until_this_morning">直到今天早上</string>
+    <string name="contact_info_mute_option_until_tomorrow_morning">直到明天早上</string>
+    <string name="contact_info_mute_option_until_turned_back_on">直到手動開啟</string>
+    <string name="contact_info_create_chat_error">建立對話時發生錯誤</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="other">%1$d小時</item>
+    </plurals>
+    <string name="chat_tab_meetings_title">會議</string>
+    <plurals name="contact_info_mute_option_minutes">
+        <item quantity="other">%1$d分鐘</item>
+    </plurals>
+    <string name="contact_info_mute_notifications_dialog_title">關閉對話通知音效</string>
+    <string name="contact_info_remove_contact_dialog_message">與所選聯絡人關聯的所有資料都將永久遺失。</string>
+    <string name="contact_info_remove_contact_dialog_title">要移除聯絡人嗎？</string>
+    <string name="share_link_with_password">連結：%1$s\n\n密碼：%2$s</string>
+    <string name="contact_info_notifications_muted_until">已靜音至%1$s</string>
+    <string name="home_offer_banner_title">%1$s · 現省%2$d%%</string>
+    <string name="home_offer_banner_subtitle">%2$s %1$s/月</string>
+    <string name="home_offer_banner_button">立即搶購</string>
+    <string name="deep_link_content_unavailable_dialog_message">帳戶無法存取您嘗試檢視的內容。</string>
+    <string name="share_link_expires_on">連結有效期限至%1$s</string>
+    <string name="share_link_expired">連結已失效</string>
+    <string name="share_link_password_dialog_title">分享連結密碼</string>
+    <string name="share_link_password_dialog_message">您要一併分享此連結的密碼嗎？</string>
+    <string name="video_editor_crop_free">免費</string>
+    <string name="video_editor_crop_original">原始檔</string>
+    <string name="video_editor_mute_button">靜音</string>
+    <string name="video_editor_unmute_button">取消靜音</string>
+    <string name="video_editor_play_button">播放</string>
+    <string name="video_editor_pause_button">暫停</string>
+    <string name="video_editor_muted_badge">靜音</string>
+    <string name="video_editor_discard_cancel_button">繼續編輯</string>
+    <string name="share_link_upgrade_pro_dialog_title">升級至Pro方案</string>
+    <string name="share_link_upgrade_pro_dialog_message">MEGA Pro方案用戶可以獨享額外的連結安全功能，讓您的帳戶更加安全。</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">查看方案</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">稍後再說</string>
+    <string name="contact_info_send_file">發送檔案至對話中</string>
+    <string name="contact_info_microphone_permission_message">允許存取麥克風以進行加密通話。</string>
+    <string name="settings_customise_navigation_start_screen">開始畫面</string>
+    <string name="tab_received_requests">已接受的邀請</string>
+    <string name="tab_sent_requests">已送出的邀請</string>
+    <string name="received_requests_empty">[B]沒有[/B][A]收到的邀請[/A]</string>
+    <string name="sent_requests_empty">[B]沒有[/B][A]發送的邀請[/A]</string>
+    <string name="contact_accept">接受</string>
+    <string name="contact_ignore">忽略</string>
+    <string name="contact_decline">拒絕</string>
+    <string name="contact_reinvite">重新邀請</string>
+    <string name="invite_contacts_my_qr_code_action">我的二維條碼</string>
+    <string name="invite_contacts_own_email_error">您無須增加個人的電子郵件</string>
+    <string name="invite_contacts_open_camera_confirmation_title">要開啟相機？</string>
+    <string name="invite_contacts_open_camera_confirmation_message">如果您開啟相機，您當前通話的視訊傳輸將被中斷。</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">開啟</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="other">%1$d個聯絡人</item>
+    </plurals>
 </resources>

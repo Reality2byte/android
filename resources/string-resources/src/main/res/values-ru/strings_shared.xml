@@ -2871,4 +2871,56 @@
     </plurals>
     <string name="add_contacts_unverified_contact_warning">Некоторые контакты, с которыми вы делитесь информацией, не были вами подтверждены. Чтобы обеспечить дополнительную безопасность, мы рекомендуем вам подтвердить их учетные данные в «Контактах». Нажмите на три точки рядом с контактом, который хотите подтвердить, затем нажмите «Информация».</string>
     <string name="contacts_qr_scan_action">Сканировать QR-код</string>
+    <string name="share_link_access_password_description">Только люди с паролем могут открыть ссылку</string>
+    <string name="share_link_password_copied_snackbar">Пароль скопирован в буфер обмена</string>
+    <string name="contact_info_nickname_dialog_set_button">Установить</string>
+    <string name="contact_info_nickname_dialog_hint">Псевдоним</string>
+    <string name="contact_info_nickname_added">Псевдоним добавлен</string>
+    <string name="contact_info_nickname_removed">Псевдоним удалён</string>
+    <string name="contact_info_mute_option_until_this_morning">До сегодняшнего утра</string>
+    <string name="contact_info_mute_option_until_tomorrow_morning">До завтрашнего утра</string>
+    <string name="contact_info_mute_option_until_turned_back_on">Пока я не включу их снова</string>
+    <string name="contact_info_create_chat_error">Ошибка. Не удалось создать чат</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="one">%1$d час</item>
+        <item quantity="few">%1$d часа</item>
+        <item quantity="many">%1$d часов</item>
+        <item quantity="other">%1$d часов</item>
+    </plurals>
+    <string name="chat_tab_meetings_title">Встречи</string>
+    <string name="share_link_with_password">Ссылка: %1$s\n\nПароль: %2$s</string>
+    <string name="video_editor_crop_free">Бесплатный</string>
+    <string name="video_editor_crop_original">Исходное</string>
+    <string name="video_editor_mute_button">Приглушить</string>
+    <string name="video_editor_unmute_button">Включить звук</string>
+    <string name="video_editor_play_button">Проиграть</string>
+    <string name="video_editor_pause_button">Пауза</string>
+    <string name="video_editor_muted_badge">Приглушён</string>
+    <string name="video_editor_discard_cancel_button">Продолжить редактирование</string>
+    <string name="share_link_upgrade_pro_dialog_title">Улучшение до Pro</string>
+    <string name="share_link_upgrade_pro_dialog_message">Пользователи MEGA Pro имеют эксклюзивный доступ к дополнительным функциям защиты ссылок, которые делают ваш аккаунт ещё безопаснее.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">Подписки</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">Не сейчас</string>
+    <string name="contact_info_send_file">Отправить файл в чат</string>
+    <string name="contact_info_microphone_permission_message">Разрешите доступ к микрофону для зашифрованных звонков.</string>
+    <string name="settings_customise_navigation_start_screen">Стартовый раздел</string>
+    <string name="tab_received_requests">Полученные запросы</string>
+    <string name="tab_sent_requests">Отправленные запросы</string>
+    <string name="received_requests_empty">[B]Нет [/B][A]полученных запросов[/A]</string>
+    <string name="sent_requests_empty">[B]Нет [/B][A]отправленных запросов[/A]</string>
+    <string name="contact_accept">Принять</string>
+    <string name="contact_ignore">Игнорировать</string>
+    <string name="contact_decline">Отклонить</string>
+    <string name="contact_reinvite">Пригласить заново</string>
+    <string name="invite_contacts_my_qr_code_action">Мой QR-код</string>
+    <string name="invite_contacts_own_email_error">Не нужно добавлять свой собственный адрес электронной почты.</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Открыть камеру?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">Если вы откроете камеру, трансляция видео в текущем звонке будет приостановлена.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Открыть</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d контакт</item>
+        <item quantity="few">%1$d контакта</item>
+        <item quantity="many">%1$d контактов</item>
+        <item quantity="other">%1$d контактов</item>
+    </plurals>
 </resources>

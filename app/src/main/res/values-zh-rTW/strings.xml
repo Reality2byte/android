@@ -928,7 +928,7 @@
     </plurals>
     <!-- title of confirmation alert before removing a contact, Plural -->
     <plurals name="title_confirmation_remove_contact">
-        <item quantity="other">移除聯絡人？</item>
+        <item quantity="other">要移除聯絡人嗎？</item>
     </plurals>
     <!-- option shown when a message could not be sent -->
     <string name="message_option_retry">重試</string>
@@ -1881,7 +1881,7 @@
     <!-- Subtitle of folder takedown historic notification -->
     <string name="subtitle_folder_takedown_notification">[A]您公開共享的資料夾[/A][B]%s[/B]已被移除。</string>
     <!-- option to dispute taken down file or folder -->
-    <string name="dispute_takendown_file">侵權移除申訴</string>
+    <string name="dispute_takendown_file">撤除下架申訴</string>
     <!-- Error shown when download a file that has violated ToS/AUP. -->
     <string name="error_download_takendown_node">因違反我們的服務條款而無法存取</string>
     <!-- Subtitle of a file takedown reinstated historic notification -->
@@ -3717,9 +3717,9 @@
     <!-- Option of a scheduled meeting in meeting list to start the meeting -->
     <string name="meetings_list_start_scheduled_meeting_option">開始</string>
     <!-- Warning shown in Info view, when the file was taken down. The placeholders [A] and [/A] will be replaced to create the hyperlink to our Takedown policy. -->
-    <string name="cloud_drive_info_taken_down_file_warning">根據我們的[A]侵權移除指引政策[/A]，此檔案已被移除。</string>
+    <string name="cloud_drive_info_taken_down_file_warning">根據我們的[A]撤除指引政策[/A]，此檔案已被移除。</string>
     <!-- Warning shown in Info view, when the folder was taken down. The placeholders [A] and [/A] will be replaced to create the hyperlink to our Takedown policy. -->
-    <string name="cloud_drive_info_taken_down_folder_warning">根據我們的[A]侵權移除指引政策[/A]，此資料夾已被移除。</string>
+    <string name="cloud_drive_info_taken_down_folder_warning">根據我們的[A]撤除指引政策[/A]，此資料夾已被移除。</string>
     <!-- Option of a scheduled meeting in meeting list to join the meeting -->
     <string name="meetings_list_join_scheduled_meeting_option">加入</string>
     <!-- Option of a scheduled meeting in chat room to start the meeting -->
@@ -4465,7 +4465,7 @@
     <!-- The Video Quality Option shown in a Dialog in Settings Camera Uploads, indicating that the Videos are automatically uploaded by Camera Uploads without any Video Compression -->
     <string name="settings_camera_uploads_video_quality_dialog_option_original">原始檔</string>
     <!-- Warning shown when the recording of audio permission is required for sending a voice clip and it has been denied by the user -->
-    <string name="chat_microphone_permissions_denied_for_voice_clip">您拒絕MEGA存取您的麥克風。如果您想錄製語音片段，請授予MEGA權限。</string>
+    <string name="chat_microphone_permissions_denied_for_voice_clip">您拒絕MEGA存取您的麥克風。如果您想錄製語音訊息，請授予MEGA權限。</string>
     <!-- Free plan limitation dialog title for scheduled meeting calls with more than 100 participants -->
     <string name="meetings_schedule_meeting_free_plan_100_participants_limit_dialog_title">無法登入</string>
     <!-- Free plan limitation dialogue description for scheduled meeting calls with more than 100 participants -->

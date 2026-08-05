@@ -2760,4 +2760,54 @@
     </plurals>
     <string name="add_contacts_unverified_contact_warning">Unele dintre contactele cu care partajați informații nu au fost confirmate de dvs. Pentru a asigura o securitate suplimentară, vă recomandăm să confirmați acreditările acestora în Contacte. Atingeți cele trei puncte de lângă contactul pe care doriți să îl confirmați și atingeți Informații.</string>
     <string name="contacts_qr_scan_action">Scanează un cod QR</string>
+    <string name="share_link_access_password_description">Doar persoanele cu parola pot deschide linkul</string>
+    <string name="share_link_password_copied_snackbar">Parolă a fost copiată în clipboard</string>
+    <string name="contact_info_nickname_dialog_set_button">Setează</string>
+    <string name="contact_info_nickname_dialog_hint">Pseudonim</string>
+    <string name="contact_info_nickname_added">Pseudonim adăugat</string>
+    <string name="contact_info_nickname_removed">Pseudonim eliminat</string>
+    <string name="contact_info_mute_option_until_this_morning">Până în această dimineață</string>
+    <string name="contact_info_mute_option_until_tomorrow_morning">Până mâine dimineață</string>
+    <string name="contact_info_mute_option_until_turned_back_on">Până când le pornesc înapoi</string>
+    <string name="contact_info_create_chat_error">A apărut o eroare la crearea chatului</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="one">%1$d oră</item>
+        <item quantity="few">%1$d ore</item>
+        <item quantity="other">%1$d de ore</item>
+    </plurals>
+    <string name="chat_tab_meetings_title">Întâlniri</string>
+    <string name="share_link_with_password">Link: %1$s\n\nParolă: %2$s</string>
+    <string name="video_editor_crop_free">Gratuit</string>
+    <string name="video_editor_crop_original">Originală</string>
+    <string name="video_editor_mute_button">Pune pe mut</string>
+    <string name="video_editor_unmute_button">Scoate de pe mut</string>
+    <string name="video_editor_play_button">Redă</string>
+    <string name="video_editor_pause_button">Pune pe pauză</string>
+    <string name="video_editor_muted_badge">Amuțit</string>
+    <string name="video_editor_discard_cancel_button">Continuați să editați</string>
+    <string name="share_link_upgrade_pro_dialog_title">Upgradează la Pro</string>
+    <string name="share_link_upgrade_pro_dialog_message">Utilizatorii MEGA Pro au acces exclusiv la funcții suplimentare de siguranță pentru linkuri, făcând contul și mai securizat.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">Vezi abonamentele</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">Nu acum</string>
+    <string name="contact_info_send_file">Trimite un fișier în chat</string>
+    <string name="contact_info_microphone_permission_message">Permiteți accesul la microfon pentru a efectua apeluri criptate.</string>
+    <string name="settings_customise_navigation_start_screen">Ecran de start</string>
+    <string name="tab_received_requests">Cereri primite</string>
+    <string name="tab_sent_requests">Cereri trimise</string>
+    <string name="received_requests_empty">[B]Nicio [/B][A]cerere primită[/A]</string>
+    <string name="sent_requests_empty">[B]Nicio [/B][A]cerere trimisă[/A]</string>
+    <string name="contact_accept">Acceptați</string>
+    <string name="contact_ignore">Ignoră</string>
+    <string name="contact_decline">Respingeți</string>
+    <string name="contact_reinvite">Reinvitați</string>
+    <string name="invite_contacts_my_qr_code_action">Codul meu QR</string>
+    <string name="invite_contacts_own_email_error">Nu este nevoie să adaugi adresa de e-mail proprie</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Deschizi camera?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">Dacă deschizi camera, transmisia video va fi pusă pe pauză în apelul actual.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Deschide</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="few">%1$d contacte</item>
+        <item quantity="other">%1$d de contacte</item>
+    </plurals>
 </resources>

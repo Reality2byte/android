@@ -725,7 +725,7 @@
     <!-- The additional security label in the ads free introduction screen -->
     <string name="payment_ads_free_intro_additional_security_label">MEGA&#160;Pass et MEGA&#160;VPN</string>
     <!-- The additional security description in the ads free introduction screen -->
-    <string name="payment_ads_free_intro_additional_security_description">Définissez des mots de passe et des dates d’expiration pour les liens de fichier et de dossier.</string>
+    <string name="payment_ads_free_intro_additional_security_description">Rendez votre vie en ligne plus sûre, plus rapide et plus facile grâce à notre gestionnaire de mots de passe et à notre VPN ultra rapide.</string>
     <!-- The button text view pro plan in the ads free introduction screen -->
     <string name="payment_ads_free_intro_button_view_pro_plan">Afficher les abonnements Pro</string>
     <!-- Label for call option on settings -->
@@ -2278,7 +2278,7 @@
     <string name="pdf_viewer_dialog_error_incorrect_password">Mot de passe incorrect</string>
     <string name="text_editor_fast_scroll_line_tooltip">Ligne %1$d</string>
     <string name="select_videos_search_empty_view_description">Rechercher des vidéos dans votre disque Cloud</string>
-    <string name="new_text_file_invalid_extension_error_message">Utilisez une extension de fichier valide (par exemple .txt, .md, or .xml)</string>
+    <string name="new_text_file_invalid_extension_error_message">Utilisez une extension de fichier texte valide (par exemple .txt, .md, or .xml)</string>
     <string name="link_decryption_key_dialog_message">Entrez la clé pour ouvrir ce lien.\nVous ne l\’avez pas&#160;? Contactez le propriétaire du lien.</string>
     <string name="file_info_subtitle_format">%1$s · %2$s</string>
     <string name="label_file_size_petabytes">%s&#160;Po</string>
@@ -2655,7 +2655,7 @@
     <string name="add_contacts_phone_contacts_section_title">Contacts du téléphone</string>
     <string name="create_group_chat_name_hint">Saisissez le nom du groupe</string>
     <string name="create_group_chat_ekr_label">Rotation de la clé de chiffrement</string>
-    <string name="create_group_chat_ekr_explanation">La rotation des clés de chiffrement est légèrement plus sécurisée, mais ne vous permet pas de créer un lien de conversation et les nouveaux participants ne verront pas les messages antérieurs.</string>
+    <string name="create_group_chat_ekr_explanation">La rotation des clés de chiffrement améliore la sécurité, mais ne vous permet pas de créer un lien de conversation, et les nouveaux participants ne verront pas les messages précédents.</string>
     <string name="create_group_chat_settings_title">Nouveau groupe</string>
     <string name="create_group_chat_get_chat_link_label">Obtenir le lien de la conversation</string>
     <string name="create_group_chat_allow_add_participants_label">Permettre aux non-hôtes d’ajouter des participants</string>
@@ -2663,7 +2663,7 @@
     <string name="subscription_revamp_why_go_pro_storage">Stockez jusqu\’à %1$s de données</string>
     <string name="subscription_revamp_why_go_pro_transfer">Profitez d\’un quota de transfert allant jusqu\’à %1$s</string>
     <string name="subscription_revamp_why_go_pro_pass">Protégez vos mots de passe avec MEGA Pass</string>
-    <string name="subscription_revamp_why_go_pro_vpn">Restez en sécurité en ligne avec MEGA VPN</string>
+    <string name="subscription_revamp_why_go_pro_vpn">Restez privé en ligne avec MEGA VPN</string>
     <string name="subscription_revamp_why_go_pro_title">Pourquoi passer à Pro ?</string>
     <string name="subscription_revamp_current_plan_renews">Se renouvelle le %1$s</string>
     <string name="subscription_revamp_current_plan_cycle_yearly">Abonnement annuel</string>
@@ -2676,15 +2676,15 @@
     <string name="add_contacts_phone_contacts_allow_access">Autoriser l\’accès aux contacts</string>
     <string name="add_contacts_phone_contacts_select">Sélectionner les contacts du téléphone</string>
     <string name="add_contacts_mega_contacts_section_title">Contacts MEGA</string>
-    <string name="home_pinned_choose_files_and_folders">Choisir des fichiers et des dossiers</string>
+    <string name="home_pinned_choose_files_and_folders">Choisir des fichiers et dossiers</string>
     <string name="document_scanner_capture_button">Prendre une photo</string>
     <string name="share_link_settings_title">Paramètres de lien</string>
     <string name="share_link_set_expiry_date">Définir une date d’expiration</string>
     <string name="share_link_expiry_subtitle">Désactiver le lien à une date précise</string>
     <string name="share_link_set_password">Définir un mot de passe</string>
     <string name="share_link_password_subtitle">Limiter l’accès avec un mot de passe</string>
-    <string name="document_scanner_auto_capture_label">Automatique</string>
-    <string name="settings_sorting_and_view_mode_title">Tri et mode d’affichage</string>
+    <string name="document_scanner_auto_capture_label">Auto</string>
+    <string name="settings_sorting_and_view_mode_title">Mode de tri et d’affichage</string>
     <string name="settings_sorting_preference_title">Préférence de tri</string>
     <string name="settings_view_mode_preference_title">Préférence du mode d’affichage</string>
     <string name="settings_preference_option_per_folder">Par dossier</string>
@@ -2694,10 +2694,10 @@
     <string name="settings_sorting_preference_description">Appliquer le tri par dossier, ou utiliser le même tri pour tous les dossiers.</string>
     <string name="settings_view_mode_preference_description">Appliquer le mode d\’affichage par dossier, ou utiliser le même mode d\’affichage pour tous les dossiers.</string>
     <string name="password_strength_strong">Le mot de passe est robuste</string>
-    <string name="password_strength_very_weak">Très vulnérable</string>
+    <string name="password_strength_very_weak">Mot de passe très faible</string>
     <string name="password_strength_weak">Le mot de passe est faible</string>
-    <string name="password_strength_medium">Moyenne</string>
-    <string name="password_strength_good">Bon</string>
+    <string name="password_strength_medium">Mot de passe moyen</string>
+    <string name="password_strength_good">Bon mot de passe</string>
     <string name="password_placeholder">Entrer un mot de passe</string>
     <string name="new_chat_title">Nouvelle conversation</string>
     <string name="contacts_qr_invitation_not_sent_dialog_title">L’invitation n’a pas été envoyée</string>
@@ -2760,4 +2760,124 @@
     <string name="contact_info_retention_time_year">1 an</string>
     <string name="add_contacts_unverified_contact_warning">Certains des contacts avec lesquels vous partagez des données n’ont pas été confirmés par vous. Pour renforcer la sécurité, nous vous recommandons de confirmer leur numéro d’identification dans Contacts. Touchez les trois points à côté du contact que vous souhaitez confirmer et touchez Renseignements.</string>
     <string name="contacts_qr_scan_action">Balayer un code QR</string>
+    <string name="share_link_access_password_description">Seules les personnes qui connaissent le mot de passe peuvent ouvrir le lien</string>
+    <string name="share_link_password_copied_snackbar">Le mot de passe a été copié dans le presse-papiers</string>
+    <string name="contact_info_nickname_added">Le pseudonyme a été ajouté</string>
+    <string name="contact_info_nickname_removed">Le pseudonyme a été supprimé</string>
+    <string name="contact_info_nickname_dialog_set_button">Définir</string>
+    <string name="contact_info_nickname_dialog_hint">Pseudonyme</string>
+    <string name="contact_info_mute_option_until_turned_back_on">Jusqu’à ce que je les réactive</string>
+    <string name="contact_info_create_chat_error">Une erreur est survenue en créant la conversation</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="one">%1$d&#160;heure</item>
+        <item quantity="many">%1$d d’heures</item>
+        <item quantity="other">%1$d&#160;heures</item>
+    </plurals>
+    <string name="contact_info_mute_option_until_tomorrow_morning">Jusqu’à demain matin</string>
+    <string name="contact_info_mute_option_until_this_morning">Jusqu’à ce matin</string>
+    <string name="chat_tab_meetings_title">Réunions</string>
+    <string name="share_link_with_password">Lien&#160;: %1$s\n\nMot de passe&#160;: %2$s</string>
+    <string name="subscription_quota_no_connection_retry_button">Réessayer</string>
+    <string name="video_editor_crop_free">Gratuit</string>
+    <string name="video_editor_crop_original">Originale</string>
+    <string name="video_editor_discard_cancel_button">Poursuivre la modification</string>
+    <string name="video_editor_mute_button">Sourdine</string>
+    <string name="video_editor_unmute_button">Désactiver la sourdine</string>
+    <string name="video_editor_play_button">Lire</string>
+    <string name="video_editor_pause_button">Mettre en pause</string>
+    <string name="video_editor_muted_badge">Le micro est désactivé</string>
+    <string name="share_link_upgrade_pro_dialog_title">Souscrire un abonnement Pro</string>
+    <string name="share_link_upgrade_pro_dialog_message">Les utilisateurs de MEGA Pro ont l’accès exclusif à des fonctions supplémentaires de sécurité des liens qui rendent votre compte encore plus sûr.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">Voir les abonnements</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">Pas maintenant</string>
+    <string name="contact_info_send_file">Envoyer un fichier vers la conversation</string>
+    <string name="contact_info_microphone_permission_message">Autorisez l’accès à votre microphone pour faire des appels chiffrés.</string>
+    <string name="settings_customise_navigation_start_screen">Écran de démarrage</string>
+    <string name="document_scanner_review_title">Vérifiez le scan</string>
+    <string name="document_scanner_review_empty">Aucune page scannée pour le moment</string>
+    <string name="document_scanner_review_delete_page">Supprimer la page</string>
+    <string name="document_scanner_review_retake_page">Re-scanner</string>
+    <string name="subscription_revamp_current_plan_upgrade_on_web">Mettez à niveau votre abonnement actuel sur notre [A]page de tarifs[/A]</string>
+    <string name="add_tags_placeholder_label">#Ajouter des étiquettes</string>
+    <string name="subscription_offer_special_offer_badge">Offre spéciale</string>
+    <string name="subscription_offer_get_plan_button">Obtenez %1$s pour %2$s</string>
+    <string name="subscription_offer_countdown_valid_until">valable jusqu\’au %1$s</string>
+    <plurals name="subscription_offer_discount_period_month">
+        <item quantity="one">Prix réduit le premier mois</item>
+        <item quantity="many">Prix réduit pour les %1$d premiers mois</item>
+        <item quantity="other">Prix réduit pour les %1$d premiers mois</item>
+    </plurals>
+    <plurals name="subscription_offer_discount_period_year">
+        <item quantity="one">Prix réduit la première année</item>
+        <item quantity="many">Prix réduit pour les %1$d premières années</item>
+        <item quantity="other">Prix réduit pour les %1$d premières années</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_days">
+        <item quantity="one">Jour</item>
+        <item quantity="many">Jours</item>
+        <item quantity="other">Jours</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_hours">
+        <item quantity="one">Heure</item>
+        <item quantity="many">Heures</item>
+        <item quantity="other">Heures</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_minutes">
+        <item quantity="one">Minute</item>
+        <item quantity="many">Minutes</item>
+        <item quantity="other">Minutes</item>
+    </plurals>
+    <string name="create_group_chat_link_requires_name_error">Entrez le nom du groupe pour obtenir un lien de conversation</string>
+    <string name="home_do_more_with_mega_album_created_message">Album «&#160;%1$s&#160;» créé</string>
+    <string name="home_do_more_with_mega_see_album_action">Voir l\’album</string>
+    <string name="campaign_name_with_discount_up_to">%1$s&#160;: Jusqu\’à %2$d%% de réduction</string>
+    <string name="subscription_revamp_price_per_year">%1$s/an</string>
+    <plurals name="subscription_offer_billed_yearly_months">
+        <item quantity="one">Facturé à %2$s le premier mois, puis facturé à %3$s annuellement après</item>
+        <item quantity="many">Facturé à %2$s les %1$d premiers mois, puis facturé à %3$s annuellement après</item>
+        <item quantity="other">Facturé à %2$s les %1$d premiers mois, puis facturé à %3$s annuellement après</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_yearly_years">
+        <item quantity="one">Facturé à %2$s la première année, puis facturé à %3$s annuellement après</item>
+        <item quantity="many">Facturé à %2$s les %1$d premières années, puis facturé à %3$s annuellement après</item>
+        <item quantity="other">Facturé à %2$s les %1$d premières années, puis facturé à %3$s annuellement après</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_months">
+        <item quantity="one">Facturé à %2$s le premier mois, puis %3$s après</item>
+        <item quantity="many">Facturé à %2$s les %1$d premiers mois, puis %3$s après</item>
+        <item quantity="other">Facturé à %2$s les %1$d premiers mois, puis %3$s après</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_years">
+        <item quantity="one">Facturé à %2$s la première année, puis %3$s après</item>
+        <item quantity="many">Facturé à %2$s les %1$d premières années, puis %3$s après</item>
+        <item quantity="other">Facturé à %2$s les %1$d premières années, puis %3$s après</item>
+    </plurals>
+    <plurals name="general_share_link_count_title">
+        <item quantity="one">%1$d lien</item>
+        <item quantity="many">%1$d liens</item>
+        <item quantity="other">%1$d liens</item>
+    </plurals>
+    <string name="contacts_qr_already_contact_dialog_body">L\’invitation n\’a pas été envoyée. %1$s est déjà dans votre liste de contacts.</string>
+    <string name="tab_received_requests">Demandes reçues</string>
+    <string name="contact_reinvite">Réinviter</string>
+    <string name="sent_requests_empty">[B]Aucune [/B][A]demande envoyée[/A]</string>
+    <string name="contact_accept">Accepter</string>
+    <string name="contact_ignore">Ignorer</string>
+    <string name="contact_decline">Refuser</string>
+    <string name="received_requests_empty">[B]Aucune [/B][A]demande reçue[/A]</string>
+    <string name="tab_sent_requests">Demandes envoyées</string>
+    <string name="file_info_taken_down_file_warning">Ce fichier a été retiré conformément à notre politique de retrait.</string>
+    <string name="file_info_taken_down_folder_warning">Ce dossier a été retiré conformément à notre politique de retrait.</string>
+    <string name="file_info_taken_down_action">Politique directrice sur les retraits</string>
+    <string name="video_player_large_cluster_seek_warning">La recherche dans cette vidéo peut être lente</string>
+    <string name="invite_contacts_my_qr_code_action">Mon code QR</string>
+    <string name="invite_contacts_own_email_error">Il est inutile d’ajouter votre propre adresse courriel</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Ouvrir l’appareil photo ?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">Si vous ouvrez l’appareil photo, votre transmission vidéo sera mise en pause dans l’appel actuel.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Ouvrir</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d&#160;contact</item>
+        <item quantity="many">%1$d de contacts</item>
+        <item quantity="other">%1$d&#160;contacts</item>
+    </plurals>
 </resources>

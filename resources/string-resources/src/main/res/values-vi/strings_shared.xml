@@ -2533,4 +2533,50 @@
     </plurals>
     <string name="add_contacts_unverified_contact_warning">Một số tên liên lạc mà bạn đang chia sẻ thông tin chưa được bạn đã xác thực. Để đảm bảo an toàn hơn, chúng tôi khuyên bạn nên xác thực chứng chỉ đăng nhập của họ trong Sổ Liên Lạc. Nhấn vào ba dấu chấm bên cạnh tên liên lạc bạn muốn xác thực và nhấn vào Thông tin.</string>
     <string name="contacts_qr_scan_action">Quét mã QR</string>
+    <string name="share_link_access_password_description">Chỉ những người có mật khẩu mới có thể mở đường liên kết</string>
+    <string name="share_link_password_copied_snackbar">Mật khẩu đã được ghi vào bảng nhớ tạm</string>
+    <string name="contact_info_nickname_dialog_set_button">Đặt</string>
+    <string name="contact_info_nickname_dialog_hint">Biêt danh</string>
+    <string name="contact_info_nickname_added">Đã thêm biệt danh</string>
+    <string name="contact_info_nickname_removed">Đã xóa biệt danh</string>
+    <string name="contact_info_mute_option_until_this_morning">Cho đến buổi sáng hôm nay</string>
+    <string name="contact_info_mute_option_until_tomorrow_morning">Cho đến buổi sáng ngày mai</string>
+    <string name="contact_info_mute_option_until_turned_back_on">Cho đến khi tôi bật lại</string>
+    <string name="contact_info_create_chat_error">Có lỗi phát&#160;sinh ra trong lúc tạo cuộc chat</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="other">%1$d giờ</item>
+    </plurals>
+    <string name="chat_tab_meetings_title">Họp</string>
+    <string name="share_link_with_password">Liên kết: %1$s\n\nMật khẩu: %2$s</string>
+    <string name="video_editor_crop_free">Miễn phí</string>
+    <string name="video_editor_crop_original">Nguyên gốc</string>
+    <string name="video_editor_mute_button">Tắt tiếng</string>
+    <string name="video_editor_unmute_button">Bỏ tắt tiếng</string>
+    <string name="video_editor_play_button">Phát</string>
+    <string name="video_editor_pause_button">Tạm dừng</string>
+    <string name="video_editor_muted_badge">Đã tắt tiếng</string>
+    <string name="video_editor_discard_cancel_button">Tiếp tục chỉnh sửa</string>
+    <string name="share_link_upgrade_pro_dialog_title">Nâng cấp lên Pro</string>
+    <string name="share_link_upgrade_pro_dialog_message">Hạng MEGA Pro có truy cập độc quyền vào các tính năng an toàn bổ sung cho liên kết, giúp tài khoản được an toàn hơn nữa.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">Xem các gói thuê bao</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">Không&#160;phải lúc&#160;này</string>
+    <string name="contact_info_send_file">Gửi tệp tin vào cuộc chat</string>
+    <string name="contact_info_microphone_permission_message">Cho phép ứng dụng sử dụng micrô của điện&#160;thoại để thực hiện cuộc gọi khi bạn yêu&#160;cầu.</string>
+    <string name="settings_customise_navigation_start_screen">Màn hình khởi đầu</string>
+    <string name="tab_received_requests">Yêu cầu đã nhận</string>
+    <string name="tab_sent_requests">Yêu cầu gửi đi</string>
+    <string name="received_requests_empty">[B]Không có [/B][A]yêu cầu được nhận nào[/A]</string>
+    <string name="sent_requests_empty">[B]Không có [/B][A]yêu cầu gửi đi nào[/A]</string>
+    <string name="contact_accept">Chấp nhận</string>
+    <string name="contact_ignore">Bỏ qua</string>
+    <string name="contact_decline">Từ chối</string>
+    <string name="contact_reinvite">Mời lại</string>
+    <string name="invite_contacts_my_qr_code_action">Mã QR của TK</string>
+    <string name="invite_contacts_own_email_error">Không cần phải nhập chính e-mail của mình vào sổ liên lạc</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Bật máy ảnh?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">Nếu bạn bật camêra, cuộc gọi video hiện tại sẽ bị gián đoạn.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Mở</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="other">%1$d tên liên lạc</item>
+    </plurals>
 </resources>

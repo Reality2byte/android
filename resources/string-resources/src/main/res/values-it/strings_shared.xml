@@ -55,7 +55,7 @@
     <!-- The name of the Device or Folder Sub State when its code is INSUFFICIENT_DISK_SPACE -->
     <string name="general_sync_insufficient_disk_space">Spazio di archiviazione insufficiente sul tuo dispositivo</string>
     <!-- The name for specific Sub States to indicate that an unknown error occurred -->
-    <string name="general_sync_message_unknown_error">Si è verificato un errore sconosciuto. Contatta support&#64;mega.io.</string>
+    <string name="general_sync_message_unknown_error">Si è verificato un errore sconosciuto. Contatta il supporto su https://mega.nz/support</string>
     <!-- The name for specific Sub States to indicate that the Node is in the Rubbish Bin -->
     <string name="general_sync_message_node_in_rubbish_bin">La cartella non può essere sincronizzata o effettuare il backup in quanto la cartella corrispettiva su MEGA è nel Cestino</string>
     <!-- The name for specific Sub States to indicate that the local drive cannot be located at this time -->
@@ -417,7 +417,7 @@
     <!-- Step 4: instruction step no.4 Tap Cancel subscription on the account from the MEGA website from the mobile device-->
     <string name="account_cancellation_instructions_tap_cancel_subscription">4. Toccare [A]Annulla abbonamento[/A].</string>
     <!-- Text to show in the Android Sync feature for a No Network State when there is no network connectivity -->
-    <string name="sync_no_network_state">Nessuna connessione a Internet</string>
+    <string name="sync_no_network_state">Nessuna connessione Internet</string>
     <!-- Create new folder dialog hint text (input field description) -->
     <string name="create_new_folder_dialog_hint_text">Nome cartella</string>
     <!-- Dialog cancel option -->
@@ -725,7 +725,7 @@
     <!-- The additional security label in the ads free introduction screen -->
     <string name="payment_ads_free_intro_additional_security_label">MEGA&#160;Pass e MEGA&#160;VPN</string>
     <!-- The additional security description in the ads free introduction screen -->
-    <string name="payment_ads_free_intro_additional_security_description">Rendi la tua vita online più sicura, veloce, e facile con il nostro gestore di password e la nostra VPN</string>
+    <string name="payment_ads_free_intro_additional_security_description">Rendi la tua vita online più sicura, veloce, e facile con il nostro gestore di password e la nostra VPN ad alta velocità</string>
     <!-- The button text view pro plan in the ads free introduction screen -->
     <string name="payment_ads_free_intro_button_view_pro_plan">Vedi i piani Pro</string>
     <!-- Label for call option on settings -->
@@ -781,7 +781,7 @@
     <!-- The Scan Confirmation screen error message shown when the filename has no file extension -->
     <string name="document_scanning_settings_file_extension_required_error_message">L\’estensione del file è necessaria</string>
     <!-- Alert text before download a big file for preview. Please do not modify the %s placeholder as it will be replaced by the size to be donwloaded -->
-    <string name="alert_larger_file_preview">MEGA recupererà una copia temporanea di questo file in modo da poterlo visualizzare in anteprima. Non sarà salvato o disponibile all\’esterno dell\’app. %1$s verrà scaricato.</string>
+    <string name="alert_larger_file_preview">Non è possibile visualizzare un\’anteprima di questo file in MEGA. Scarica il file (%1$s) o aprilo con un\’altra app.</string>
     <!-- Message displayed with progress percentage while the app is doing some background operation -->
     <string name="login_completing_operation">Completamento dell\’operazione: %1$d%%</string>
     <!-- Add to album files existed message -->
@@ -1245,7 +1245,7 @@
     <!-- The camera uploads notification action text to allow mobile data-->
     <string name="camera_uploads_notification_action_allow_mobile_data">Attiva connessione dati</string>
     <!-- Alert title before download a big file for preview. -->
-    <string name="alert_larger_file_preview_title">Anteprima di file di grandi dimensioni</string>
+    <string name="alert_larger_file_preview_title">Anteprima non disponibile</string>
     <!-- Alert confirm button before download a big file for preview -->
     <string name="alert_larger_file_preview_confirm_button">Visualizza ora l\’anteprima</string>
     <!-- Alert always allow button before download a big file for preview -->
@@ -2388,7 +2388,7 @@
     <string name="pdf_viewer_dialog_error_incorrect_password">Password errata</string>
     <string name="text_editor_fast_scroll_line_tooltip">Rigo %1$d</string>
     <string name="select_videos_search_empty_view_description">Cerca video nel tuo Cloud drive</string>
-    <string name="new_text_file_invalid_extension_error_message">Utilizza un\’estensione file valida (es.: .txt, .md o .xml)</string>
+    <string name="new_text_file_invalid_extension_error_message">Utilizza un\’estensione valida per il file testuale (es.: .txt, .md o .xml)</string>
     <string name="link_decryption_key_dialog_message">Inserisci la chiave per aprire questo link.\nNon ce l\’hai? Contatta il proprietario del link.</string>
     <string name="file_info_subtitle_format">%1$s · %2$s</string>
     <string name="label_file_size_petabytes">%s&#160;PB</string>
@@ -2413,8 +2413,8 @@
     <string name="rewarded_ad_dialog_watch_ad_button">Guarda la pubblicità</string>
     <string name="rewarded_ad_dialog_upgrade_subtitle">Oppure passa a un piano Pro per un accesso immediato senza annunci</string>
     <string name="rewarded_ad_dialog_pro_card_title">MEGA Pro</string>
-    <string name="rewarded_ad_dialog_perk_unlimited_downloads">Download illimitati, Salta la pubblicità</string>
-    <string name="rewarded_ad_dialog_perk_storage">Fino a 20 TB di spazio di archiviazione crittografato</string>
+    <string name="rewarded_ad_dialog_perk_unlimited_downloads">Download illimitati, salta la pubblicità</string>
+    <string name="rewarded_ad_dialog_perk_storage">Fino a 20TB di spazio di archiviazione criptografato</string>
     <string name="rewarded_ad_dialog_perk_transfer_speed">Velocità di trasferimento prioritario</string>
     <string name="rewarded_ad_dialog_perk_pass_vpn">MEGA Pass e MEGA VPN inclusi</string>
     <string name="rewarded_ad_unavailable_toast">La pubblicità non è disponibile! Proseguo&#8230;</string>
@@ -2426,7 +2426,7 @@
     <string name="sync_label_this_device">questo dispositivo</string>
     <string name="sync_label_camera_uploads">Caricamenti da fotocamera</string>
     <string name="sync_label_media_uploads">Caricamenti dei media</string>
-    <string name="home_recents_bucket_subtitle_added_to">Aggiunto a %s</string>
+    <string name="home_recents_bucket_subtitle_added_to">Aggiunti a %s</string>
     <string name="general_skip">Salta</string>
     <string name="unlock_pin_title">Inserisci il codice</string>
     <string name="settings_passcode_lock">Codice di accesso</string>
@@ -2443,26 +2443,26 @@
     <string name="unlock_pin_title_2">Reinserisci il codice</string>
     <string name="home_widget_viewed_links_section_header">Collegamenti visualizzati</string>
     <string name="open_link_dialog_description">Incolla un link MEGA qualsiasi per aprirlo</string>
-    <string name="home_cwlo_clear_history">Elimina la cronologia di \’Continua da dove hai lasciato\’</string>
+    <string name="home_cwlo_clear_history">Elimina la cronologia di “Continua da dove hai lasciato”</string>
     <string name="home_widget_continue_where_left_off">Continua da dove hai lasciato</string>
     <string name="setting_biometric_id">Identità biometrica</string>
     <string name="title_enable_biometrics">Conferma le tue informazioni biometriche per sbloccare</string>
     <string name="confirmation_biometric_enabled">Le tue informazioni biometriche sono state confermate</string>
     <string name="title_unlock_biometric">Sblocca utilizzando le tue informazioni biometriche</string>
-    <string name="rewarded_ad_dialog_perk_ad_free_downloads">Download privi di annunci</string>
-    <string name="video_player_subtitle_bottom_sheet_add_subtitle_option">Aggiungi sottotitolo da Cloud Drive</string>
+    <string name="rewarded_ad_dialog_perk_ad_free_downloads">Download senza annunci</string>
+    <string name="video_player_subtitle_bottom_sheet_add_subtitle_option">Aggiungi sottotitoli dal Cloud drive</string>
     <string name="settings_transfer_connections_title">Connessioni per il trasferimento</string>
     <string name="settings_transfer_connections_text">Definisce il numero di connessioni parallele per il trasferimento di file. Valori più elevati possono migliorare la velocità ma aumentano il consumo di batteria e dati.</string>
     <string name="settings_transfer_download_connections">Connessioni di download</string>
-    <string name="settings_transfer_upload_connections">Connessioni di caricamento</string>
+    <string name="settings_transfer_upload_connections">Connessioni di upload</string>
     <string name="settings_transfer_connections_slow_networs">%1$d (Il migliore per reti lente)</string>
     <string name="settings_transfer_connections_default">%1$d (Predefinito)</string>
     <string name="settings_transfer_connections_higher_usage">%1$d (Aumenta il consumo di batteria e dati)</string>
     <string name="public_link_auth_alert_title_folder">Salva questa cartella nel tuo account MEGA</string>
     <string name="public_link_auth_alert_title_link">Salva questo link nel tuo account MEGA</string>
     <string name="public_link_auth_alert_title_album">Salva questo album nel tuo account MEGA</string>
-    <string name="public_link_auth_alert_description_default">Accedi in qualsiasi momento, da qualsiasi dispositivo.\nNon è necessario conservare nuovamente il link o scaricare i file.</string>
-    <string name="public_link_auth_alert_description_album">Mantieni queste foto al sicuro e accedile in qualsiasi momento</string>
+    <string name="public_link_auth_alert_description_default">Accedi in qualsiasi momento, da qualsiasi dispositivo.\nNon è necessario conservare il link o scaricare nuovamente i file.</string>
+    <string name="public_link_auth_alert_description_album">Mantieni queste foto al sicuro e accedi a loro in qualsiasi momento</string>
     <string name="public_link_auth_alert_title_file">Salva questo file nel tuo account MEGA</string>
     <string name="offline_status">Offline</string>
     <string name="online_status">Online</string>
@@ -2478,7 +2478,7 @@
     <string name="home_configuration_widget_my_account_widget_name">Account</string>
     <string name="general_new_group_chat">Nuova chat di gruppo</string>
     <string name="general_new_group_chat_created">Nuova chat di gruppo creata</string>
-    <string name="favourites_empty_screen_description">Aggiungi file e cartelle ai Preferiti per vederli qui</string>
+    <string name="favourites_empty_screen_description">Aggiungi file e cartelle ai Preferiti per vederli da qui</string>
     <string name="node_sort_option_last_accessed_label">Data</string>
     <string name="general_view_button">Vedi</string>
     <string name="scan_dialog_discard_all_confirmation_title">Scartare tutte le scansioni?</string>
@@ -2488,7 +2488,7 @@
     <string name="scan_dialog_discard_confirmation_body">La scansione corrente verrà persa</string>
     <string name="general_file_name">Nome del file</string>
     <string name="general_error_invalid_name">Nome non valido</string>
-    <string name="file_link_subtitle">Link File</string>
+    <string name="file_link_subtitle">Link del file</string>
     <string name="or_divider">o</string>
     <string name="error_file_not_supported_title">File non supportato</string>
     <string name="home_configuration_widget_shortcuts_widget_name">Scorciatoie</string>
@@ -2501,12 +2501,12 @@
         <item quantity="other">Rimuovere i link visualizzati?</item>
     </plurals>
     <string name="google_sign_in">Accedi con Google</string>
-    <string name="google_sign_in_failed">L\’accesso tramite Google non è riuscito. Per favore riprova.</string>
+    <string name="google_sign_in_failed">L\’accesso tramite Google non è riuscito. Per favore, riprova.</string>
     <string name="google_sign_in_email_exists">Hai già un account con questa email. Accedi con la tua password.</string>
     <string name="favourite_folders_empty_screen_description">Aggiungi cartelle ai Preferiti per vederle qui</string>
     <string name="general_chat_sent_as_message">Inviato come messaggio</string>
-    <string name="video_player_subtitles_empty_hint_description">Carica i sottotitoli in formato SRT sul tuo Cloud Drive</string>
-    <string name="video_player_subtitles_add_subtitles_button">Aggiungi sottotitolo</string>
+    <string name="video_player_subtitles_empty_hint_description">Carica i sottotitoli in formato SRT sul tuo Cloud drive</string>
+    <string name="video_player_subtitles_add_subtitles_button">Aggiungi sottotitoli</string>
     <string name="home_cwlo_empty_state">Gli elementi che hai lasciato incompleti appariranno qui</string>
     <string name="home_widget_viewed_links_clear_history">Svuota la cronologia dei collegamenti visualizzati</string>
     <string name="home_widget_viewed_links_clear_history_dialog_message">Sei sicuro di voler cancellare tutta la cronologia dei collegamenti visualizzati? Questo non può essere annullato.</string>
@@ -2516,12 +2516,12 @@
     <string name="general_new_link">Nuovo link</string>
     <string name="general_error_incorrect_name">Correggi il nome del file prima di procedere</string>
     <string name="general_destination">Destinazione</string>
-    <string name="video_player_more_options_pip_option">Immagine in immagine</string>
+    <string name="video_player_more_options_pip_option">Picture-in-picture</string>
     <string name="folder_link_guest_banner_title">Salva nel tuo cloud MEGA</string>
     <string name="folder_link_guest_banner_description">Non perdere questo link. Crea un account gratuito per salvare questa cartella e accedervi in qualsiasi momento.</string>
     <string name="folder_link_guest_banner_create_account">Crea un account gratuito</string>
     <string name="folder_link_guest_banner_dismiss_content_description">Chiudi banner</string>
-    <string name="home_configuration_tooltip_description">Scegli cosa vedere e organizza questo per adattarlo alle tue esigenze</string>
+    <string name="home_configuration_tooltip_description">Scegli cosa vedere e organizzala per adattarla alle tue esigenze</string>
     <string name="home_configuration_tooltip_action">Esplora</string>
     <string name="error_fail_to_play_video_title">Impossibile riprodurre il video</string>
     <string name="error_fail_to_play_video_message">Mi dispiace. Qualcosa è andato storto e non siamo in grado di aprire il file.</string>
@@ -2537,7 +2537,7 @@
     </plurals>
     <string name="home_configuration_screen_toolbar_title">Personalizza la Home</string>
     <string name="home_configuration_screen_toolbar_subtitle">Trascina le sezioni per riordinarle</string>
-    <string name="home_configuration_screen_menu_reset_to_default">Ripristina predefinito</string>
+    <string name="home_configuration_screen_menu_reset_to_default">Ripristina visualizzazione predefinita</string>
     <string name="home_configuration_screen_menu_choose_default_start_screen">Scegli la schermata iniziale predefinita</string>
     <string name="name_collision_choose_folder_header">Seleziona la cartella che vuoi conservare</string>
     <string name="name_collision_folder_warning_upload_and_rename">La cartella che stai caricando verrà rinominata in:</string>
@@ -2545,9 +2545,9 @@
     <string name="file_link_unavaible_ToS_violation">Il link del file è stato rimosso in quanto violava i nostri Termini di servizio.</string>
     <string name="cloud_drive_inactivity_banner_title">Il tuo account è rimasto inattivo per troppo a lungo</string>
     <plurals name="cloud_drive_inactivity_banner_message">
-        <item quantity="one">Dato che non effettui l\’acceso da più di %1$d mese, i tuoi file sono stati rimossi come da nostra politica riguardo l’inattività</item>
-        <item quantity="many">Dato che non effettui l\’acceso da più di %1$d di mesi, i tuoi file sono stati rimossi come da nostra politica riguardo l’inattività</item>
-        <item quantity="other">Dato che non effettui l\’acceso da più di %1$d mesi, i tuoi file sono stati rimossi come da nostra politica riguardo l’inattività</item>
+        <item quantity="one">Dato che non effettui l\’acceso da più di %1$d mese, i tuoi file sono stati rimossi in base alla nostra Politica sull\’inattività</item>
+        <item quantity="many">Dato che non effettui l\’acceso da più di %1$d di mesi, i tuoi file sono stati rimossi in base alla nostra Politica sull\’inattività</item>
+        <item quantity="other">Dato che non effettui l\’acceso da più di %1$d mesi, i tuoi file sono stati rimossi in base alla nostra Politica sull\’inattività</item>
     </plurals>
     <string name="contacts_section_requests">Richieste</string>
     <string name="contacts_action_send_message">Invia messaggio</string>
@@ -2577,19 +2577,19 @@
     <string name="notifications_payment_info_section">Informazioni di pagamento</string>
     <plurals name="general_selection_num_selected">
         <item quantity="one">%1$d selezionato</item>
-        <item quantity="many"></item>
-        <item quantity="other">%1$d selezionato</item>
+        <item quantity="many">%1$d selezionati</item>
+        <item quantity="other">%1$d selezionati</item>
     </plurals>
     <string name="contacts_groups_empty_title">Nessun gruppo</string>
-    <string name="public_link_auth_alert_description_external_file">Mantieni questo file al sicuro e accedi a esso in qualsiasi momento.</string>
+    <string name="public_link_auth_alert_description_external_file">Mantieni questo file al sicuro e accedi a esso in qualsiasi momento</string>
     <plurals name="notifications_history_updated_items_subtitle">
-        <item quantity="one">[A]%1$s [/A][B]aggiornato %2$d elemento.[/B]</item>
-        <item quantity="many"></item>
-        <item quantity="other">[A]%1$s [/A][B]aggiornati %2$d elementi.[/B]</item>
+        <item quantity="one">[A]%1$s [/A][B]ha aggiornato %2$d elemento.[/B]</item>
+        <item quantity="many">[A]%1$s [/A][B]ha aggiornato %2$d di elementi.[/B]</item>
+        <item quantity="other">[A]%1$s [/A][B]ha aggiornato %2$d elementi.[/B]</item>
     </plurals>
     <string name="home_cwlo_clear_history_dialog_title">Cancella cronologia</string>
-    <string name="home_cwlo_clear_history_dialog_message">Se sei sicuro di voler eliminare la tua cronologia? Questo non può essere annullato.</string>
-    <string name="search_placeholder_chat">Cerca nella chat</string>
+    <string name="home_cwlo_clear_history_dialog_message">Vuoi veramente eliminare la tua cronologia? Questo non può essere annullato.</string>
+    <string name="search_placeholder_chat">Cerca nelle chat</string>
     <string name="search_landing_chat_explorer_subtitle">Cerca contatti, chat e riunioni</string>
     <string name="home_do_more_with_mega_scan_document">Scansiona documento</string>
     <string name="notifications_payment_reminder_section">Il piano Pro sta per scadere</string>
@@ -2598,15 +2598,15 @@
     <string name="notifications_payment_reminder_expired_section">Il piano Pro è scaduto</string>
     <plurals name="notifications_payment_reminder_will_expire">
         <item quantity="one">Il tuo piano Pro scade tra %1$d giorno</item>
-        <item quantity="many"></item>
+        <item quantity="many">Il tuo piano Pro scade tra %1$d di giorni</item>
         <item quantity="other">Il tuo piano Pro scade tra %1$d giorni</item>
     </plurals>
     <plurals name="notifications_payment_reminder_expired">
         <item quantity="one">Il tuo piano Pro è scaduto %1$d giorno fa</item>
-        <item quantity="many"></item>
+        <item quantity="many">Il tuo piano Pro è scaduto %1$d di giorni fa</item>
         <item quantity="other">Il tuo piano Pro è scaduto %1$d giorni fa</item>
     </plurals>
-    <string name="chat_settings_link_preview_summary">Genera un\’anteprima dei link che invii nella chat. Nota che il recupero di queste anteprime non è protetto dalla criptografia a conoscenza zero.</string>
+    <string name="chat_settings_link_preview_summary">Genera un\’anteprima dei link che invii nella chat. Ricorda che il recupero di queste anteprime non è protetto dalla criptografia a conoscenza zero.</string>
     <string name="video_player_video_not_rendered">Questo video non può essere visualizzato</string>
     <string name="document_scanner_download_dialog_download_button">Scarica</string>
     <string name="add_participants_title">Aggiungi partecipanti</string>
@@ -2646,25 +2646,25 @@
     <string name="settings_view_mode_preference_title">Preferenze modalità di visualizzazione</string>
     <string name="settings_preference_option_per_folder">Per cartella</string>
     <string name="settings_preference_option_all_folders">Stessa per tutte</string>
-    <string name="park_account_screen_title">Resetta account</string>
-    <string name="park_account_screen_acknowledge">Sono a conoscenza del fatto che sto iniziando un nuovo, vuoto account e che perderò tutti i dati nel mio account finché non userò la mia password o una copia della mia Chiave di recupero.</string>
-    <string name="park_account_screen_start_button">Inizia un nuovo account</string>
+    <string name="park_account_screen_title">Parcheggia account</string>
+    <string name="park_account_screen_acknowledge">Sono a conoscenza del fatto che sto creando un nuovo account vuoto e che perderò tutti i dati nel mio account attuale finché non ritroverò la mia password o una copia della mia Chiave di recupero.</string>
+    <string name="park_account_screen_start_button">Crea un nuovo account</string>
     <string name="park_account_success_message">Il tuo vecchio account è stato sospeso. Ora puoi accedere al tuo nuovo account.</string>
-    <string name="add_contacts_mega_contacts_section_title">MEGA contatti</string>
-    <string name="document_scanner_prepare_waiting_for_connection">In attesa di connessione. Il download riprende automaticamente non appena torni online.</string>
-    <string name="create_group_chat_ekr_explanation">La rotazione delle chiavi di cifratura è leggermente più sicura, ma non ti permette di creare un link di chat e i nuovi partecipanti non vedranno i messaggi passati.</string>
+    <string name="add_contacts_mega_contacts_section_title">Contatti MEGA</string>
+    <string name="document_scanner_prepare_waiting_for_connection">In attesa di connessione. Il download riprenderà automaticamente non appena torni online.</string>
+    <string name="create_group_chat_ekr_explanation">La rotazione delle chiavi di cifratura è leggermente più sicura, ma non ti permette di creare un link della chat e i nuovi partecipanti non vedranno i messaggi precedenti.</string>
     <string name="home_pinned_choose_files_and_folders">Scegli file e cartelle</string>
-    <string name="subscription_revamp_title">Aggiorna a MEGA Pro</string>
+    <string name="subscription_revamp_title">Effettua l\’upgrade a MEGA Pro</string>
     <string name="subscription_revamp_why_go_pro_title">Perché passare a Pro?</string>
-    <string name="subscription_revamp_why_go_pro_transfer">Goditi fino a %1$s quota di trasferimento</string>
+    <string name="subscription_revamp_why_go_pro_transfer">Goditi fino a %1$s di banda di trasferimento</string>
     <string name="subscription_revamp_why_go_pro_vpn">Rimani al sicuro online con MEGA VPN</string>
     <string name="subscription_revamp_why_go_pro_pass">Mantieni le password al sicuro con MEGA Pass</string>
     <string name="subscription_revamp_current_plan_cycle_yearly">Abbonamento annuale</string>
     <string name="subscription_revamp_price_per_month">%1$s/mese</string>
-    <string name="subscription_revamp_charged_yearly">%1$s addebitato annualmente</string>
+    <string name="subscription_revamp_charged_yearly">%1$s fatturato annualmente</string>
     <string name="subscription_revamp_get_plan_button">Ottieni %1$s</string>
-    <string name="email_confirmation_resend_button_countdown">Rinvia l\’email in %1$s</string>
-    <string name="document_scanner_auto_capture_on">Acquisizione automatica attiva</string>
+    <string name="email_confirmation_resend_button_countdown">Invia nuovamente l\’email tra %1$s</string>
+    <string name="document_scanner_auto_capture_on">Acquisizione automatica attivata</string>
     <string name="document_scanner_auto_capture_off">Acquisizione automatica disattivata</string>
     <string name="document_scanner_prepare_title">Configurazione dello scanner di documenti</string>
     <string name="document_scanner_prepare_message">Questo accade solo una volta. Puoi continuare a usare il tuo dispositivo mentre effettua il download.</string>
@@ -2673,19 +2673,19 @@
     <string name="document_scanner_prepare_error_permanent_message">Puoi utilizzare lo scanner vecchio.</string>
     <string name="settings_sorting_preference_description">Applica l\’ordinamento per cartella, oppure usa lo stesso ordinamento per tutte le cartelle.</string>
     <string name="settings_view_mode_preference_description">Applica la modalità di visualizzazione per cartella, oppure usa la stessa modalità di visualizzazione per tutte le cartelle.</string>
-    <string name="meetings_add_participants_user_limit_warning">Questa chiamata è limitata a 100 partecipanti. Chiunque superi tale limite può solo chattare. L\’organizzatore può aggiornare a Pro per rimuovere questo limite.</string>
+    <string name="meetings_add_participants_user_limit_warning">Questa chiamata è limitata a 100 partecipanti. Chiunque superi tale limite può solo chattare. L\’organizzatore può effettuare l\’upgrade a Pro per rimuovere questo limite.</string>
     <string name="add_contacts_phone_contacts_allow_access">Consenti l\’accesso ai contatti</string>
     <string name="add_contacts_phone_contacts_select">Seleziona i contatti del telefono</string>
     <string name="document_scanner_download_dialog_title">Scarica lo scanner di documenti</string>
-    <string name="document_scanner_download_dialog_message">Il nuovo scanner di documenti richiede un download una tantum di %1$d MB prima di poterlo utilizzare.</string>
+    <string name="document_scanner_download_dialog_message">Il nuovo scanner di documenti richiede un download una tantum di %1$dMB prima di poterlo utilizzare.</string>
     <string name="document_scanner_download_dialog_mobile_data_title">Scaricare tramite dati mobili?</string>
-    <string name="document_scanner_download_dialog_mobile_data_message">Il nuovo scanner di documenti richiede un download una tantum di %1$d MB. Potrebbero applicarsi tariffe per i dati mobili.</string>
+    <string name="document_scanner_download_dialog_mobile_data_message">Il nuovo scanner di documenti richiede un download una tantum di %1$dMB. Potrebbero applicarsi tariffe per i dati mobili.</string>
     <string name="document_scanner_download_dialog_download_over_mobile_data_button">Scarica tramite dati mobili</string>
-    <string name="document_scanner_download_dialog_use_old_scanner_button">Usa lo scanner vecchio.</string>
-    <string name="password_strength_very_weak">Molto debole</string>
+    <string name="document_scanner_download_dialog_use_old_scanner_button">Usa lo scanner vecchio</string>
+    <string name="password_strength_very_weak">Password molto debole</string>
     <string name="password_strength_weak">Password debole</string>
-    <string name="password_strength_medium">Media</string>
-    <string name="password_strength_good">Buono</string>
+    <string name="password_strength_medium">Password media</string>
+    <string name="password_strength_good">Password buona</string>
     <string name="password_strength_strong">Password sicura</string>
     <string name="password_placeholder">Inserisci la password</string>
     <string name="new_chat_title">Nuova chat</string>
@@ -2749,4 +2749,279 @@
     <string name="contact_info_retention_time_year">1 anno</string>
     <string name="add_contacts_unverified_contact_warning">Alcuni dei contatti con cui stai condividendo informazioni non sono stati verificati da te. Per aumentare la sicurezza, ti raccomandiamo di verificare le loro credenziali in Contatti. Tocca sui tre pallini affianco il contatto che vuoi verificare e poi tocca su Info.</string>
     <string name="contacts_qr_scan_action">Scansiona il codice QR</string>
+    <string name="share_link_access_password_description">Solo le persone con la password possono aprire il link</string>
+    <string name="share_link_password_copied_snackbar">Password copiata negli appunti</string>
+    <string name="document_scanner_review_title">Controlla la scansione</string>
+    <string name="document_scanner_review_empty">Nessuna pagina scansionata</string>
+    <string name="document_scanner_review_delete_page">Elimina pagina</string>
+    <string name="document_scanner_review_retake_page">Scatta di nuovo</string>
+    <string name="subscription_revamp_current_plan_upgrade_on_web">Effettua l\’upgrade del tuo abbonamento sulla nostra [A]pagina dei prezzi[/A]</string>
+    <string name="add_tags_placeholder_label">#Aggiungi tag</string>
+    <string name="subscription_offer_special_offer_badge">Offerta speciale</string>
+    <string name="subscription_offer_get_plan_button">Ottieni %1$s a %2$s</string>
+    <string name="subscription_offer_countdown_valid_until">valida fino al %1$s</string>
+    <plurals name="subscription_offer_discount_period_month">
+        <item quantity="one">Prezzo scontato per il primo mese</item>
+        <item quantity="many">Prezzo scontato per %1$d di mesi</item>
+        <item quantity="other">Prezzo scontato per i primi %1$d mesi</item>
+    </plurals>
+    <plurals name="subscription_offer_discount_period_year">
+        <item quantity="one">Prezzo scontato per il primo anno</item>
+        <item quantity="many">Prezzo scontato per %1$d di anni</item>
+        <item quantity="other">Prezzo scontato per i primi %1$d anni</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_days">
+        <item quantity="one">Giorno</item>
+        <item quantity="many">Giorni</item>
+        <item quantity="other">Giorni</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_hours">
+        <item quantity="one">Ora</item>
+        <item quantity="many">Ore</item>
+        <item quantity="other">Ore</item>
+    </plurals>
+    <plurals name="subscription_offer_countdown_minutes">
+        <item quantity="one">Minuto</item>
+        <item quantity="many">Minuti</item>
+        <item quantity="other">Minuti</item>
+    </plurals>
+    <string name="create_group_chat_link_requires_name_error">Inserisci un nome per il gruppo per ottenere il link della chat</string>
+    <string name="home_do_more_with_mega_album_created_message">Album “%1$s” creato</string>
+    <string name="home_do_more_with_mega_see_album_action">Visualizza album</string>
+    <string name="campaign_name_with_discount_up_to">%1$s: Fino al %2$d%% di sconto</string>
+    <string name="subscription_revamp_price_per_year">%1$s/anno</string>
+    <plurals name="subscription_offer_billed_yearly_months">
+        <item quantity="one">Fatturato a %2$s per il primo mese, %3$s fatturato annualmente in seguito</item>
+        <item quantity="many">Fatturato a %2$s per %1$d di mesi, %3$s fatturato annualmente in seguito</item>
+        <item quantity="other">Fatturato a %2$s per i primi %1$d mesi, %3$s fatturato annualmente in seguito</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_yearly_years">
+        <item quantity="one">Fatturato a %2$s per il primo anno, %3$s fatturato annualmente in seguito</item>
+        <item quantity="many">Fatturato a %2$s per %1$d di anni, %3$s fatturato annualmente in seguito</item>
+        <item quantity="other">Fatturato a %2$s per i primi %1$d anni, %3$s fatturato annualmente in seguito</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_months">
+        <item quantity="one">Fatturato a %2$s per il primo mese, %3$s fatturato in seguito</item>
+        <item quantity="many">Fatturato a %2$s per %1$d di mesi, %3$s fatturato in seguito</item>
+        <item quantity="other">Fatturato a %2$s per i primi %1$d mesi, %3$s fatturato in seguito</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_years">
+        <item quantity="one">Fatturato a %2$s per il primo anno, %3$s fatturato in seguito</item>
+        <item quantity="many">Fatturato a %2$s per %1$d di anni, %3$s fatturato in seguito</item>
+        <item quantity="other">Fatturato a %2$s per i primi %1$d anni, %3$s fatturato in seguito</item>
+    </plurals>
+    <plurals name="general_share_link_count_title">
+        <item quantity="one">%1$d link</item>
+        <item quantity="many">%1$d link</item>
+        <item quantity="other">%1$d link</item>
+    </plurals>
+    <string name="contacts_qr_already_contact_dialog_body">L\’invito non è stato spedito. %1$s è già nella tua lista di contatti.</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_title">QR scanner non pronto</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_body">Il QR scanner si sta ancora scaricando. Riprova tra pochi secondi.</string>
+    <string name="share_link_separate_key_title">Separa link e chiave</string>
+    <string name="share_link_separate_key_subtitle">Il link non includerà la chiave di decriptazione. Condividi la chiave utilizzando un metodo diverso per una sicurezza extra.</string>
+    <plurals name="share_link_access_banner_description_with_key">
+        <item quantity="one">Chiunque con questo link e questa chiave può visualizzare e scaricare i tuoi dati</item>
+        <item quantity="many">Chiunque con questi link e queste chiavi può visualizzare e scaricare i tuoi dati</item>
+        <item quantity="other">Chiunque con questi link e queste chiavi può visualizzare e scaricare i tuoi dati</item>
+    </plurals>
+    <string name="subscription_revamp_current_plan_expiring_badge">In scadenza</string>
+    <plurals name="subscription_revamp_current_plan_period_minutes">
+        <item quantity="one">%1$d minuto</item>
+        <item quantity="many">%1$d di minuti</item>
+        <item quantity="other">%1$d minuti</item>
+    </plurals>
+    <string name="general_pro_label">Pro</string>
+    <string name="file_info_information_map_label">Mappa</string>
+    <string name="file_info_information_outgoing_share">Condivisione in uscita</string>
+    <string name="file_info_information_incoming_share">Condivisione in entrata</string>
+    <string name="file_info_information_type_folder">Cartella</string>
+    <plurals name="file_info_information_num_contacts">
+        <item quantity="one">%d contatto</item>
+        <item quantity="many">%d di contatti</item>
+        <item quantity="other">%d contatti</item>
+    </plurals>
+    <plurals name="file_info_information_num_versioned_files">
+        <item quantity="one">%d versione dei file</item>
+        <item quantity="many">%d di versioni dei file</item>
+        <item quantity="other">%d versioni dei file</item>
+    </plurals>
+    <plurals name="file_info_information_num_versions">
+        <item quantity="one">%d versione</item>
+        <item quantity="many">%d di versioni</item>
+        <item quantity="other">%d versioni</item>
+    </plurals>
+    <string name="create_group_chat_image_content_description">Foto del gruppo</string>
+    <string name="create_group_chat_image_take_photo">Scatta foto</string>
+    <string name="create_group_chat_image_choose_from_gallery">Scegli dalla galleria</string>
+    <string name="subscription_quota_storage_almost_full_title">Il tuo spazio di archiviazione è pieno al %1$d%%</string>
+    <string name="subscription_quota_storage_almost_full_subtitle">Effettua l\’upgrade del tuo piano prima di terminare lo spazio</string>
+    <string name="subscription_quota_storage_over_subtitle">Effettua l\’upgrade del tuo piano per ottenere più spazio di archiviazione e caricare più file</string>
+    <string name="subscription_quota_transfer_low_title">La tua banda di trasferimento sta per terminare</string>
+    <string name="subscription_quota_transfer_percentage_used_title">Hai utilizzato il %1$d%% della tua banda di trasferimento</string>
+    <string name="subscription_quota_transfer_low_download_subtitle">Come risultato, il tuo download potrebbe essere interrotto. Effettua l\’upgrade del tuo piano per ottenere più banda di trasferimento.</string>
+    <string name="subscription_quota_transfer_low_streaming_subtitle">Come risultato, la riproduzione del file multimediale potrebbe essere interrotta. Effettua l\’upgrade per ottenere più banda di trasferimento.</string>
+    <string name="subscription_quota_transfer_over_download_subtitle">Per continuare il tuo download, effettua l\’upgrade del tuo piano per ottenere più banda di trasferimento.</string>
+    <string name="subscription_quota_transfer_over_streaming_subtitle">Per continuare la riproduzione del file multimediale, effettua l\’upgrade del tuo piano per ottenere più banda di trasferimento.</string>
+    <string name="subscription_quota_current_plan_storage_usage">%1$s usati su %2$s</string>
+    <string name="subscription_quota_current_plan_transfer_usage">%1$s usati</string>
+    <string name="subscription_quota_recommended_storage_usage">%1$s usati su %2$s</string>
+    <string name="subscription_quota_recommended_transfer_usage">%1$s usati su %2$s</string>
+    <string name="subscription_quota_best_for_you">Migliore per te</string>
+    <string name="subscription_quota_charged_yearly">%1$s fatturato annualmente</string>
+    <string name="subscription_quota_upgrade_button">Effettua l\’upgrade a %1$s</string>
+    <string name="subscription_quota_view_all_plans">Vedi tutti i piani</string>
+    <string name="subscription_quota_current_plan_transfer_usage_with_total">%1$s usati su %2$s</string>
+    <string name="subscription_quota_storage_over_upload_subtitle">Hai esaurito lo spazio di archiviazione. Effettua l\’upgrade del tuo piano per continuare con il caricamento</string>
+    <string name="audio_player_podcast_mode_label">Modalità podcast</string>
+    <string name="audio_player_music_mode_label">Modalità musica</string>
+    <string name="add_contacts_manual_email_placeholder">Inserisci indirizzo email</string>
+    <string name="add_contacts_manual_email_add_action">Aggiungi indirizzo email</string>
+    <string name="add_contacts_manual_email_already_added_error">Indirizzo email già aggiunto</string>
+    <string name="file_type_name_image">Immagine</string>
+    <string name="file_type_name_compressed">Compresso</string>
+    <string name="file_type_name_text">Testo</string>
+    <string name="file_type_name_vector">Vettoriale</string>
+    <string name="file_type_name_mpeg4_video">Video MPEG-4</string>
+    <string name="file_type_name_mp3_audio">Audio MP3</string>
+    <string name="file_type_name_png_image">Immagine PNG</string>
+    <string name="file_type_name_jpeg_image">Immagine JPEG</string>
+    <string name="file_type_name_gif_image">Immagine GIF</string>
+    <string name="file_type_name_heic_image">Immagine HEIC</string>
+    <string name="file_type_name_zip_compressed">File compresso ZIP</string>
+    <string name="file_type_name_pdf_document">Documento PDF</string>
+    <string name="file_type_name_raw">Immagine RAW</string>
+    <string name="file_type_name_word">Documento Word</string>
+    <string name="file_type_name_excel">Foglio Excel</string>
+    <string name="file_type_name_spreadsheet">Foglio elettronico</string>
+    <string name="file_type_name_powerpoint">Presentazione PowerPoint</string>
+    <string name="file_type_name_keynote">Presentazione Keynote</string>
+    <string name="file_type_name_numbers">Foglio Numbers</string>
+    <string name="file_type_name_pages">Documento Pages</string>
+    <string name="file_type_name_openoffice">Documento OpenOffice</string>
+    <string name="file_type_name_photoshop">Adobe Photoshop</string>
+    <string name="file_type_name_illustrator">Adobe Illustrator</string>
+    <string name="file_type_name_indesign">Adobe InDesign</string>
+    <string name="file_type_name_premiere">Adobe Premiere</string>
+    <string name="file_type_name_aftereffects">Adobe After Effects</string>
+    <string name="file_type_name_xd">Adobe XD</string>
+    <string name="file_type_name_cad">File CAD</string>
+    <string name="file_type_name_font">Font</string>
+    <string name="file_type_name_executable">File EXE</string>
+    <string name="file_type_name_disk_image">Immagine disco</string>
+    <string name="file_type_name_torrent">Torrent</string>
+    <string name="file_type_name_three_d">File 3D</string>
+    <string name="file_type_name_web">File web</string>
+    <string name="file_type_name_url">URL</string>
+    <string name="file_type_name_generic">File %1$s</string>
+    <string name="file_type_name_quicktime_video">Video QuickTime</string>
+    <string name="file_type_name_avi_video">Video AVI</string>
+    <string name="file_type_name_mkv_video">Video MKV</string>
+    <string name="file_type_name_wav_audio">Audio WAV</string>
+    <string name="file_type_name_m4a_audio">Audio M4A</string>
+    <string name="file_type_name_webp_image">Immagine WebP</string>
+    <string name="file_type_name_rar_compressed">File RAR compresso</string>
+    <string name="file_type_name_7zip_compressed">File 7-Zip compresso</string>
+    <string name="subscription_quota_storage_highest_plan_subtitle">Fai spazio nel tuo Cloud drive, o gestisci il tuo piano su [A]mega.io[/A] per più spazio di archiviazione</string>
+    <string name="subscription_quota_transfer_low_download_highest_plan_subtitle">Come risultato, il tuo download potrebbe essere interrotto. Gestisci il tuo piano su [A]mega.io[/A] per più banda di trasferimento</string>
+    <string name="subscription_quota_transfer_low_streaming_highest_plan_subtitle">Come risultato, la riproduzione del file multimediale potrebbe essere interrotta. Gestisci il tuo piano su [A]mega.io[/A] per più banda di trasferimento</string>
+    <string name="subscription_quota_transfer_over_download_highest_plan_subtitle">Per continuare il tuo download, gestisci il tuo piano su [A]mega.io[/A] per più banda di trasferimento</string>
+    <string name="subscription_quota_transfer_over_streaming_highest_plan_subtitle">Per continuare la riproduzione del file multimediale, gestisci il tuo piano su [A]mega.io[/A] per più banda di trasferimento</string>
+    <string name="subscription_quota_contact_support">Contatta il Supporto</string>
+    <string name="audio_player_playback_speed_title">Velocità di riproduzione</string>
+    <string name="file_info_taken_down_file_warning">Questo file è stato rimosso in base alla nostra Politica sulla rimozione.</string>
+    <string name="file_info_taken_down_folder_warning">Questa cartella è stata rimossa in base alla nostra Politica sulla rimozione.</string>
+    <string name="file_info_taken_down_action">Politica sulla rimozione</string>
+    <string name="contact_info_notifications_muted_until">Mutato fino alle %1$s</string>
+    <string name="share_link_password_protected_label">Protetto da password</string>
+    <string name="contact_info_nickname_added">Soprannome aggiunto</string>
+    <string name="contact_info_nickname_removed">Soprannome rimosso</string>
+    <string name="contact_info_nickname_dialog_set_button">Imposta</string>
+    <string name="contact_info_nickname_dialog_hint">Soprannome</string>
+    <string name="contact_info_remove_contact_dialog_title">Rimuovere il contatto?</string>
+    <string name="contact_info_remove_contact_dialog_message">Tutti i dati associati al contatto selezionato saranno persi in modo permanente.</string>
+    <string name="contact_info_mute_notifications_dialog_title">Muta le notifiche della chat</string>
+    <string name="contact_info_mute_option_until_turned_back_on">Finché non lo riattivo</string>
+    <string name="contact_info_create_chat_error">Un errore è avvenuto durante la creazione della chat</string>
+    <plurals name="contact_info_mute_option_minutes">
+        <item quantity="one">%1$d minuto</item>
+        <item quantity="many">%1$d di minuti</item>
+        <item quantity="other">%1$d minuti</item>
+    </plurals>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="one">%1$d ora</item>
+        <item quantity="many">%1$d ore</item>
+        <item quantity="other">%1$d ore</item>
+    </plurals>
+    <string name="contact_info_mute_option_until_tomorrow_morning">Fino a domani mattina</string>
+    <string name="contact_info_mute_option_until_this_morning">Fino a questa mattina</string>
+    <string name="chat_tab_meetings_title">Meeting</string>
+    <string name="share_link_with_password">Link: %1$s\n\nPassword: %2$s</string>
+    <string name="video_editor_crop_free">Gratis</string>
+    <string name="video_editor_crop_original">Originale</string>
+    <string name="video_editor_mute_button">Muta</string>
+    <string name="video_editor_unmute_button">Togli il muto</string>
+    <string name="video_editor_play_button">Gioca</string>
+    <string name="video_editor_pause_button">Pausa</string>
+    <string name="video_editor_muted_badge">Mutata</string>
+    <string name="video_editor_discard_cancel_button">Continua a modificare</string>
+    <string name="share_link_upgrade_pro_dialog_title">Aggiorna a Pro</string>
+    <string name="share_link_upgrade_pro_dialog_message">Gli utenti MEGA Pro hanno accesso esclusivo a feature che comportano un link addizionale di sicurezza rendendo il tuo account ancora più sicuro.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">Vedi i piani</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">Non adesso</string>
+    <string name="home_offer_banner_title">%1$s · Ottieni %2$d%% di sconto</string>
+    <string name="home_offer_banner_subtitle">%1$s/mese per %2$s</string>
+    <string name="home_offer_banner_button">Prendi l\’offerta</string>
+    <string name="deep_link_content_unavailable_dialog_message">Il contenuto a cui stai cercando di accedere non è disponibile per questo account.</string>
+    <string name="share_link_expires_on">Il link scade il giorno %1$s</string>
+    <string name="share_link_expired">Link scaduto</string>
+    <string name="share_link_password_dialog_title">Condividi la password del link</string>
+    <string name="share_link_password_dialog_message">Vuoi condividere la password di questo link?</string>
+    <string name="subscription_quota_no_connection_title">Impossibile connettersi</string>
+    <string name="subscription_quota_no_connection_description">Controlla i dettagli del tuo spazio di archiviazione e della tua banda di trasferimento più tardi, oppure riprova</string>
+    <string name="subscription_quota_no_connection_retry_button">Riprova</string>
+    <string name="subscription_offer_expired_dialog_title">Questa offerta è terminata</string>
+    <string name="subscription_offer_expired_dialog_description">Questa offerta non è più disponibile. Controlla i nostri piani attuali per trovare quello che ti soddisfa di più.</string>
+    <string name="subscription_offer_expired_dialog_button">Vedi i piani</string>
+    <string name="video_editor_screen_title">Modifica video</string>
+    <string name="video_editor_save_copy_button">Salva una copia</string>
+    <string name="video_editor_load_failed_message">Impossibile caricare il video</string>
+    <string name="video_editor_export_failed_message">Impossibile salvare il video</string>
+    <string name="video_editor_tool_trim">Taglia</string>
+    <string name="video_editor_tool_crop">Ritaglia</string>
+    <string name="video_editor_tool_rotate">Ruota</string>
+    <string name="video_editor_tool_speed">Velocità</string>
+    <string name="video_editor_tool_volume">Volume</string>
+    <string name="video_editor_rotate_left">Sinistra</string>
+    <string name="video_editor_rotate_right">Destra</string>
+    <string name="video_editor_rotate_flip">Ribalta</string>
+    <string name="video_editor_volume_boost_warning">Gli aumenti oltre il 100% sono applicati solo alle esportazioni.</string>
+    <string name="video_editor_apply_button">Applica</string>
+    <string name="video_editor_preparing_dialog_title">Preparazione del video</string>
+    <string name="video_editor_saving_dialog_title">Salvataggio della copia</string>
+    <string name="video_editor_encoding_label">Codifica&#8230;</string>
+    <string name="video_editor_discard_changes_description">Se lasci ora, le tue modifiche saranno perse.</string>
+    <string name="search_tags_show_all">Mostra tutto</string>
+    <string name="search_tags_show_less">Mostra di meno</string>
+    <string name="contact_info_send_file">Invia file a chat</string>
+    <string name="contact_info_microphone_permission_message">Permetti l’accesso al tuo microfono per effettuare chiamate audio criptate.</string>
+    <string name="settings_customise_navigation_start_screen">Schermata iniziale</string>
+    <string name="contact_accept">Accetta</string>
+    <string name="contact_ignore">Ignora</string>
+    <string name="contact_decline">Declina</string>
+    <string name="received_requests_empty">[B]Nessuna[/B] [A]richiesta ricevuta[/A]</string>
+    <string name="tab_received_requests">Richieste ricevute</string>
+    <string name="tab_sent_requests">Richieste inviate</string>
+    <string name="sent_requests_empty">[B]Nessuna[/B] [A]richiesta inviata[/A]</string>
+    <string name="contact_reinvite">Reinvita</string>
+    <string name="invite_contacts_my_qr_code_action">Il mio codice QR</string>
+    <string name="invite_contacts_own_email_error">Non c’è bisogno di aggiungere il tuo indirizzo e-mail</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Aprire la fotocamera?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">Se apri la fotocamera, la tua trasmissione video sarà interrotta nella chiamata corrente.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Apri</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d contatto</item>
+        <item quantity="many">%1$d contatti</item>
+        <item quantity="other">%1$d contatti</item>
+    </plurals>
 </resources>

@@ -1739,12 +1739,14 @@
     <string name="campaign_name_cyber_monday">Cyber Monday deal: %1$d%% off</string>
     <!-- campaign name for Special offer -->
     <string name="campaign_name_special_offer">Special offer: %1$d%% off</string>
-    <!-- Label for first time period in months full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of months. is a line break. -->
+    <!-- Label for first time period in months full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of months. 
+    is a line break. -->
     <plurals name="label_first_time_in_months_full">
         <item quantity="one">[B]%1$s[/B]\nFor the first month</item>
         <item quantity="other">[B]%1$s[/B]\nFor the first %2$d months</item>
     </plurals>
-    <!-- Label for first time period in years full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of years. is a line break. -->
+    <!-- Label for first time period in years full format. [B] and [/B] are span tags for bold styling. %1$s is the discounted price, %2$d is the number of years. 
+    is a line break. -->
     <plurals name="label_first_time_in_years_full">
         <item quantity="one">[B]%1$s[/B]\nFor the first year</item>
         <item quantity="other">[B]%1$s[/B]\nFor the first %2$d years</item>
@@ -1781,9 +1783,11 @@
         <item quantity="one">Bonus expires in %1$d day</item>
         <item quantity="other">Bonus expires in %1$d days</item>
     </plurals>
-    <!-- Discount label for first month singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. is a line break before "For the first month". -->
+    <!-- Discount label for first month singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. 
+    is a line break before "For the first month". -->
     <string name="label_first_time_in_months_full_singular">[B]%1$s[/B]\nFor the first month</string>
-    <!-- Discount label for first year singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. is a line break before "For the first year". -->
+    <!-- Discount label for first year singular. [B] and [/B] are span tags for bold styling. %1$s is the discounted price. 
+    is a line break before "For the first year". -->
     <string name="label_first_time_in_years_full_singular">[B]%1$s[/B]\nFor the first year</string>
     <!-- Hidden nodes description: control visibility feature with tag -->
     <string name="hidden_nodes_description_control_visibility_tag">Only you can reveal hidden files, either individually or by temporarily displaying hidden items from the [A]settings[/A].</string>
@@ -2945,22 +2949,6 @@
     <string name="contacts_remove_dialog_title">Remove %1$s?</string>
     <!-- Contact list: body of the dialog asking the user to confirm removing a contact -->
     <string name="contacts_remove_dialog_message">This contact will be removed from your contact list.</string>
-    <!-- Contact requests: label for the tab listing received (incoming) contact requests -->
-    <string name="tab_received_requests">Received requests</string>
-    <!-- Contact requests: label for the tab listing sent (outgoing) contact requests -->
-    <string name="tab_sent_requests">Sent requests</string>
-    <!-- Contact requests: empty state shown when there are no received (incoming) requests -->
-    <string name="received_requests_empty">[B]No [/B][A]received requests[/A]</string>
-    <!-- Contact requests: empty state shown when there are no sent (outgoing) requests -->
-    <string name="sent_requests_empty">[B]No [/B][A]sent requests[/A]</string>
-    <!-- Contact requests bottom sheet: action that accepts a received contact request -->
-    <string name="contact_accept">Accept</string>
-    <!-- Contact requests bottom sheet: action that ignores a received contact request -->
-    <string name="contact_ignore">Ignore</string>
-    <!-- Contact requests bottom sheet: destructive action that declines a received contact request -->
-    <string name="contact_decline">Decline</string>
-    <!-- Contact requests bottom sheet: action that resends a sent contact request -->
-    <string name="contact_reinvite">Reinvite</string>
     <!-- Add contacts picker: toolbar title shown when selecting contacts to send to a chat -->
     <string name="send_contacts">Send contacts</string>
     <!-- Multi-select picker: toolbar title showing how many items are currently selected. %1$d is the count. -->
@@ -3601,31 +3589,6 @@
     </plurals>
     <!--Title of the Meetings tab in the chat list-->
     <string name="chat_tab_meetings_title">Meetings</string>
-    <!-- Invite contacts: top bar subtitle showing how many recipients are currently selected -->
-    <plurals name="general_selection_num_contacts">
-        <item quantity="one">%1$d contact</item>
-        <item quantity="other">%1$d contacts</item>
-    </plurals>
-    <!-- Invite contacts: label of the toolbar action that shares an invite link -->
-    <string name="invite_contacts_share_link_action">Invite via link</string>
-    <!-- Invite contacts: label of the toolbar action that opens the user\'s own QR code -->
-    <string name="invite_contacts_my_qr_code_action">My QR code</string>
-    <!-- Invite contacts: placeholder for the field where an email address or phone number is typed to invite -->
-    <string name="invite_contacts_manual_input_placeholder">Enter email or phone number</string>
-    <!-- Invite contacts: error snackbar shown when the typed email is the user\'s own email address -->
-    <string name="invite_contacts_own_email_error">There’s no need to add your own email address</string>
-    <!-- Invite contacts: error snackbar shown when the typed email is already saved as a contact -->
-    <string name="invite_contacts_already_contact_error">This email address is already a contact</string>
-    <!-- Invite contacts: error snackbar shown when an invitation was already sent to the typed email -->
-    <string name="invite_contacts_pending_error">An invitation has already been sent to this email address</string>
-    <!-- Invite contacts: error snackbar shown when the typed text is neither a valid email nor phone number -->
-    <string name="invite_contacts_invalid_input_error">Enter a valid email address or phone number</string>
-    <!-- Invite contacts: title of the dialog confirming a QR scan while a call is ongoing -->
-    <string name="invite_contacts_open_camera_confirmation_title">Open camera?</string>
-    <!-- Invite contacts: body of the dialog confirming a QR scan while a call is ongoing -->
-    <string name="invite_contacts_open_camera_confirmation_message">If you open the camera, your video transmission will be paused in the current call.</string>
-    <!-- Invite contacts: confirm button of the dialog that opens the camera to scan a QR code -->
-    <string name="invite_contacts_open_camera_confirmation_confirm">Open</string>
     <!-- Message of the dialog shown when opening a link to content that is not available for the logged in account -->
     <string name="deep_link_content_unavailable_dialog_message">The content you are trying to access is not available for this account.</string>
     <!-- Share link revamp: notice under the link showing the date it stops working. %1$s is a date, for example "Jan 11, 2026" -->
@@ -3754,6 +3717,36 @@
     <string name="settings_customise_navigation_max_items_snackbar">Max %1$d items reached. Remove an item to add another.</string>
     <!-- Customise navigation settings screen: snackbar shown when trying to remove a section while at the minimum. Placeholder is the minimum number of sections -->
     <string name="settings_customise_navigation_min_items_snackbar">Minimum of %1$d items required</string>
+    <!-- Contact requests: label for the tab listing received (incoming) contact requests -->
+    <string name="tab_received_requests">Received requests</string>
+    <!-- Contact requests: label for the tab listing sent (outgoing) contact requests -->
+    <string name="tab_sent_requests">Sent requests</string>
+    <!-- Contact requests: empty state shown when there are no received (incoming) requests -->
+    <string name="received_requests_empty">[B]No [/B][A]received requests[/A]</string>
+    <!-- Contact requests: empty state shown when there are no sent (outgoing) requests -->
+    <string name="sent_requests_empty">[B]No [/B][A]sent requests[/A]</string>
+    <!-- Contact requests bottom sheet: action that accepts a received contact request -->
+    <string name="contact_accept">Accept</string>
+    <!-- Contact requests bottom sheet: action that ignores a received contact request -->
+    <string name="contact_ignore">Ignore</string>
+    <!-- Contact requests bottom sheet: destructive action that declines a received contact request -->
+    <string name="contact_decline">Decline</string>
+    <!-- Contact requests bottom sheet: action that resends a sent contact request -->
+    <string name="contact_reinvite">Reinvite</string>
     <!-- Snackbar warning shown when seeking in a video with large keyframe clusters, which may cause slow seek performance -->
-    <string name="video_player_large_cluster_seek_warning">Seeking in this video may be slow.</string>
+    <string name="video_player_large_cluster_seek_warning">Seeking in this video may be slow</string>
+    <string name="invite_contacts_share_link_action">Invite via link</string>
+    <string name="invite_contacts_my_qr_code_action">My QR code</string>
+    <string name="invite_contacts_manual_input_placeholder">Enter email or phone number</string>
+    <string name="invite_contacts_own_email_error">There’s no need to add your own email address</string>
+    <string name="invite_contacts_already_contact_error">This email address is already a contact</string>
+    <string name="invite_contacts_pending_error">An invitation has already been sent to this email address</string>
+    <string name="invite_contacts_invalid_input_error">Enter a valid email address or phone number</string>
+    <string name="invite_contacts_open_camera_confirmation_title">Open camera?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">If you open the camera, your video transmission will be paused in the current call.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">Open</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="one">%1$d contact</item>
+        <item quantity="other">%1$d contacts</item>
+    </plurals>
 </resources>

@@ -451,7 +451,7 @@
     <!--Title text to start a conversation from Recent Chat screen empty view-->
     <string name="chat_recent_list_empty_title">대화를 비공개로 유지</string>
     <!--Subtitle text from Recent Chat screen empty view-->
-    <string name="chat_recent_list_empty_subtitle">당신의 모든 메시지, 단체 대화, 그리고 통화는 우리의 영지식 암호화로 보호됩니다. [A]더 알아보기[/A]</string>
+    <string name="chat_recent_list_empty_subtitle">당신의 모든 메시지, 단체 대화, 그리고 통화는 저희의 영지식 암호화로 보호됩니다. [A]더 알아보기[/A]</string>
     <!-- Label of the action button of inviting a friend from contact screen -->
     <string name="chat_recent_invite_friend">친구를 초대하세요</string>
     <!-- Title Text shown when an account doesn’t have any contact added and it’s trying to start a new chat conversation -->
@@ -517,7 +517,7 @@
     <!--Title text to start a meeting from Meeting screen empty view-->
     <string name="meeting_recent_list_empty_title">통화 보호</string>
     <!--Subtitle text from Meeting screen empty view-->
-    <string name="meeting_recent_list_empty_subtitle">당신의 회의, 가족 통화, 그리고 비공개 대화는 우리의 영지식 암호화로 보호됩니다. [A]더 알아보기[/A]</string>
+    <string name="meeting_recent_list_empty_subtitle">당신의 회의, 가족 통화, 그리고 비공개 대화는 저희의 영지식 암호화로 보호됩니다. [A]더 알아보기[/A]</string>
     <!--Warning message to inform the user the minimum number of characters to enter into the edit text field for the survey-->
     <string name="account_cancel_subscription_survey_minimum_character_limit">메시지는 최소 10자이어야 합니다</string>
     <!--Warning message to inform the user that the edit text field for the survey is empty and needs to be filled with details-->
@@ -581,7 +581,7 @@
     <!-- Title of the dialog to notify the requirement of access storage permission for Sync/Backup feature -->
     <string name="sync_backup_access_storage_permission_dialog_title">MEGA가 모든 파일에 접근하도록 허용할까요?</string>
     <!-- Message of the dialog to notify the requirement of access storage permission for Sync/Backup feature -->
-    <string name="sync_backup_access_storage_permission_dialog_message">파일을 백업하려면, MEGA가 당신의 장치의 파일과 폴더에 대한 접근이 필요합니다. 당신의 데이터는 언제나 우리와 함께 안전합니다.</string>
+    <string name="sync_backup_access_storage_permission_dialog_message">파일을 백업하려면, MEGA가 당신의 장치의 파일과 폴더에 대한 접근이 필요합니다. 당신의 데이터는 언제나 저희와 함께 안전합니다.</string>
     <!-- Text for the warning banner displayed if try to create a new backup but storage permission has not been granted. The placeholders are to underline text -->
     <string name="sync_add_new_backup_storage_permission_banner">MEGA가 당신의 로컬 폴더를 백업하기 위해 장치 저장소에 접근이 필요합니다. [U]접근을 승인하려면 탭하세요[/U]</string>
     <!-- Title in the files permission screen -->
@@ -699,7 +699,7 @@
     <!-- The additional security label in the ads free introduction screen -->
     <string name="payment_ads_free_intro_additional_security_label">MEGA&#160;Pass와 MEGA&#160;VPN</string>
     <!-- The additional security description in the ads free introduction screen -->
-    <string name="payment_ads_free_intro_additional_security_description">파일과 폴더 링크에 암호와 만료일을 설정</string>
+    <string name="payment_ads_free_intro_additional_security_description">저희의 암호 관리자와 고속 VPN으로 당신의 온라인 생활을 더 안전하고, 더 빠르고, 더 쉽게 만드세요</string>
     <!-- The button text view pro plan in the ads free introduction screen -->
     <string name="payment_ads_free_intro_button_view_pro_plan">Pro 요금제 보기</string>
     <!-- Label for call option on settings -->
@@ -861,7 +861,7 @@
     <!--The title of the Email Confirmation page-->
     <string name="email_confirmation_title">이메일 확인</string>
     <!--The Content of the Email Confirmation page-->
-    <string name="email_confirmation_content">우리가 [P]%s[/P]로 링크가 있는 이메일을 보냈습니다. 당신의 이메일 주소를 확인하고 계정을 활성화하려면 링크를 탭하세요.\n\n만약 이메일을 받지 못 했다면 스팸 폴더를 확인하거나 다시 시도하세요. 다른 문제가 있다면 [A]고객센터[/A]에 방문하세요.</string>
+    <string name="email_confirmation_content">저희가 [P]%s[/P](으)로 링크가 있는 이메일을 보냈습니다. 당신의 이메일 주소를 확인하고 계정을 활성화하려면 링크를 탭하세요.\n\n만약 이메일을 받지 못 했다면 스팸 폴더를 확인하거나 다시 시도하세요. 다른 문제가 있다면 [A]고객센터[/A]에 방문하세요.</string>
     <!-- Button to resend the create account email to a new email address in case the previous email address was misspelled -->
     <string name="general_resend_button">재발송</string>
     <!-- General change email address -->
@@ -1073,11 +1073,11 @@
     <!-- Title for MEGA VPN feature -->
     <string name="pro_plan_feature_vpn_title">MEGA&#160;VPN</string>
     <!-- Description for MEGA VPN feature -->
-    <string name="pro_plan_feature_vpn_desc">빠르고 이용하기 편리한 우리의 고속 VPN으로 온라인에서 안전하게 지내세요</string>
+    <string name="pro_plan_feature_vpn_desc">빠르고 이용하기 편리한 저희의 고속 VPN으로 온라인에서 안전하게 지내세요</string>
     <!-- Title for MEGA Pass feature -->
     <string name="pro_plan_feature_pass_title">MEGA&#160;Pass</string>
     <!-- Description for MEGA Pass feature -->
-    <string name="pro_plan_feature_pass_desc">우리의 암호 관리자로 당신의 모든 암호를 정리하고 안전하게 지키세요</string>
+    <string name="pro_plan_feature_pass_desc">저희 암호 관리자로 당신의 모든 암호를 정리하고 안전하게 지키세요</string>
     <!-- Title of label, which will be shown next to the plan, which our app recommends user to purchase. -->
     <string name="account_upgrade_account_pro_plan_info_recommended_label">권고됨</string>
     <!-- Text for the upgrade banner action -->
@@ -1257,7 +1257,7 @@
     <!-- Bottom menu option to delete permanently an item from Rubbish Bin -->
     <string name="rubbish_bin_bottom_menu_option_delete">영구적으로 삭제</string>
     <!-- option to dispute taken down file or folder -->
-    <string name="dispute_takendown_file">게시중단 이의제기</string>
+    <string name="dispute_takendown_file">게시 중단 이의 제기</string>
     <!-- Title of the Dialog to edit the profile attributes of the user’s account -->
     <string name="title_edit_profile_info">수정</string>
     <!-- Context menu item. Allows user to add file/folder to favourites -->
@@ -1369,7 +1369,7 @@
     <!-- Sync message when multiple issues resolved -->
     <string name="sync_stalled_issues_resolved">문제가 해결되었습니다</string>
     <!-- Text of the empty playlist in Video Section -->
-    <string name="video_section_playlists_video_empty">비우기</string>
+    <string name="video_section_playlists_video_empty">비어있음</string>
     <!-- Text of video count of playlist in Video Section -->
     <plurals name="video_section_playlists_video_count">
         <item quantity="other">동영상 %1$d개</item>
@@ -1715,7 +1715,7 @@
     <!-- Message after the current album is deleted (singular album). %s should represent the album name-->
     <string name="delete_singular_album_confirmation_message">“%s” 삭제됨</string>
     <!-- External checkout button text -->
-    <string name="external_checkout_button_text">우리 웹사이트에서 구매 (최대 %1$.0f%% 절약)</string>
+    <string name="external_checkout_button_text">저희 웹사이트에서 구매 (최대 %1$.0f%% 절약)</string>
     <!-- Hint for password dialog -->
     <string name="password_dialog_hint">링크 암호 입력</string>
     <!-- Text for decrypt button -->
@@ -1927,7 +1927,7 @@
     <string name="label_file_upload_size_peta_byte">%1$sPB</string>
     <string name="label_file_upload_size_exa_byte">%1$sEB</string>
     <string name="album_decryption_key_title">복호화 키</string>
-    <string name="album_decryption_key_description">우리의 영지식 암호화 시스템은 이 파일 또는 폴더를 위해 자동으로 생성된 고유의 키를 필요로 합니다. 이 키에 대한 링크는 자동으로 생성되지만, 보안을 위해 복호화 키를 별도로 내보낼 수 있습니다.</string>
+    <string name="album_decryption_key_description">저희의 영지식 암호화 시스템은 이 파일 또는 폴더를 위해 자동으로 생성된 고유의 키를 필요로 합니다. 이 키에 대한 링크는 자동으로 생성되지만, 보안을 위해 복호화 키를 별도로 내보낼 수 있습니다.</string>
     <string name="general_clear_all">모두 지우기</string>
     <string name="offline_remove_singular_item_success_message">1개 항목 제거됨</string>
     <string name="offline_remove_multiple_item_success_message">%d개 항목 제거됨</string>
@@ -2470,13 +2470,13 @@
     <string name="add_contacts_phone_contacts_allow_access">연락처에 접근 허용</string>
     <string name="add_contacts_phone_contacts_select">전화 연락처 선택</string>
     <string name="add_contacts_mega_contacts_section_title">MEGA 연락처</string>
-    <string name="create_group_chat_ekr_explanation">암호화 키 순환은 약간 더 안전하지만, 대화 링크를 생성하거나 새 참여자가 과거 메시지를 보는 것을 허용하지 않습니다.</string>
-    <string name="home_pinned_choose_files_and_folders">파일 및 폴더 선택</string>
+    <string name="create_group_chat_ekr_explanation">암호화 키 순환은 향상된 보안을 제공하지만, 대화 링크를 생성하거나 새 참여자가 과거 메시지를 보는 것을 허용하지 않습니다.</string>
+    <string name="home_pinned_choose_files_and_folders">파일과 폴더 선택</string>
     <string name="subscription_revamp_title">MEGA Pro로 업그레이드</string>
     <string name="subscription_revamp_why_go_pro_title">왜 Pro를 써야 하나요?</string>
     <string name="subscription_revamp_why_go_pro_storage">최대 %1$s의 데이터 저장</string>
     <string name="subscription_revamp_why_go_pro_transfer">최대 %1$s의 전송 할당량을 즐기세요</string>
-    <string name="subscription_revamp_why_go_pro_vpn">MEGA VPN으로 온라인에서 안전하게 지내세요</string>
+    <string name="subscription_revamp_why_go_pro_vpn">MEGA VPN으로 온라인에서 비공개로 지내세요</string>
     <string name="subscription_revamp_why_go_pro_pass">MEGA Pass로 암호를 안전하게 지키세요</string>
     <string name="subscription_revamp_current_plan_cycle_yearly">연간 구독</string>
     <string name="subscription_revamp_price_per_month">월 %1$s</string>
@@ -2577,4 +2577,227 @@
     </plurals>
     <string name="add_contacts_unverified_contact_warning">정보를 공유하는 연락처 중 일부가 당신에 의해 인증되지 않았습니다. 추가적인 보안을 적용하려면, 연락처에서 그들의 자격 증명을 인증할 것을 권장합니다. 인증하려는 연락처 옆의 점 3개를 탭하고 정보를 탭하세요.</string>
     <string name="contacts_qr_scan_action">QR 코드 스캔</string>
+    <string name="file_info_taken_down_file_warning">이 파일은 게시 중단 정책에 따라 게시 중단되었습니다.</string>
+    <string name="file_info_taken_down_folder_warning">이 폴더는 게시 중단 정책에 따라 게시 중단되었습니다.</string>
+    <string name="file_info_taken_down_action">게시 중단 처리 지침</string>
+    <string name="home_do_more_with_mega_album_created_message">“%1$s” 사진첩이 생성되었습니다</string>
+    <string name="home_do_more_with_mega_see_album_action">사진첩 보기</string>
+    <string name="campaign_name_with_discount_up_to">%1$s: 최대 %2$d%% 할인</string>
+    <string name="subscription_revamp_price_per_year">연 %1$s</string>
+    <plurals name="subscription_offer_billed_yearly_months">
+        <item quantity="other">첫 %1$d개월 동안 %2$s 청구, 이후 연 %3$s 청구</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_yearly_years">
+        <item quantity="other">첫 %1$d년 동안 %2$s 청구, 이후 연 %3$s 청구</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_months">
+        <item quantity="other">첫 %1$d개월 동안 %2$s 청구, 이후 %3$s</item>
+    </plurals>
+    <plurals name="subscription_offer_billed_monthly_years">
+        <item quantity="other">첫 %1$d년 동안 %2$s 청구, 이후 %3$s</item>
+    </plurals>
+    <plurals name="general_share_link_count_title">
+        <item quantity="other">링크 %1$d개</item>
+    </plurals>
+    <string name="contacts_qr_already_contact_dialog_body">초대장이 발송되지 않았습니다. %1$s 님은 이미 당신의 연락처 목록에 있습니다.</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_title">QR 스캐너가 준비되지 않음</string>
+    <string name="contacts_qr_scanner_not_ready_dialog_body">QR 스캐너가 아직 다운로드 중입니다. 잠시 후 다시 시도하세요.</string>
+    <string name="share_link_separate_key_title">링크와 키 분리</string>
+    <string name="share_link_separate_key_subtitle">이 링크는 복호화 키를 포함하지 않을 것입니다. 추가 보안을 위해 다른 방식을 이용하여 키를 공유하세요.</string>
+    <plurals name="share_link_access_banner_description_with_key">
+        <item quantity="other">이 링크와 키를 가진 누구나 당신의 데이터를 보고 다운로드할 수 있습니다</item>
+    </plurals>
+    <string name="subscription_revamp_current_plan_expiring_badge">만료 예정</string>
+    <plurals name="subscription_revamp_current_plan_period_minutes">
+        <item quantity="other">%1$d분</item>
+    </plurals>
+    <string name="general_pro_label">Pro</string>
+    <string name="file_info_information_map_label">지도</string>
+    <string name="file_info_information_outgoing_share">나가는 공유</string>
+    <string name="file_info_information_incoming_share">들어오는 공유</string>
+    <string name="file_info_information_type_folder">폴더</string>
+    <plurals name="file_info_information_num_contacts">
+        <item quantity="other">연락처 %d개</item>
+    </plurals>
+    <plurals name="file_info_information_num_versioned_files">
+        <item quantity="other">파일 기록 %d개</item>
+    </plurals>
+    <plurals name="file_info_information_num_versions">
+        <item quantity="other">버전 %d개</item>
+    </plurals>
+    <string name="create_group_chat_image_content_description">단체 사진</string>
+    <string name="create_group_chat_image_take_photo">사진 찍기</string>
+    <string name="create_group_chat_image_choose_from_gallery">갤러리에서 선택</string>
+    <string name="subscription_quota_storage_almost_full_title">당신의 저장소가 %1$d%% 찼습니다</string>
+    <string name="subscription_quota_storage_almost_full_subtitle">공간이 부족해지기 전에 요금제를 업그레이드하세요</string>
+    <string name="subscription_quota_storage_over_subtitle">저장소를 늘리고 더 많은 파일을 업로드하려면 요금제를 업그레이드하세요</string>
+    <string name="subscription_quota_transfer_low_title">전송 할당량이 적습니다</string>
+    <string name="subscription_quota_transfer_percentage_used_title">전송 할당량의 %1$d%%를 썼습니다</string>
+    <string name="subscription_quota_transfer_low_download_subtitle">그 결과로, 다운로드가 중단될 수 있습니다. 전송 할당량을 늘리기 위해 요금제를 업그레이드하세요.</string>
+    <string name="subscription_quota_transfer_low_streaming_subtitle">그 결과로, 미디어 재생이 중단될 수 있습니다. 전송 할당량을 늘리려면 요금제를 업그레이드하세요.</string>
+    <string name="subscription_quota_transfer_over_download_subtitle">다운로드를 계속 하려면, 전송 할당량을 늘리기 위해 요금제를 업그레이드하세요.</string>
+    <string name="subscription_quota_transfer_over_streaming_subtitle">미디어 재생을 계속 하려면, 전송 할당량을 늘리기 위해 요금제를 업그레이드하세요.</string>
+    <string name="subscription_quota_current_plan_storage_usage">%2$s 중 %1$s 이용함</string>
+    <string name="subscription_quota_current_plan_transfer_usage">%1$s 이용함</string>
+    <string name="subscription_quota_recommended_storage_usage">%2$s 중 %1$s 이용함</string>
+    <string name="subscription_quota_recommended_transfer_usage">%2$s 중 %1$s 이용함</string>
+    <string name="subscription_quota_best_for_you">당신께 최고</string>
+    <string name="subscription_quota_charged_yearly">매년 %1$s 청구</string>
+    <string name="subscription_quota_upgrade_button">%1$s로 업그레이드</string>
+    <string name="subscription_quota_view_all_plans">모든 요금제 보기</string>
+    <string name="subscription_quota_current_plan_transfer_usage_with_total">%2$s 중 %1$s 이용함</string>
+    <string name="subscription_quota_storage_over_upload_subtitle">저장 공간이 부족합니다. 업로드를 계속 하려면 요금제를 업그레이드하세요</string>
+    <string name="audio_player_podcast_mode_label">팟캐스트 모드</string>
+    <string name="audio_player_music_mode_label">음악 모드</string>
+    <string name="add_contacts_manual_email_placeholder">이메일 주소를 입력하세요</string>
+    <string name="add_contacts_manual_email_add_action">이메일 주소 추가</string>
+    <string name="add_contacts_manual_email_already_added_error">이메일 주소가 이미 추가되었습니다</string>
+    <string name="file_type_name_image">이미지</string>
+    <string name="file_type_name_compressed">압축</string>
+    <string name="file_type_name_text">텍스트</string>
+    <string name="file_type_name_vector">벡터</string>
+    <string name="file_type_name_mpeg4_video">MPEG-4 동영상</string>
+    <string name="file_type_name_mp3_audio">MP3 오디오</string>
+    <string name="file_type_name_png_image">PNG 이미지</string>
+    <string name="file_type_name_jpeg_image">JPEG 이미지</string>
+    <string name="file_type_name_gif_image">GIF 이미지</string>
+    <string name="file_type_name_heic_image">HEIC 이미지</string>
+    <string name="file_type_name_zip_compressed">ZIP 압축</string>
+    <string name="file_type_name_pdf_document">PDF 문서</string>
+    <string name="file_type_name_raw">RAW 이미지</string>
+    <string name="file_type_name_word">Word 문서</string>
+    <string name="file_type_name_excel">Excel 스프레드시트</string>
+    <string name="file_type_name_spreadsheet">스프레드시트</string>
+    <string name="file_type_name_powerpoint">PowerPoint 프레젠테이션</string>
+    <string name="file_type_name_keynote">Keynote 프레젠테이션</string>
+    <string name="file_type_name_numbers">Numbers 스프레드시트</string>
+    <string name="file_type_name_pages">Pages 문서</string>
+    <string name="file_type_name_openoffice">OpenOffice 문서</string>
+    <string name="file_type_name_photoshop">Adobe Photoshop</string>
+    <string name="file_type_name_illustrator">Adobe Illustrator</string>
+    <string name="file_type_name_indesign">Adobe InDesign</string>
+    <string name="file_type_name_premiere">Adobe Premiere</string>
+    <string name="file_type_name_aftereffects">Adobe After Effects</string>
+    <string name="file_type_name_xd">Adobe XD</string>
+    <string name="file_type_name_cad">CAD 파일</string>
+    <string name="file_type_name_font">글꼴</string>
+    <string name="file_type_name_executable">실행 파일</string>
+    <string name="file_type_name_disk_image">디스크 이미지</string>
+    <string name="file_type_name_torrent">토렌트</string>
+    <string name="file_type_name_three_d">3D 파일</string>
+    <string name="file_type_name_web">웹 파일</string>
+    <string name="file_type_name_url">URL</string>
+    <string name="file_type_name_generic">%1$s 파일</string>
+    <string name="file_type_name_quicktime_video">QuickTime 동영상</string>
+    <string name="file_type_name_avi_video">AVI 동영상</string>
+    <string name="file_type_name_mkv_video">MKV 동영상</string>
+    <string name="file_type_name_wav_audio">WAV 오디오</string>
+    <string name="file_type_name_m4a_audio">M4A 오디오</string>
+    <string name="file_type_name_webp_image">WebP 이미지</string>
+    <string name="file_type_name_rar_compressed">RAR 압축</string>
+    <string name="file_type_name_7zip_compressed">7-Zip 압축</string>
+    <string name="subscription_quota_storage_highest_plan_subtitle">클라우드 드라이브에 공간을 확보하거나, 더 많은 저장소를 위해 [A]mega.io[/A]에서 요금제를 관리하세요</string>
+    <string name="share_link_access_password_description">암호가 있는 사람만 링크를 열 수 있습니다</string>
+    <string name="share_link_password_copied_snackbar">암호가 클립보드에 복사되었습니다</string>
+    <string name="subscription_quota_transfer_low_download_highest_plan_subtitle">그 결과로, 다운로드가 중단될 수 있습니다. 더 많은 전송 할당량을 위해 [A]mega.io[/A]에서 요금제를 관리하세요</string>
+    <string name="subscription_quota_transfer_low_streaming_highest_plan_subtitle">그 결과, 미디어 재생이 중단될 수 있습니다. 더 많은 전송 할당량을 위해 [A]mega.io[/A]에서 요금제를 관리하세요</string>
+    <string name="subscription_quota_transfer_over_download_highest_plan_subtitle">다운로드를 계속하려면, 더 많은 전송 할당량을 위해 [A]mega.io[/A]에서 요금제를 관리하세요</string>
+    <string name="subscription_quota_transfer_over_streaming_highest_plan_subtitle">미디어 재생을 계속하려면, 더 많은 전송 할당량을 위해 [A]mega.io[/A]에서 요금제를 관리하세요</string>
+    <string name="subscription_quota_contact_support">고객센터에 연락</string>
+    <string name="audio_player_playback_speed_title">재생 속도</string>
+    <string name="contact_info_notifications_muted_until">%1$s까지 알림 끔</string>
+    <string name="share_link_password_protected_label">암호로 보호됨</string>
+    <string name="contact_info_nickname_dialog_set_button">설정</string>
+    <string name="contact_info_nickname_dialog_hint">별명</string>
+    <string name="contact_info_nickname_added">별명 추가됨</string>
+    <string name="contact_info_nickname_removed">별명 제거됨</string>
+    <string name="contact_info_mute_option_until_this_morning">오늘 아침까지</string>
+    <string name="contact_info_mute_option_until_tomorrow_morning">내일 아침까지</string>
+    <string name="contact_info_mute_option_until_turned_back_on">내가 다시 켤 때까지</string>
+    <string name="contact_info_create_chat_error">대화를 만드는 중 오류가 발생했습니다</string>
+    <plurals name="contact_info_mute_option_hours">
+        <item quantity="other">%1$d시간</item>
+    </plurals>
+    <string name="chat_tab_meetings_title">회의</string>
+    <string name="home_offer_banner_title">%1$s · %2$d%% 할인을 받으세요</string>
+    <string name="home_offer_banner_subtitle">%2$s 요금제를 월 %1$s에</string>
+    <string name="home_offer_banner_button">할인 받기</string>
+    <string name="contact_info_remove_contact_dialog_title">연락처를 제거할까요?</string>
+    <string name="contact_info_remove_contact_dialog_message">선택한 연락처와 관련된 모든 데이터가 영구적으로 사라집니다.</string>
+    <string name="contact_info_mute_notifications_dialog_title">대화 알림 끄기</string>
+    <plurals name="contact_info_mute_option_minutes">
+        <item quantity="other">%1$d분</item>
+    </plurals>
+    <string name="share_link_with_password">링크: %1$s\n\n암호: %2$s</string>
+    <string name="deep_link_content_unavailable_dialog_message">접근하려는 콘텐츠는 이 계정에서 이용 불가합니다.</string>
+    <string name="share_link_expires_on">링크가 %1$s에 만료됩니다</string>
+    <string name="share_link_expired">링크가 만료되었습니다</string>
+    <string name="share_link_password_dialog_title">링크 암호 공유</string>
+    <string name="share_link_password_dialog_message">이 링크의 암호를 공유하시겠습니까?</string>
+    <string name="subscription_quota_no_connection_title">연결할 수 없습니다</string>
+    <string name="subscription_quota_no_connection_description">나중에 저장소와 전송 세부 정보를 확인하거나, 다시 시도하세요</string>
+    <string name="subscription_quota_no_connection_retry_button">다시 시도</string>
+    <string name="subscription_offer_expired_dialog_title">이 할인은 종료되었습니다</string>
+    <string name="subscription_offer_expired_dialog_description">이 할인을 더 이상 이용할 수 없습니다. 당신에게 맞는 요금제를 확인해보세요.</string>
+    <string name="subscription_offer_expired_dialog_button">요금제 보기</string>
+    <string name="video_editor_crop_free">무료</string>
+    <string name="video_editor_crop_original">원본</string>
+    <string name="video_editor_mute_button">조용히</string>
+    <string name="video_editor_unmute_button">음소거 해제</string>
+    <string name="video_editor_play_button">재생</string>
+    <string name="video_editor_pause_button">일시정지</string>
+    <string name="video_editor_muted_badge">음소거됨</string>
+    <string name="video_editor_discard_cancel_button">계속 편집</string>
+    <string name="video_editor_screen_title">동영상 편집</string>
+    <string name="video_editor_save_copy_button">복사본 저장</string>
+    <string name="video_editor_load_failed_message">동영상 불러오기 실패</string>
+    <string name="video_editor_export_failed_message">동영상을 저장할 수 없습니다</string>
+    <string name="video_editor_tool_trim">자르기</string>
+    <string name="video_editor_tool_crop">크기 조절</string>
+    <string name="video_editor_tool_rotate">회전</string>
+    <string name="video_editor_tool_speed">속도</string>
+    <string name="video_editor_tool_volume">음량</string>
+    <string name="video_editor_rotate_left">왼쪽</string>
+    <string name="video_editor_rotate_right">오른쪽</string>
+    <string name="video_editor_rotate_flip">뒤집기</string>
+    <string name="video_editor_volume_boost_warning">100%를 초과하는 증폭은 내보낸 후에만 적용됩니다.</string>
+    <string name="video_editor_apply_button">적용</string>
+    <string name="video_editor_preparing_dialog_title">동영상 준비 중</string>
+    <string name="video_editor_saving_dialog_title">복사본 저장 중</string>
+    <string name="video_editor_encoding_label">인코딩 중&#8230;</string>
+    <string name="video_editor_discard_changes_description">지금 나가면, 편집이 사라집니다.</string>
+    <string name="share_link_upgrade_pro_dialog_title">Pro로 업그레이드</string>
+    <string name="share_link_upgrade_pro_dialog_message">MEGA Pro 이용자는 계정을 더욱 안전하게 만드는 추가적인 링크 보안 기능에 대한 독점적 접근이 가능합니다.</string>
+    <string name="share_link_upgrade_pro_dialog_see_plans">요금제 보기</string>
+    <string name="share_link_upgrade_pro_dialog_not_now">나중에</string>
+    <string name="contact_info_send_file">대화에 파일 보내기</string>
+    <string name="contact_info_microphone_permission_message">암호화된 통화를 하려면 당신의 마이크에 접근을 허용하세요.</string>
+    <string name="search_tags_show_all">모두 보기</string>
+    <string name="search_tags_show_less">적게 보기</string>
+    <string name="subscription_offer_no_connection_description">인터넷 연결을 확인하고 다시 시도하세요</string>
+    <string name="audio_player_sleep_timer_title">잠자기 타이머</string>
+    <string name="audio_player_sleep_timer_active_title">잠자기 타이머 - %s 남음</string>
+    <string name="audio_player_sleep_timer_end_of_track">트랙이 끝나면</string>
+    <string name="audio_player_sleep_timer_turn_off">타이머 끄기</string>
+    <string name="audio_player_sleep_timer_countdown_label">잠자기 타이머 %s</string>
+    <plurals name="audio_player_sleep_timer_minutes">
+        <item quantity="other">%1$d분</item>
+    </plurals>
+    <string name="settings_customise_navigation_start_screen">시작 화면</string>
+    <string name="tab_received_requests">받은 요청</string>
+    <string name="tab_sent_requests">보낸 요청</string>
+    <string name="received_requests_empty">[A]수신된 요청[/A] [B]없음[/B]</string>
+    <string name="sent_requests_empty">[A]발송된 요청[/A] [B]없음[/B]</string>
+    <string name="contact_accept">수락</string>
+    <string name="contact_ignore">무시</string>
+    <string name="contact_decline">거절</string>
+    <string name="contact_reinvite">재초대</string>
+    <string name="invite_contacts_my_qr_code_action">내 QR 코드</string>
+    <string name="invite_contacts_own_email_error">당신의 이메일을 추가할 필요는 없습니다</string>
+    <string name="invite_contacts_open_camera_confirmation_title">카메라를 열까요?</string>
+    <string name="invite_contacts_open_camera_confirmation_message">카메라를 열면, 현재 통화에서의 영상 전송이 일시정지됩니다.</string>
+    <string name="invite_contacts_open_camera_confirmation_confirm">열기</string>
+    <plurals name="general_selection_num_contacts">
+        <item quantity="other">%1$d개의 연락처</item>
+    </plurals>
 </resources>
