@@ -27,8 +27,13 @@ import mega.privacy.android.domain.usecase.node.GetNodePreviewFileUseCase
 import mega.privacy.android.domain.usecase.node.namecollision.GetNodeNameCollisionRenameNameUseCase
 import mega.privacy.android.domain.usecase.thumbnailpreview.GetPreviewUseCase
 import mega.privacy.android.domain.usecase.thumbnailpreview.GetThumbnailUseCase
+import mega.privacy.android.domain.entity.transfer.TransferOverQuotaStatus
+import mega.privacy.android.domain.exception.BlockedMegaException
+import mega.privacy.android.domain.exception.QuotaExceededMegaException
 import mega.privacy.android.domain.usecase.transfers.CancelTransferByTagUseCase
 import mega.privacy.android.domain.usecase.transfers.downloads.DownloadNodeUseCase
+import mega.privacy.android.domain.usecase.transfers.overquota.BroadcastTransferOverQuotaEventUseCase
+import mega.privacy.android.domain.usecase.transfers.overquota.BroadcastTransferOverQuotaUseCase
 import mega.privacy.android.feature.videoeditor.presentation.screen.VideoEditorScreenViewModel
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
 import mega.privacy.android.shared.resources.R as sharedR
@@ -77,6 +82,9 @@ class VideoEditorScreenViewModelTest {
     private val getPreviewUseCase = mock<GetPreviewUseCase>()
     private val getThumbnailUseCase = mock<GetThumbnailUseCase>()
     private val cancelTransferByTagUseCase = mock<CancelTransferByTagUseCase>()
+    private val broadcastTransferOverQuotaUseCase = mock<BroadcastTransferOverQuotaUseCase>()
+    private val broadcastTransferOverQuotaEventUseCase =
+        mock<BroadcastTransferOverQuotaEventUseCase>()
     private val applicationScope = CoroutineScope(UnconfinedTestDispatcher())
     private val snackbarEventQueue = mock<SnackbarEventQueue>()
     private val context = mock<Context> {
@@ -94,6 +102,8 @@ class VideoEditorScreenViewModelTest {
             getPreviewUseCase,
             getThumbnailUseCase,
             cancelTransferByTagUseCase,
+            broadcastTransferOverQuotaUseCase,
+            broadcastTransferOverQuotaEventUseCase,
             snackbarEventQueue,
         )
     }
@@ -109,6 +119,8 @@ class VideoEditorScreenViewModelTest {
             getPreviewUseCase = getPreviewUseCase,
             getThumbnailUseCase = getThumbnailUseCase,
             cancelTransferByTagUseCase = cancelTransferByTagUseCase,
+            broadcastTransferOverQuotaUseCase = broadcastTransferOverQuotaUseCase,
+            broadcastTransferOverQuotaEventUseCase = broadcastTransferOverQuotaEventUseCase,
             applicationScope = applicationScope,
             snackbarEventQueue = snackbarEventQueue,
             context = context,
@@ -416,6 +428,94 @@ class VideoEditorScreenViewModelTest {
             assertThat(state.isError).isTrue()
             assertThat(state.videoFilePath).isNull()
         }
+    }
+
+    @Test
+    fun `test that transfer over quota is broadcast and state is error when download hits bandwidth over quota`(
+        @TempDir tempDir: File,
+    ) = runTest {
+        val transfer = transferWith(0.5f, TRANSFER_TAG)
+        val error = QuotaExceededMegaException(errorCode = -17, value = 1L)
+        val errorEvent = TransferEvent.TransferTemporaryErrorEvent(transfer, error)
+        val node = stubNode()
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))) doReturn node
+        whenever(getFilePreviewDownloadPathUseCase()) doReturn tempDir.path
+        whenever(downloadNodeUseCase(any(), any(), anyOrNull(), any())) doReturn flowOf(errorEvent)
+        initViewModel()
+        advanceUntilIdle()
+
+        verifyBlocking(broadcastTransferOverQuotaUseCase) { invoke(true) }
+        verifyBlocking(broadcastTransferOverQuotaEventUseCase) {
+            invoke(TransferOverQuotaStatus.OverQuota)
+        }
+        verifyBlocking(cancelTransferByTagUseCase) { invoke(TRANSFER_TAG) }
+        assertThat(underTest.uiState.value.isError).isTrue()
+        assertThat(underTest.uiState.value.isDownloading).isFalse()
+    }
+
+    @Test
+    fun `test that transfer over quota is not broadcast when the over quota is foreign`(
+        @TempDir tempDir: File,
+    ) = runTest {
+        val transfer = mock<Transfer> {
+            on { progress } doReturn Progress(0.5f)
+            on { tag } doReturn TRANSFER_TAG
+            on { localPath } doReturn ""
+            on { isForeignOverQuota } doReturn true
+        }
+        val error = QuotaExceededMegaException(errorCode = -17, value = 1L)
+        val errorEvent = TransferEvent.TransferTemporaryErrorEvent(transfer, error)
+        val node = stubNode()
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))) doReturn node
+        whenever(getFilePreviewDownloadPathUseCase()) doReturn tempDir.path
+        whenever(downloadNodeUseCase(any(), any(), anyOrNull(), any())) doReturn flowOf(errorEvent)
+        initViewModel()
+        advanceUntilIdle()
+
+        org.mockito.kotlin.verifyNoInteractions(broadcastTransferOverQuotaUseCase)
+        org.mockito.kotlin.verifyNoInteractions(broadcastTransferOverQuotaEventUseCase)
+        assertThat(underTest.uiState.value.isError).isTrue()
+    }
+
+    @Test
+    fun `test that state is error without broadcast when download is blocked`(
+        @TempDir tempDir: File,
+    ) = runTest {
+        val transfer = transferWith(0.5f, TRANSFER_TAG)
+        val error = BlockedMegaException(errorCode = -16)
+        val errorEvent = TransferEvent.TransferTemporaryErrorEvent(transfer, error)
+        val node = stubNode()
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))) doReturn node
+        whenever(getFilePreviewDownloadPathUseCase()) doReturn tempDir.path
+        whenever(downloadNodeUseCase(any(), any(), anyOrNull(), any())) doReturn flowOf(errorEvent)
+        initViewModel()
+        advanceUntilIdle()
+
+        org.mockito.kotlin.verifyNoInteractions(broadcastTransferOverQuotaUseCase)
+        org.mockito.kotlin.verifyNoInteractions(broadcastTransferOverQuotaEventUseCase)
+        verifyBlocking(cancelTransferByTagUseCase) { invoke(TRANSFER_TAG) }
+        assertThat(underTest.uiState.value.isError).isTrue()
+    }
+
+    @Test
+    fun `test that a temporary error without quota or blocked cause keeps the download running`(
+        @TempDir tempDir: File,
+    ) = runTest {
+        val transfer = transferWith(0.5f, TRANSFER_TAG)
+        val error = mock<mega.privacy.android.domain.exception.MegaException>()
+        val errorEvent = TransferEvent.TransferTemporaryErrorEvent(transfer, error)
+        val updateEvent = TransferEvent.TransferUpdateEvent(transferWithProgress(0.5f))
+        val node = stubNode()
+        whenever(getNodeByIdUseCase(NodeId(NODE_HANDLE))) doReturn node
+        whenever(getFilePreviewDownloadPathUseCase()) doReturn tempDir.path
+        whenever(downloadNodeUseCase(any(), any(), anyOrNull(), any())) doReturn
+                flowOf(updateEvent, errorEvent)
+        initViewModel()
+        advanceUntilIdle()
+
+        org.mockito.kotlin.verifyNoInteractions(cancelTransferByTagUseCase)
+        assertThat(underTest.uiState.value.isError).isFalse()
+        assertThat(underTest.uiState.value.isDownloading).isTrue()
     }
 
     @Test

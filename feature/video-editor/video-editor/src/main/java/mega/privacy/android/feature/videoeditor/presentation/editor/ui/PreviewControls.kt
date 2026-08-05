@@ -2,8 +2,6 @@ package mega.privacy.android.feature.videoeditor.presentation.editor.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -21,7 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,9 +26,6 @@ import androidx.compose.ui.res.stringResource
 import mega.privacy.android.shared.resources.R as sharedR
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import mega.android.core.ui.components.MegaText
@@ -40,6 +34,7 @@ import mega.android.core.ui.theme.AppTheme
 import mega.android.core.ui.theme.values.IconColor
 import mega.android.core.ui.theme.values.TextColor
 import mega.privacy.android.core.formatter.mapper.DurationInSecondsTextMapper
+import mega.privacy.android.feature.videoeditor.components.ScrubBar
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -132,61 +127,6 @@ fun PreviewControls(
                 textColor = TextColor.OnColor,
             )
         }
-    }
-}
-
-@Composable
-private fun ScrubBar(
-    progress: Float,
-    onSeek: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var widthPx by remember { mutableStateOf(0) }
-    val onSeekState = rememberUpdatedState(onSeek)
-    Box(
-        modifier = modifier
-            .height(20.dp)
-            .onSizeChanged { widthPx = it.width }
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { offset ->
-                    if (widthPx > 0) onSeekState.value((offset.x / widthPx).coerceIn(0f, 1f))
-                })
-            }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDrag = { change, _ ->
-                        if (widthPx > 0) {
-                            onSeekState.value((change.position.x / widthPx).coerceIn(0f, 1f))
-                            change.consume()
-                        }
-                    },
-                )
-            },
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        // On-video scrub bar — fixed light colours against the video frame.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(Color.White.copy(alpha = 0.25f)),
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(3.dp)
-                .background(Color.White),
-        )
-        val handleOffsetDp = with(LocalDensity.current) {
-            (widthPx * progress.coerceIn(0f, 1f)).toDp() - 7.dp
-        }
-        Box(
-            modifier = Modifier
-                .padding(start = handleOffsetDp.coerceAtLeast(0.dp))
-                .size(14.dp)
-                .clip(CircleShape)
-                .background(Color.White),
-        )
     }
 }
 

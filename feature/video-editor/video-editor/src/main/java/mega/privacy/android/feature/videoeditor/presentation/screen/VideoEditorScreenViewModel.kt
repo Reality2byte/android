@@ -23,8 +23,11 @@ import mega.privacy.android.domain.entity.node.TypedFileNode
 import mega.privacy.android.domain.entity.pitag.PitagTrigger
 import mega.privacy.android.domain.entity.transfer.TransferAppData
 import mega.privacy.android.domain.entity.transfer.TransferEvent
+import mega.privacy.android.domain.entity.transfer.TransferOverQuotaStatus
 import mega.privacy.android.domain.entity.transfer.event.TransferTriggerEvent
 import mega.privacy.android.domain.entity.uri.UriPath
+import mega.privacy.android.domain.exception.BlockedMegaException
+import mega.privacy.android.domain.exception.QuotaExceededMegaException
 import mega.privacy.android.domain.qualifier.ApplicationScope
 import mega.privacy.android.domain.usecase.GetNodeByIdUseCase
 import mega.privacy.android.domain.usecase.node.GetFilePreviewDownloadPathUseCase
@@ -34,6 +37,8 @@ import mega.privacy.android.domain.usecase.thumbnailpreview.GetPreviewUseCase
 import mega.privacy.android.domain.usecase.thumbnailpreview.GetThumbnailUseCase
 import mega.privacy.android.domain.usecase.transfers.CancelTransferByTagUseCase
 import mega.privacy.android.domain.usecase.transfers.downloads.DownloadNodeUseCase
+import mega.privacy.android.domain.usecase.transfers.overquota.BroadcastTransferOverQuotaEventUseCase
+import mega.privacy.android.domain.usecase.transfers.overquota.BroadcastTransferOverQuotaUseCase
 import mega.privacy.android.feature.videoeditor.presentation.screen.model.VideoEditorUiState
 import mega.privacy.android.navigation.contract.queue.snackbar.SnackbarEventQueue
 import mega.privacy.android.shared.resources.R as sharedR
@@ -59,6 +64,8 @@ internal class VideoEditorScreenViewModel @AssistedInject constructor(
     private val getPreviewUseCase: GetPreviewUseCase,
     private val getThumbnailUseCase: GetThumbnailUseCase,
     private val cancelTransferByTagUseCase: CancelTransferByTagUseCase,
+    private val broadcastTransferOverQuotaUseCase: BroadcastTransferOverQuotaUseCase,
+    private val broadcastTransferOverQuotaEventUseCase: BroadcastTransferOverQuotaEventUseCase,
     private val snackbarEventQueue: SnackbarEventQueue,
     @ApplicationScope private val applicationScope: CoroutineScope,
     @ApplicationContext private val context: Context,
@@ -166,6 +173,36 @@ internal class VideoEditorScreenViewModel @AssistedInject constructor(
                     Timber.e(event.error, "Video download finished with error for node $nodeHandle")
                     emitError()
                 }
+            }
+
+            is TransferEvent.TransferTemporaryErrorEvent -> handleTemporaryError(event)
+
+            else -> Unit
+        }
+    }
+
+    /**
+     * Over-quota and blocked errors arrive as temporary errors while the SDK retries the
+     * transfer indefinitely, so without this the preparing dialog would spin forever
+     */
+    private fun handleTemporaryError(event: TransferEvent.TransferTemporaryErrorEvent) {
+        when (val error = event.error) {
+            is QuotaExceededMegaException -> {
+                Timber.e(error, "Video download hit over quota for node $nodeHandle")
+                if (!event.transfer.isForeignOverQuota && error.value != 0L) {
+                    applicationScope.launch {
+                        broadcastTransferOverQuotaUseCase(true)
+                        broadcastTransferOverQuotaEventUseCase(TransferOverQuotaStatus.OverQuota)
+                    }
+                }
+                cancelDownload()
+                emitError()
+            }
+
+            is BlockedMegaException -> {
+                Timber.e(error, "Video download blocked for node $nodeHandle")
+                cancelDownload()
+                emitError()
             }
 
             else -> Unit
