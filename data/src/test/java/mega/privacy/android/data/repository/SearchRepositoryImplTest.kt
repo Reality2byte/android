@@ -10,10 +10,12 @@ import kotlinx.coroutines.test.runTest
 import mega.privacy.android.data.database.dao.RecentSearchDao
 import mega.privacy.android.data.database.entity.RecentSearchEntity
 import mega.privacy.android.data.gateway.MegaLocalRoomGateway
+import mega.privacy.android.data.gateway.api.MegaApiFolderGateway
 import mega.privacy.android.data.gateway.api.MegaApiGateway
 import mega.privacy.android.data.mapper.SortOrderIntMapper
 import mega.privacy.android.data.mapper.node.NodeMapper
 import mega.privacy.android.data.mapper.search.MegaSearchFilterMapper
+import mega.privacy.android.data.mapper.search.MegaSearchPageMapper
 import mega.privacy.android.domain.entity.SortOrder
 import mega.privacy.android.domain.entity.node.NodeId
 import mega.privacy.android.domain.entity.node.TypedFileNode
@@ -26,6 +28,7 @@ import mega.privacy.android.domain.usecase.GetOthersSortOrder
 import nz.mega.sdk.MegaCancelToken
 import nz.mega.sdk.MegaNode
 import nz.mega.sdk.MegaSearchFilter
+import nz.mega.sdk.MegaSearchPage
 import nz.mega.sdk.MegaShare
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -44,6 +47,7 @@ class SearchRepositoryImplTest {
     private lateinit var underTest: SearchRepository
     private val nodeMapper: NodeMapper = mock()
     private val megaApiGateway: MegaApiGateway = mock()
+    private val megaApiFolderGateway: MegaApiFolderGateway = mock()
     private val ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()
     private val cancelTokenProvider: CancelTokenProvider = mock()
     private val getLinksSortOrderUseCase: GetLinksSortOrderUseCase = mock()
@@ -60,6 +64,10 @@ class SearchRepositoryImplTest {
     private val megaNode: MegaNode = mock {
         on { handle } doReturn 123456L
     }
+    private val megaSearchPage: MegaSearchPage = mock()
+    private val megaSearchPageMapper: MegaSearchPageMapper = mock {
+        on { invoke(any(), any()) } doReturn megaSearchPage
+    }
 
 
     @BeforeAll
@@ -67,11 +75,13 @@ class SearchRepositoryImplTest {
         underTest = SearchRepositoryImpl(
             nodeMapper = nodeMapper,
             megaApiGateway = megaApiGateway,
+            megaApiFolderGateway = megaApiFolderGateway,
             ioDispatcher = ioDispatcher,
             cancelTokenProvider = cancelTokenProvider,
             getLinksSOrtOrderUseCase = getLinksSortOrderUseCase,
             sortOrderIntMapper = sortOrderIntMapper,
             megaSearchFilterMapper = megsSearchFilterMapper,
+            megaSearchPageMapper = megaSearchPageMapper,
             megaLocalRoomGateway = megaLocalRoomGateway,
             getCloudSortOrder = getCloudSortOrder,
             getOthersSortOrder = getOthersSortOrder,
@@ -102,7 +112,8 @@ class SearchRepositoryImplTest {
             megaApiGateway.getChildren(
                 filter = filter,
                 order = sortOrderIntMapper(order),
-                megaCancelToken = megaCancelToken
+                megaCancelToken = megaCancelToken,
+                megaSearchPage = megaSearchPage,
             )
         ).thenReturn(emptyList())
         val list = underTest.getChildren(
@@ -140,7 +151,8 @@ class SearchRepositoryImplTest {
             megaApiGateway.searchWithFilter(
                 filter = filter,
                 megaCancelToken = megaCancelToken,
-                order = sortOrderIntMapper(order)
+                order = sortOrderIntMapper(order),
+                megaSearchPage = megaSearchPage,
             )
         ).thenReturn(emptyList())
 
@@ -154,9 +166,50 @@ class SearchRepositoryImplTest {
         verify(megaApiGateway).searchWithFilter(
             filter,
             sortOrderIntMapper(SortOrder.ORDER_NONE),
-            megaCancelToken
+            megaCancelToken,
+            megaSearchPage,
         )
     }
+
+    @Test
+    fun `test that search passes the result limit page to the SDK`() =
+        runTest {
+            whenever(sortOrderIntMapper(any(), any())).thenReturn(0)
+            val nodeID = NodeId(-1L)
+            val query = "Limited query"
+            val order = SortOrder.ORDER_NONE
+            val filter = mock<MegaSearchFilter>()
+            whenever(cancelTokenProvider.getOrCreateCancelToken()).thenReturn(megaCancelToken)
+            whenever(megaLocalRoomGateway.getAllOfflineInfo()).thenReturn(emptyList())
+            whenever(
+                megsSearchFilterMapper(
+                    searchQuery = query,
+                    parentHandle = nodeID,
+                    searchCategory = SearchCategory.ALL
+                )
+            ).thenReturn(filter)
+            whenever(
+                megaApiGateway.searchWithFilter(
+                    filter = filter,
+                    megaCancelToken = megaCancelToken,
+                    order = sortOrderIntMapper(order),
+                    megaSearchPage = megaSearchPage,
+                )
+            ).thenReturn(emptyList())
+
+            underTest.search(
+                nodeId = nodeID,
+                order = order,
+                parameters = SearchParameters(query = query),
+            )
+
+            verify(megaApiGateway).searchWithFilter(
+                filter,
+                sortOrderIntMapper(order),
+                megaCancelToken,
+                megaSearchPage,
+            )
+        }
 
     @Test
     fun `test that search passes useAndForTextQuery override from parameters to the filter mapper`() =
@@ -181,7 +234,8 @@ class SearchRepositoryImplTest {
                 megaApiGateway.searchWithFilter(
                     filter = filter,
                     megaCancelToken = megaCancelToken,
-                    order = sortOrderIntMapper(order)
+                    order = sortOrderIntMapper(order),
+                    megaSearchPage = megaSearchPage,
                 )
             ).thenReturn(emptyList())
 
@@ -198,8 +252,43 @@ class SearchRepositoryImplTest {
             verify(megaApiGateway).searchWithFilter(
                 filter,
                 sortOrderIntMapper(SortOrder.ORDER_NONE),
-                megaCancelToken
+                megaCancelToken,
+                megaSearchPage,
             )
+        }
+
+    @Test
+    fun `test that searchInFolderLink searches through the folder api and maps nodes as folder link nodes`() =
+        runTest {
+            whenever(sortOrderIntMapper(any(), any())).thenReturn(0)
+            val nodeID = NodeId(123456L)
+            val query = "Some query"
+            val filter = mock<MegaSearchFilter>()
+            whenever(cancelTokenProvider.getOrCreateCancelToken()).thenReturn(megaCancelToken)
+            whenever(
+                megsSearchFilterMapper(
+                    searchQuery = query,
+                    parentHandle = nodeID,
+                    searchCategory = SearchCategory.ALL,
+                )
+            ).thenReturn(filter)
+            whenever(
+                megaApiFolderGateway.search(
+                    filter = filter,
+                    order = 0,
+                    megaCancelToken = megaCancelToken,
+                    megaSearchPage = megaSearchPage,
+                )
+            ).thenReturn(listOf(megaNode))
+            whenever(nodeMapper(megaNode, fromFolderLink = true)).thenReturn(typedNode)
+
+            val actual = underTest.searchInFolderLink(
+                nodeId = nodeID,
+                order = SortOrder.ORDER_NONE,
+                parameters = SearchParameters(query = query),
+            )
+
+            assertThat(actual.first().id).isEqualTo(nodeId)
         }
 
     @Test

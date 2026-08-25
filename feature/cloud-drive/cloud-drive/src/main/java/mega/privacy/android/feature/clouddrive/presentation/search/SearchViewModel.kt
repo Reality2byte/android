@@ -13,7 +13,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mega.android.core.ui.model.LocalizedText
 import mega.privacy.android.domain.entity.SortOrder
 import mega.privacy.android.domain.entity.node.NodeChanges
@@ -49,6 +49,7 @@ import mega.privacy.android.domain.usecase.GetNodeInfoByIdUseCase
 import mega.privacy.android.domain.usecase.GetRootNodeIdUseCase
 import mega.privacy.android.domain.usecase.SetCloudSortOrder
 import mega.privacy.android.domain.usecase.canceltoken.CancelCancelTokenUseCase
+import mega.privacy.android.domain.usecase.folderlink.GetPublicChildNodeFromIdUseCase
 import mega.privacy.android.domain.usecase.node.GetAllNodeTagsUseCase
 import mega.privacy.android.domain.usecase.node.MonitorNodeUpdatesByIdUseCase
 import mega.privacy.android.domain.usecase.node.hiddennode.MonitorHiddenNodesEnabledUseCase
@@ -106,11 +107,13 @@ class SearchViewModel @AssistedInject constructor(
     private val clearRecentSearchesUseCase: ClearRecentSearchesUseCase,
     private val getAllNodeTagsUseCase: GetAllNodeTagsUseCase,
     private val getRootNodeIdUseCase: GetRootNodeIdUseCase,
+    private val getPublicChildNodeFromIdUseCase: GetPublicChildNodeFromIdUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         SearchUiState(
-            nodeSourceType = args.nodeSourceType
+            nodeSourceType = args.nodeSourceType,
+            folderLinkUrl = args.folderLinkUrl,
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -184,7 +187,10 @@ class SearchViewModel @AssistedInject constructor(
                 is SearchFilterResult.Type -> state.copy(typeFilterOption = result.option)
                 is SearchFilterResult.DateModified -> state.copy(dateModifiedFilterOption = result.option)
                 is SearchFilterResult.DateAdded -> state.copy(dateAddedFilterOption = result.option)
-            }.copy(nodesLoadingState = NodesLoadingState.Loading)
+            }.copy(
+                items = emptyList(),
+                nodesLoadingState = NodesLoadingState.Loading,
+            )
         }
         launchSearch(_uiState.value.searchText)
     }
@@ -193,6 +199,7 @@ class SearchViewModel @AssistedInject constructor(
         _uiState.update {
             it.copy(
                 searchText = text,
+                items = emptyList(),
                 nodesLoadingState = NodesLoadingState.Loading
             )
         }
@@ -242,7 +249,7 @@ class SearchViewModel @AssistedInject constructor(
             val nodeUiItems = nodeUiItemMapper(
                 nodeList = nodes,
                 nodeSourceType = args.nodeSourceType,
-                existingItems = _uiState.value.items,
+                isPublicNodes = args.nodeSourceType == NodeSourceType.FOLDER_LINK,
             )
             _uiState.update { state ->
                 state.copy(
@@ -296,6 +303,8 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     private fun monitorNodeUpdates() {
+        // Folder link nodes belong to another account, so account node updates don't apply
+        if (args.nodeSourceType == NodeSourceType.FOLDER_LINK) return
         viewModelScope.launch {
             monitorNodeUpdatesByIdUseCase(
                 nodeId = NodeId(args.parentHandle),
@@ -510,6 +519,17 @@ class SearchViewModel @AssistedInject constructor(
     }
 
     private fun monitorHiddenNodeSettings() {
+        // Folder link doesn't need hidden nodes check, instead it will cause infinite loading
+        if (args.nodeSourceType == NodeSourceType.FOLDER_LINK) {
+            _uiState.update { state ->
+                state.copy(
+                    isHiddenNodeSettingsLoading = false,
+                    isHiddenNodesEnabled = false,
+                    showHiddenNodes = true,
+                )
+            }
+            return
+        }
         viewModelScope.launch {
             combine(
                 monitorHiddenNodesEnabledUseCase()
@@ -546,7 +566,13 @@ class SearchViewModel @AssistedInject constructor(
             val placeholder = runCatching {
                 val nodeName = args.parentHandle
                     .takeIf { it != -1L }
-                    ?.let { getNodeInfoByIdUseCase(nodeId)?.name }
+                    ?.let {
+                        if (args.nodeSourceType == NodeSourceType.FOLDER_LINK) {
+                            getPublicChildNodeFromIdUseCase(nodeId)?.name
+                        } else {
+                            getNodeInfoByIdUseCase(nodeId)?.name
+                        }
+                    }
                 searchPlaceholderMapper(
                     nodeName = nodeName,
                     nodeSourceType = args.nodeSourceType
@@ -615,6 +641,7 @@ class SearchViewModel @AssistedInject constructor(
         _uiState.update {
             it.copy(
                 tagFilterOption = tag,
+                items = emptyList(),
                 nodesLoadingState = NodesLoadingState.Loading,
             )
         }
@@ -628,6 +655,7 @@ class SearchViewModel @AssistedInject constructor(
         _uiState.update {
             it.copy(
                 tagFilterOption = null,
+                items = emptyList(),
                 nodesLoadingState = NodesLoadingState.Loading,
             )
         }
@@ -653,6 +681,7 @@ class SearchViewModel @AssistedInject constructor(
     data class Args(
         val parentHandle: Long,
         val nodeSourceType: NodeSourceType,
+        val folderLinkUrl: String? = null,
     )
 
     private fun SearchUiState.toShellState(): SearchShellState = SearchShellState(
