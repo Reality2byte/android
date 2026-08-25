@@ -4,8 +4,6 @@ import de.palm.composestateevents.StateEvent
 import de.palm.composestateevents.StateEventWithContent
 import de.palm.composestateevents.consumed
 import mega.android.core.ui.model.LocalizedText
-import mega.privacy.android.shared.nodes.model.NodeSortConfiguration
-import mega.privacy.android.shared.nodes.model.NodeUiItem
 import mega.privacy.android.domain.entity.SortOrder
 import mega.privacy.android.domain.entity.node.NodeSourceType
 import mega.privacy.android.domain.entity.node.NodesLoadingState
@@ -14,6 +12,8 @@ import mega.privacy.android.domain.entity.node.TypedNode
 import mega.privacy.android.domain.entity.preference.ViewType
 import mega.privacy.android.domain.entity.search.DateFilterOption
 import mega.privacy.android.domain.entity.search.TypeFilterOption
+import mega.privacy.android.shared.nodes.model.NodeSortConfiguration
+import mega.privacy.android.shared.nodes.model.NodeUiItem
 
 /**
  * UI state for search screen
@@ -37,6 +37,7 @@ data class SearchUiState(
     val dateModifiedFilterOption: DateFilterOption? = null,
     val dateAddedFilterOption: DateFilterOption? = null,
     val navigateToFolderEvent: StateEventWithContent<TypedNode> = consumed(),
+    val folderLinkUrl: String? = null,
     val openedFileNode: TypedFileNode? = null,
     val selectedSortOrder: SortOrder = SortOrder.ORDER_DEFAULT_ASC,
     val selectedSortConfiguration: NodeSortConfiguration = NodeSortConfiguration.default,
@@ -121,6 +122,7 @@ data class SearchUiState(
     /**
      * True if search filters can be applied in the current node source type
      */
-    val isFilterAllowed =
-        nodeSourceType == NodeSourceType.CLOUD_DRIVE || nodeSourceType == NodeSourceType.HOME
+    val isFilterAllowed = nodeSourceType == NodeSourceType.CLOUD_DRIVE ||
+            nodeSourceType == NodeSourceType.HOME ||
+            nodeSourceType == NodeSourceType.FOLDER_LINK
 }
